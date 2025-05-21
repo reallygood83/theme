@@ -1,122 +1,119 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
+import { useState, useEffect } from 'react'
 
-export default function Home() {
-  const [sessionCode, setSessionCode] = useState('')
+export default function EduHub() {
+  const [hoveredCard, setHoveredCard] = useState<number | null>(null);
+
+  const platforms = [
+    {
+      title: "질문톡톡! 논제샘솟!",
+      description: "학생들의 질문으로 토론 논제를 발굴하는 교육 플랫폼",
+      color: "bg-gradient-to-br from-rose-100 to-rose-200 hover:from-rose-200 hover:to-rose-300",
+      textColor: "text-rose-800",
+      borderColor: "border-rose-300",
+      shadowColor: "shadow-rose-200",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+        </svg>
+      ),
+      url: "/platform"
+    },
+    {
+      title: "토론 메이트",
+      description: "토론 근거 자료를 검색하고 활용하는 서비스",
+      color: "bg-gradient-to-br from-sky-100 to-sky-200 hover:from-sky-200 hover:to-sky-300",
+      textColor: "text-sky-800",
+      borderColor: "border-sky-300",
+      shadowColor: "shadow-sky-200",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 16l2.879-2.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242zM21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      ),
+      url: "https://evidence-search.vercel.app/"
+    },
+    {
+      title: "LovableDebate",
+      description: "토론 시나리오와 학습 피드백을 제공하는 서비스",
+      color: "bg-gradient-to-br from-violet-100 to-violet-200 hover:from-violet-200 hover:to-violet-300",
+      textColor: "text-violet-800",
+      borderColor: "border-violet-300",
+      shadowColor: "shadow-violet-200",
+      icon: (
+        <svg xmlns="http://www.w3.org/2000/svg" className="w-12 h-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z" />
+        </svg>
+      ),
+      url: "https://debate25.vercel.app/"
+    }
+  ];
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 md:gap-8 px-4">
-      <div className="text-center">
-        <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">
-          <span className="hidden sm:inline">질문톡톡! 논제샘솟!</span>
-          <span className="sm:hidden">질문톡톡!</span>
-        </h1>
-        <p className="text-lg md:text-xl text-gray-600 max-w-2xl">
-          학생들의 질문으로 토론 논제를 발굴하는 교육 플랫폼
-        </p>
-      </div>
-      
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
-        <div className="card flex flex-col items-center justify-center text-center p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow">
-          <div className="bg-primary/10 p-3 md:p-4 rounded-full mb-3 md:mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
-            </svg>
-          </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">선생님이신가요?</h2>
-          <p className="mb-4 md:mb-6 text-gray-600 text-sm md:text-base">
-            새로운 토론 세션을 만들고 학생들의 질문을 수집하세요.
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white py-12 md:py-16 px-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="text-center mb-14">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 via-rose-500 to-purple-600 mb-4">
+            토론, 생각을 피어나게 하는 공간
+          </h1>
+          <p className="text-gray-600 text-lg md:text-xl max-w-3xl mx-auto">
+            질문에서 시작해 논제를 발견하고, 근거를 찾아 토론으로 연결되는 따뜻한 배움의 여정
           </p>
-          <Link href="/teacher/dashboard" className="btn-primary w-full py-3 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            교사 대시보드
-          </Link>
         </div>
-        
-        <div className="card flex flex-col items-center justify-center text-center p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow">
-          <div className="bg-secondary/10 p-3 md:p-4 rounded-full mb-3 md:mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-          </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">학생이신가요?</h2>
-          <p className="mb-4 md:mb-6 text-gray-600 text-sm md:text-base">
-            선생님이 제공한 세션 코드를 입력하여 참여하세요.
-          </p>
-          <div className="w-full">
-            <div className="relative mb-4">
-              <input
-                type="text"
-                placeholder="세션 코드 입력"
-                className="input-field pr-10 text-center uppercase tracking-wider"
-                value={sessionCode}
-                onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
-                maxLength={6}
-                pattern="[A-Z0-9]{6}"
-                autoComplete="off"
-              />
-              {sessionCode && (
-                <button 
-                  type="button" 
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  onClick={() => setSessionCode('')}
-                  aria-label="코드 초기화"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              )}
-            </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-10">
+          {platforms.map((platform, index) => (
             <Link 
-              href={sessionCode ? `/student/session/${sessionCode}` : '#'}
-              className={`btn-secondary w-full py-3 flex items-center justify-center ${!sessionCode && 'opacity-50 cursor-not-allowed'}`}
-              onClick={(e) => !sessionCode && e.preventDefault()}
+              href={platform.url} 
+              key={index}
+              target={index > 0 ? "_blank" : "_self"}
+              className={`relative flex flex-col items-center p-8 md:p-10 rounded-2xl border ${platform.borderColor} ${platform.color} ${platform.shadowColor} shadow-lg transform transition-all duration-300 ease-in-out ${hoveredCard === index ? 'scale-105 rotate-1' : 'scale-100 rotate-0'}`}
+              onMouseEnter={() => setHoveredCard(index)}
+              onMouseLeave={() => setHoveredCard(null)}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-              </svg>
-              세션 참여하기
+              <div className={`${platform.textColor}`}>
+                {platform.icon}
+              </div>
+              <h2 className={`text-2xl font-bold mb-2 ${platform.textColor}`}>
+                {platform.title}
+              </h2>
+              <p className="text-gray-700 text-center mb-6">
+                {platform.description}
+              </p>
+              <div className={`absolute bottom-0 left-0 w-full h-1 ${hoveredCard === index ? 'bg-gradient-to-r from-transparent via-white to-transparent' : 'bg-transparent'} transition-all duration-500`}></div>
+              
+              <div className={`mt-auto px-4 py-2 rounded-full ${platform.textColor} font-medium transition-all duration-300 ${hoveredCard === index ? 'bg-white' : 'bg-white/50'}`}>
+                {index === 0 ? '시작하기' : '방문하기'}
+              </div>
             </Link>
-          </div>
+          ))}
+        </div>
+
+        <div className="mt-16 text-center">
+          <h2 className="text-2xl font-semibold text-gray-700 mb-4">
+            🌟 토론으로 성장하는 즐거움을 경험하세요 🌟
+          </h2>
+          <p className="text-gray-600 max-w-3xl mx-auto">
+            토론은 단순한 주장의 대립이 아닌, 함께 생각하고 성장하는 과정입니다. 
+            다양한 관점을 존중하며 더 나은 해결책을 찾아가는 여정에 초대합니다.
+          </p>
         </div>
         
-        <div className="card flex flex-col items-center justify-center text-center p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow">
-          <div className="bg-yellow-100 p-3 md:p-4 rounded-full mb-3 md:mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
-          </div>
-          <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">이용 가이드</h2>
-          <p className="mb-4 md:mb-6 text-gray-600 text-sm md:text-base">
-            질문톡톡! 논제샘솟! 서비스의 사용 방법과 팁을 확인하세요.
+        <div className="mt-20 text-center text-sm text-gray-500">
+          <p>
+            © 2025 토론교육 플랫폼 시리즈 | 안양 박달초 김문정 | 
+            <a 
+              href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-rose-600 hover:underline ml-1"
+            >
+              유튜브 배움의 달인
+            </a>
           </p>
-          <Link href="/guide" className="btn-primary bg-yellow-600 hover:bg-yellow-700 w-full py-3 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            이용 가이드 보기
-          </Link>
         </div>
-      </div>
-      
-      <div className="mt-6 md:mt-8 text-center">
-        <p className="text-xs md:text-sm text-gray-500">
-          © 2025 질문톡톡! 논제샘솟! | 안양 박달초 김문정 | 
-          <a 
-            href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-primary hover:underline ml-1"
-          >
-            유튜브 배움의 달인
-          </a>
-        </p>
       </div>
     </div>
   )
