@@ -200,6 +200,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     setIsGeneratingAgendas(true)
     
     try {
+      console.log('논제 추천 요청 시작:', { topic, useQuestions });
+      
       const response = await fetch('/api/ai/recommend-agendas', {
         method: 'POST',
         headers: {
@@ -215,8 +217,22 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         }),
       })
       
+      console.log('논제 추천 응답 상태:', response.status);
+      
       if (!response.ok) {
         throw new Error('논제 추천 요청에 실패했습니다.')
+      }
+      
+      try {
+        // 디버깅을 위해 응답 내용 로깅
+        const responseData = await response.json();
+        console.log('논제 추천 성공:', { 
+          success: responseData.success,
+          agendasCount: responseData.recommendedAgendas?.length || 0,
+          hasQuestionAnalysis: !!responseData.questionAnalysis
+        });
+      } catch (jsonError) {
+        console.warn('응답 JSON 파싱 실패:', jsonError);
       }
       
       // 서버 응답을 기다릴 필요가 없음 - Firebase 실시간 업데이트로 데이터를 수신함

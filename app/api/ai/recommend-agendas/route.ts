@@ -133,7 +133,8 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
         }
       }
       
-      console.log('파싱 시도할 JSON 문자열:', jsonString);
+      console.log('파싱 시도할 JSON 문자열 길이:', jsonString.length);
+      console.log('파싱 시도할 JSON 문자열 일부:', jsonString.substring(0, 100) + '...');
       const parsedData = JSON.parse(jsonString);
       
       // 타입 안전성을 위해 필요한 필드를 가진 새 객체로 명시적 변환
@@ -212,19 +213,41 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
         const studentAgendasRef = ref(database, `sessions/${sessionId}/studentAgendas`)
         const newAgendaRef = push(studentAgendasRef)
         
-        await set(newAgendaRef, {
+        // 저장할 데이터 구성
+        const dataToSave = {
           recommendedAgendas: parsedResponse.recommendedAgendas,
           topic,
           description: description || '',
           studentName,
           studentGroup,
           createdAt: Date.now()
-        })
+        };
+        
+        // 질문 분석 결과가 있으면 추가
+        if (parsedResponse.questionAnalysis) {
+          dataToSave.questionAnalysis = parsedResponse.questionAnalysis;
+        }
+        
+        console.log('저장할 논제 데이터 구조:', 
+          JSON.stringify({
+            agendasCount: parsedResponse.recommendedAgendas.length,
+            hasQuestionAnalysis: !!parsedResponse.questionAnalysis,
+            firstAgendaTitle: parsedResponse.recommendedAgendas[0]?.agendaTitle || '없음'
+          })
+        );
+        
+        // 데이터베이스에 저장
+        await set(newAgendaRef, dataToSave);
+        console.log('논제 저장 완료 - 경로:', `sessions/${sessionId}/studentAgendas/${newAgendaRef.key}`);
       } catch (dbError) {
         console.error('데이터베이스 저장 오류:', dbError)
       }
+    } else {
+      console.warn('저장할 논제가 없거나 데이터베이스 연결 실패');
     }
     
+    // 응답 로깅 및 반환
+    console.log('응답 성공 - 논제 개수:', parsedResponse.recommendedAgendas?.length || 0);
     return NextResponse.json({ 
       success: true, 
       ...parsedResponse
