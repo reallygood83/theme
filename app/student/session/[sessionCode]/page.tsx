@@ -120,12 +120,20 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                     ...(value as any)
                   }))
                   
-                  // 현재 학생/모둠의 논제만 필터링
-                  const filteredAgendas = agendaArray.filter(
-                    a => a.studentGroup === studentGroup || a.studentName === studentName
-                  )
-                  
-                  setStudentAgendas(filteredAgendas)
+                  // 학생 이름과 모둠 정보가 있을 때만 필터링 적용
+                  if (studentName && studentGroup) {
+                    // 현재 학생/모둠의 논제만 필터링
+                    const filteredAgendas = agendaArray.filter(
+                      a => a.studentGroup === studentGroup || a.studentName === studentName
+                    )
+                    
+                    setStudentAgendas(filteredAgendas)
+                    
+                    // 논제가 생성되었으면 추천기 숨기기
+                    if (filteredAgendas.length > 0) {
+                      setShowAgendaRecommender(false)
+                    }
+                  }
                 }
               }
             })
@@ -145,7 +153,13 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   a => a.studentGroup === studentGroup || a.studentName === studentName
                 )
                 
+                console.log('학생 논제 실시간 업데이트:', { count: filteredAgendas.length, 모둠: studentGroup, 이름: studentName });
                 setStudentAgendas(filteredAgendas)
+                
+                // 논제가 생성되었으면 추천기 숨기기
+                if (filteredAgendas.length > 0) {
+                  setShowAgendaRecommender(false)
+                }
               }
             })
             
