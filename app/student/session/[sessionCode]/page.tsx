@@ -43,6 +43,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   
   // 세션 코드로 세션 정보 조회
   useEffect(() => {
+    console.log('세션 정보 조회 시작 - 현재 학생 정보:', { 
+      이름: studentName, 
+      모둠: studentGroup,
+      세션코드: sessionCode
+    });
+    
     const fetchSessionByCode = async () => {
       try {
         // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
@@ -138,47 +144,68 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               }
             })
             
-            // 학생 논제 실시간 업데이트 수신
-            const studentAgendasRef = ref(db, `sessions/${foundSessionId}/studentAgendas`)
-            const agendasUnsubscribe = onValue(studentAgendasRef, (snapshot) => {
-              if (snapshot.exists()) {
-                const agendasData = snapshot.val()
-                const agendaArray = Object.entries(agendasData).map(([key, value]) => ({
-                  agendaId: key,
-                  ...(value as any)
-                }))
-                
-                // 학생 이름과 모둠이 유효한지 확인
-                const validStudentName = studentName?.trim() || '';
-                const validStudentGroup = studentGroup?.trim() || '';
-
-                console.log('학생 정보 확인:', { 이름: validStudentName, 모둠: validStudentGroup });
-                
-                // 유효한 학생 정보가 있을 때만 필터링
-                if (validStudentName && validStudentGroup) {
-                  // 현재 학생/모둠의 논제만 필터링
-                  const filteredAgendas = agendaArray.filter(
-                    a => (a.studentGroup === validStudentGroup || a.studentName === validStudentName)
-                  );
+            // 클로저 문제를 피하기 위한 함수 정의
+            const setupAgendaListener = () => {
+              const studentAgendasRef = ref(db, `sessions/${foundSessionId}/studentAgendas`);
+              
+              return onValue(studentAgendasRef, (snapshot) => {
+                if (snapshot.exists()) {
+                  const agendasData = snapshot.val();
+                  const agendaArray = Object.entries(agendasData).map(([key, value]) => ({
+                    agendaId: key,
+                    ...(value as any)
+                  }));
                   
-                  console.log('학생 논제 실시간 업데이트:', { 
-                    count: filteredAgendas.length, 
-                    모둠: validStudentGroup, 
-                    이름: validStudentName,
-                    필터링_전_전체갯수: agendaArray.length
+                  // 컴포넌트의 최신 상태에서 이름과 모둠 가져오기
+                  const currentName = studentName?.trim() || sessionStorage.getItem(`session_${sessionCode}_name`)?.trim() || '';
+                  const currentGroup = studentGroup?.trim() || sessionStorage.getItem(`session_${sessionCode}_group`)?.trim() || '';
+                  
+                  console.log('학생 정보 확인:', { 
+                    이름: currentName, 
+                    모둠: currentGroup,
+                    세션스토리지_이름: sessionStorage.getItem(`session_${sessionCode}_name`),
+                    세션스토리지_모둠: sessionStorage.getItem(`session_${sessionCode}_group`),
+                    상태_이름: studentName,
+                    상태_모둠: studentGroup
                   });
                   
-                  setStudentAgendas(filteredAgendas);
-                  
-                  // 논제가 생성되었으면 추천기 숨기기
-                  if (filteredAgendas.length > 0) {
-                    setShowAgendaRecommender(false);
+                  // 유효한 학생 정보가 있을 때만 필터링
+                  if (currentName && currentGroup) {
+                    // 모든 논제를 먼저 로깅
+                    console.log('모든 논제 데이터:', agendaArray.map(a => ({ 
+                      id: a.agendaId, 
+                      studentName: a.studentName, 
+                      studentGroup: a.studentGroup 
+                    })));
+                    
+                    // 현재 학생/모둠의 논제만 필터링
+                    const filteredAgendas = agendaArray.filter(a => 
+                      (a.studentGroup && a.studentGroup.trim() === currentGroup) || 
+                      (a.studentName && a.studentName.trim() === currentName)
+                    );
+                    
+                    console.log('학생 논제 실시간 업데이트:', { 
+                      count: filteredAgendas.length, 
+                      모둠: currentGroup, 
+                      이름: currentName,
+                      필터링_전_전체갯수: agendaArray.length
+                    });
+                    
+                    setStudentAgendas(filteredAgendas);
+                    
+                    // 논제가 생성되었으면 추천기 숨기기
+                    if (filteredAgendas.length > 0) {
+                      setShowAgendaRecommender(false);
+                    }
+                  } else {
+                    console.warn('유효한 학생 정보가 없어 논제를 필터링할 수 없습니다.');
                   }
-                } else {
-                  console.warn('유효한 학생 정보가 없어 논제를 필터링할 수 없습니다.');
                 }
-              }
-            })
+              });
+            };
+            
+            // 실시간 리스너 설정
+            const agendasUnsubscribe = setupAgendaListener();
             
             return () => {
               unsubscribe()
@@ -199,7 +226,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     }
     
     fetchSessionByCode()
-  }, [sessionCode])
+    
+    // 이름이나 모둠이 변경되면 데이터를 다시 필터링해야 함
+    return () => {
+      console.log('세션 정보 조회 정리 - 학생 정보 변경됨');
+    };
+  }, [sessionCode, studentName, studentGroup])
   
   const handleJoinSession = (e: React.FormEvent) => {
     e.preventDefault()
