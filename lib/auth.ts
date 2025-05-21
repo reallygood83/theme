@@ -4,6 +4,8 @@ import {
   signOut,
   sendPasswordResetEmail,
   onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
   User,
   UserCredential
 } from 'firebase/auth';
@@ -121,6 +123,46 @@ export function onAuthStateChange(callback: (user: User | null) => void): () => 
   }
   
   return onAuthStateChanged(auth, callback);
+}
+
+// 구글 로그인
+export async function loginWithGoogle(): Promise<UserCredential> {
+  if (!auth) {
+    throw new Error('Firebase 인증이 초기화되지 않았습니다.');
+  }
+  
+  try {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    
+    // 사용자 정보가 없으면 새 사용자 프로필 생성
+    if (database && userCredential.user) {
+      const userRef = ref(database, `users/${userCredential.user.uid}`);
+      const snapshot = await get(userRef);
+      
+      if (!snapshot.exists()) {
+        await set(userRef, {
+          displayName: userCredential.user.displayName || '사용자',
+          email: userCredential.user.email,
+          photoURL: userCredential.user.photoURL,
+          role: 'teacher', // 기본적으로 교사 역할 부여
+          createdAt: Date.now()
+        });
+      }
+    }
+    
+    return userCredential;
+  } catch (error: any) {
+    console.error('구글 로그인 오류:', error);
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      throw new Error('로그인 창이 사용자에 의해 닫혔습니다.');
+    } else if (error.code === 'auth/cancelled-popup-request') {
+      throw new Error('이미 로그인 창이 열려있습니다.');
+    } else {
+      throw new Error('구글 로그인 중 문제가 발생했습니다. 나중에 다시 시도해주세요.');
+    }
+  }
 }
 
 // 현재 로그인한 사용자 정보 가져오기
