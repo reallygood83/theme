@@ -59,14 +59,14 @@ export async function translateLetter(text: string, targetLang: string = 'en'): 
     }
     
     const prompt = `
-      You are a professional translator specializing in translating heartfelt letters from Korean students to the veterans and citizens of countries that participated in the Korean War.
+      You are a professional translator specializing in translating educational content from Korean students.
       
-      Please translate the following Korean letter to ${targetLang === 'en' ? 'English' : languageNames[targetLang as SupportedLanguage]}. 
+      Please translate the following Korean text to ${targetLang === 'en' ? 'English' : languageNames[targetLang as SupportedLanguage]}. 
       
       Maintain the tone, emotion, and meaning of the original text while making it natural in the target language.
       Preserve paragraph breaks and formatting.
       
-      Korean letter to translate:
+      Korean text to translate:
       "${text}"
       
       Translation:
@@ -88,35 +88,29 @@ export async function translateLetter(text: string, targetLang: string = 'en'): 
 export function getSampleTranslation(targetLang: string): string {
   // This is just for development/demo purposes
   const sampleTranslations: Record<string, string> = {
-    en: `Dear veterans and citizens of the United States,
+    en: `Question: Why do you think debate is important in a democratic society?
 
-I am a student from South Korea, and I would like to express my deepest gratitude for the courage and sacrifice your country showed for Korea during the Korean War from 1950 to 1953.
+I think debate is important in a democratic society because it allows for different perspectives to be heard and considered. When people engage in thoughtful debate, they are exposed to ideas and viewpoints they might not have considered before.
 
-The 1,789,000 soldiers sent from your country fought for freedom and peace.
+Debate also helps us refine our thinking and identify flaws in our reasoning. By having our ideas challenged, we can develop stronger arguments and better solutions to complex problems.
 
-Without your sacrifice and help, today's South Korea would not exist. We will never forget this debt of gratitude, and hope that the friendship between our two countries will continue to deepen in the future.
-
-Thank you from the bottom of my heart.`,
+Finally, debate teaches important skills like critical thinking, active listening, and respectful disagreement - all necessary for citizens in a healthy democracy.`,
     
-    fr: `Chers vétérans et citoyens de la France,
+    fr: `Question: Pourquoi pensez-vous que le débat est important dans une société démocratique?
 
-Je suis un étudiant de la Corée du Sud, et je voudrais exprimer ma plus profonde gratitude pour le courage et le sacrifice dont votre pays a fait preuve pour la Corée pendant la guerre de Corée de 1950 à 1953.
+Je pense que le débat est important dans une société démocratique car il permet d'entendre et de prendre en compte différentes perspectives. Lorsque les gens participent à un débat réfléchi, ils sont exposés à des idées et des points de vue qu'ils n'auraient peut-être pas envisagés auparavant.
 
-Les soldats envoyés par votre pays ont combattu pour la liberté et la paix.
+Le débat nous aide également à affiner notre réflexion et à identifier les failles dans notre raisonnement. En ayant nos idées remises en question, nous pouvons développer des arguments plus solides et de meilleures solutions aux problèmes complexes.
 
-Sans votre sacrifice et votre aide, la Corée du Sud d'aujourd'hui n'existerait pas. Nous n'oublierons jamais cette dette de gratitude, et espérons que l'amitié entre nos deux pays continuera à s'approfondir à l'avenir.
-
-Je vous remercie du fond du cœur.`,
+Enfin, le débat enseigne des compétences importantes comme la pensée critique, l'écoute active et le désaccord respectueux - toutes nécessaires aux citoyens dans une démocratie saine.`,
     
-    tr: `Türkiye'nin değerli gazileri ve vatandaşları,
+    tr: `Soru: Demokratik bir toplumda tartışmanın neden önemli olduğunu düşünüyorsunuz?
 
-Ben Güney Kore'den bir öğrenciyim ve 1950'den 1953'e kadar süren Kore Savaşı sırasında ülkenizin Kore için gösterdiği cesaret ve fedakarlık için en derin minnettarlığımı ifade etmek istiyorum.
+Demokratik bir toplumda tartışmanın önemli olduğunu düşünüyorum çünkü farklı bakış açılarının duyulmasına ve dikkate alınmasına olanak tanıyor. İnsanlar düşünceli bir tartışmaya girdiklerinde, daha önce düşünmemiş olabilecekleri fikir ve bakış açılarına maruz kalırlar.
 
-Ülkenizden gönderilen 21.212 asker özgürlük ve barış için savaştı.
+Tartışma aynı zamanda düşüncemizi geliştirmemize ve mantığımızdaki kusurları belirlememize yardımcı olur. Fikirlerimiz sorgulandığında, karmaşık sorunlara daha güçlü argümanlar ve daha iyi çözümler geliştirebiliriz.
 
-Sizin fedakarlığınız ve yardımınız olmasaydı, bugünkü Güney Kore var olmazdı. Bu minnettarlık borcunu asla unutmayacağız ve iki ülkemiz arasındaki dostluğun gelecekte daha da derinleşmesini umuyoruz.
-
-Kalbimin derinliklerinden teşekkür ederim.`
+Son olarak, tartışma, eleştirel düşünme, aktif dinleme ve saygılı anlaşmazlık gibi sağlıklı bir demokraside vatandaşlar için gerekli olan önemli becerileri öğretir.`
   }
   
   return sampleTranslations[targetLang] || sampleTranslations['en']
