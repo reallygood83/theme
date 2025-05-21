@@ -22,7 +22,7 @@ body {
   }
   
   .card {
-    @apply bg-white p-6 rounded-lg shadow-md;
+    @apply bg-white p-4 md:p-6 rounded-lg shadow-md;
   }
   
   .input-field {
@@ -31,5 +31,25 @@ body {
   
   .textarea-field {
     @apply w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[100px];
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+  }
+  
+  /* 모바일 터치 최적화 */
+  @media (max-width: 768px) {
+    .card, .btn-primary, .btn-secondary, input, textarea, select, button {
+      @apply touch-manipulation;
+    }
+    
+    input, textarea, select, button {
+      @apply text-base;
+    }
   }
 }

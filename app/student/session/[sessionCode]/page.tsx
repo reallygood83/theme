@@ -181,7 +181,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     return (
       <>
         <Header />
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto px-4 md:px-0">
           <Card title="토론 세션 참여하기">
             <form onSubmit={handleJoinSession} className="space-y-4">
               <div>
@@ -196,6 +196,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   value={studentName}
                   onChange={(e) => setStudentName(e.target.value)}
                   required
+                  autoComplete="name"
+                  autoCapitalize="words"
                 />
               </div>
               
@@ -211,10 +213,14 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   value={studentGroup}
                   onChange={(e) => setStudentGroup(e.target.value)}
                   required
+                  autoComplete="off"
                 />
               </div>
               
               <Button type="submit" variant="primary" fullWidth>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
                 참여하기
               </Button>
             </form>
@@ -227,23 +233,26 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   return (
     <>
       <Header />
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+      <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4 md:px-6">
+        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">토론 세션</h1>
-            <p className="text-gray-600">
-              참여자: <span className="font-medium">{studentName}</span> ({studentGroup} 모둠)
-            </p>
+            <h1 className="text-xl md:text-2xl font-bold">토론 세션</h1>
+            <div className="bg-accent/10 text-accent inline-flex items-center px-3 py-1 rounded-full text-sm mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="font-medium">{studentName}</span> ({studentGroup} 모둠)
+            </div>
           </div>
         </div>
         
-        <Card title="학습 자료">
+        <Card title="학습 자료" className="shadow-md hover:shadow-lg transition-shadow">
           {session.materialText ? (
-            <div className="prose max-w-none">
-              <p>{session.materialText}</p>
+            <div className="prose max-w-none text-sm md:text-base">
+              <p className="whitespace-pre-wrap">{session.materialText}</p>
             </div>
           ) : session.materialUrl ? (
-            <div className="aspect-video">
+            <div className="aspect-video rounded-md overflow-hidden">
               <iframe
                 src={`https://www.youtube.com/embed/${extractYoutubeVideoId(session.materialUrl)}`}
                 className="w-full h-full"
@@ -270,15 +279,34 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           )}
         </Card>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+        {/* 모바일에서는 탭 형태로 전환 */}
+        <div className="block lg:hidden">
+          <div className="border-b border-gray-200 mb-4">
+            <nav className="-mb-px flex space-x-6 overflow-x-auto pb-1 scrollbar-hide">
+              <a href="#questions" className="whitespace-nowrap py-2 px-1 border-b-2 border-primary font-medium text-sm text-primary">
+                질문 작성 및 목록
+              </a>
+              <a href="#helper" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                질문 도우미
+              </a>
+              {showAnalysisResult && (
+                <a href="#result" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                  AI 분석 결과
+                </a>
+              )}
+            </nav>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          <div className="lg:col-span-2" id="questions">
             <QuestionInput 
               sessionId={sessionId!} 
               studentName={studentName}
               onQuestionSubmit={() => {}}
             />
             
-            <div className="mt-6">
+            <div className="mt-4 md:mt-6">
               <QuestionList
                 sessionId={sessionId!}
                 studentName={studentName}
@@ -286,18 +314,20 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             </div>
           </div>
           
-          <div className="space-y-6">
-            <QuestionHelper />
+          <div className="space-y-4 md:space-y-6 mt-6 lg:mt-0">
+            <div id="helper">
+              <QuestionHelper />
+            </div>
             
             {showAnalysisResult && session.aiAnalysisResult && (
-              <>
-                <Card title="AI 추천 논제">
+              <div id="result">
+                <Card title="AI 추천 논제" className="shadow-md hover:shadow-lg transition-shadow">
                   {session.aiAnalysisResult.recommendedAgendas && (
                     <div className="space-y-4">
                       {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
                         <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
-                          <h3 className="font-medium mb-1">{agenda.agendaTitle}</h3>
-                          <p className="text-sm text-gray-600 mb-2">{agenda.reason}</p>
+                          <h3 className="font-medium mb-1 text-sm md:text-base">{agenda.agendaTitle}</h3>
+                          <p className="text-xs md:text-sm text-gray-600 mb-2">{agenda.reason}</p>
                           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
                             {agenda.type}
                           </span>
@@ -307,17 +337,50 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   )}
                 </Card>
                 
-                <AgendaValidator />
+                <div className="mt-4 md:mt-6">
+                  <AgendaValidator />
+                </div>
                 
-                <TermDefinition
-                  sessionId={sessionId!}
-                  studentGroup={studentGroup}
-                  initialTerms={session.aiAnalysisResult.extractedTerms}
-                />
-              </>
+                <div className="mt-4 md:mt-6">
+                  <TermDefinition
+                    sessionId={sessionId!}
+                    studentGroup={studentGroup}
+                    initialTerms={session.aiAnalysisResult.extractedTerms}
+                  />
+                </div>
+              </div>
             )}
           </div>
         </div>
+        
+        {/* 모바일 탭 전환을 위한 하단 탭 바 */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-2 px-4 lg:hidden">
+          <div className="flex justify-around max-w-md mx-auto">
+            <a href="#questions" className="flex flex-col items-center text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <span className="text-xs mt-1">질문</span>
+            </a>
+            <a href="#helper" className="flex flex-col items-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              </svg>
+              <span className="text-xs mt-1">도우미</span>
+            </a>
+            {showAnalysisResult && (
+              <a href="#result" className="flex flex-col items-center text-gray-500">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span className="text-xs mt-1">논제</span>
+              </a>
+            )}
+          </div>
+        </div>
+        
+        {/* 모바일 하단 탭 영역 패딩 */}
+        <div className="h-16 lg:hidden"></div>
       </div>
     </>
   )
