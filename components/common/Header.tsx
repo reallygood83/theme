@@ -95,14 +95,6 @@ export default function Header() {
               </li>
               <li>
                 <Link 
-                  href="/un-veterans"
-                  className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/un-veterans') ? 'font-medium text-primary' : ''}`}
-                >
-                  6.25 참전국
-                </Link>
-              </li>
-              <li>
-                <Link 
                   href="/guide"
                   className={`text-gray-600 hover:text-primary ${pathname === '/guide' ? 'font-medium text-primary' : ''}`}
                 >
@@ -194,15 +186,6 @@ export default function Header() {
                     세션 생성
                   </Link>
                 </div>
-              </li>
-              <li>
-                <Link 
-                  href="/un-veterans"
-                  className={`text-xl ${pathname?.startsWith('/un-veterans') ? 'font-medium text-primary' : 'text-gray-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  6.25 참전국
-                </Link>
               </li>
               <li>
                 <Link 
