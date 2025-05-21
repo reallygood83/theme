@@ -131,6 +131,12 @@ export async function loginWithGoogle(): Promise<UserCredential> {
     throw new Error('Firebase 인증이 초기화되지 않았습니다.');
   }
   
+  // 환경 변수를 통해 구글 로그인 활성화 여부 확인
+  const isGoogleAuthEnabled = process.env.NEXT_PUBLIC_ENABLE_GOOGLE_AUTH === 'true';
+  if (!isGoogleAuthEnabled) {
+    throw new Error('구글 로그인이 비활성화되어 있습니다.');
+  }
+  
   try {
     const provider = new GoogleAuthProvider();
     const userCredential = await signInWithPopup(auth, provider);
@@ -159,6 +165,8 @@ export async function loginWithGoogle(): Promise<UserCredential> {
       throw new Error('로그인 창이 사용자에 의해 닫혔습니다.');
     } else if (error.code === 'auth/cancelled-popup-request') {
       throw new Error('이미 로그인 창이 열려있습니다.');
+    } else if (error.code === 'auth/unauthorized-domain') {
+      throw new Error('이 도메인에서는 구글 로그인을 사용할 수 없습니다. Firebase 콘솔에서 도메인을 추가해주세요.');
     } else {
       throw new Error('구글 로그인 중 문제가 발생했습니다. 나중에 다시 시도해주세요.');
     }
