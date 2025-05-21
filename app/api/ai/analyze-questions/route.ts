@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
-import { ref, update, getDatabase } from 'firebase/database'
+import { ref, update, getDatabase, Database } from 'firebase/database'
 import { clusterQuestions, recommendAgendas, extractKeyTerms } from '@/lib/gemini'
 import { initializeApp } from 'firebase/app'
 
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
     
     // 데이터베이스에 결과 저장
     // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-    let db = database;
+    let db: Database | null = database;
     
     // Firebase 환경 변수 확인 및 필요시 재초기화
     if (!db) {

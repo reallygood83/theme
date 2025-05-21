@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
-import { ref, push, set, getDatabase } from 'firebase/database'
+import { ref, push, set, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 
 export async function POST(request: Request) {
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     }
     
     // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-    let db = database;
+    let db: Database | null = database;
     
     // Firebase 환경 변수 확인 및 필요시 재초기화
     if (!db) {
