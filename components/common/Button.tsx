@@ -11,6 +11,7 @@ interface ButtonProps {
   isLoading?: boolean
   onClick?: () => void
   type?: 'button' | 'submit' | 'reset'
+  className?: string
 }
 
 export default function Button({
@@ -22,6 +23,7 @@ export default function Button({
   isLoading = false,
   onClick,
   type = 'button',
+  className = '',
 }: ButtonProps) {
   const baseStyles = 'font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
   
@@ -50,6 +52,7 @@ export default function Button({
         ${sizeStyles[size]} 
         ${widthStyles} 
         ${disabledStyles}
+        ${className}
       `}
       onClick={onClick}
       disabled={disabled || isLoading}

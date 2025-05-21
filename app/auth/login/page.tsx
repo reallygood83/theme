@@ -101,7 +101,7 @@ export default function LoginPage() {
               variant="primary"
               fullWidth
               isLoading={loading}
-              className="py-2.5"
+              size="lg"
             >
               로그인
             </Button>

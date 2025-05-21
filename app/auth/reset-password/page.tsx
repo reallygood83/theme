@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
                 variant="primary"
                 fullWidth
                 isLoading={loading}
-                className="py-2.5"
+                size="lg"
               >
                 비밀번호 재설정 이메일 보내기
               </Button>

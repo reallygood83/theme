@@ -139,7 +139,7 @@ export default function RegisterPage() {
               variant="primary"
               fullWidth
               isLoading={loading}
-              className="py-2.5"
+              size="lg"
             >
               회원가입
             </Button>
