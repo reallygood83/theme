@@ -151,3 +151,14 @@ export async function extractKeyTerms(agenda: string) {
 }
 
 // 필요한 경우 추가 AI 기능을 여기에 구현
+
+// 일반 텍스트 생성 함수
+export async function generateContent(prompt: string) {
+  try {
+    const result = await model.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    console.error('Gemini API 호출 오류:', error);
+    return '';
+  }
+}
