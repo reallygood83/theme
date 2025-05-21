@@ -238,9 +238,24 @@ export default function SessionManager({
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">토론 세션 관리</h1>
-          <p className="text-gray-600">
-            세션 코드: <span className="font-medium">{sessionCode}</span>
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-gray-600">
+              세션 코드: <span className="font-medium">{sessionCode}</span>
+            </p>
+            <button
+              type="button"
+              className="inline-flex items-center text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+              onClick={() => {
+                navigator.clipboard.writeText(sessionCode);
+                alert('세션 코드가 클립보드에 복사되었습니다.');
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              복사
+            </button>
+          </div>
         </div>
         
         {!analysisComplete && (
