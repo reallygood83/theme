@@ -3,6 +3,11 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Gemini API 키는 환경 변수에서 가져옵니다.
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 
+// API 키 유효성 확인
+if (!apiKey || apiKey.trim() === '') {
+  console.error('경고: Gemini API 키가 설정되지 않았습니다. 환경 변수를 확인하세요.');
+}
+
 // Gemini API 인스턴스 생성
 const genAI = new GoogleGenerativeAI(apiKey);
 
@@ -154,11 +159,23 @@ export async function extractKeyTerms(agenda: string) {
 
 // 일반 텍스트 생성 함수
 export async function generateContent(prompt: string) {
+  if (!apiKey || apiKey.trim() === '') {
+    console.error('Gemini API 키가 설정되지 않아 생성을 진행할 수 없습니다.');
+    return '{"error": "API 키가 설정되지 않았습니다", "recommendedAgendas": []}';
+  }
+  
   try {
+    console.log('Gemini API 호출 시작...');
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    const responseText = result.response.text();
+    console.log('Gemini API 응답 완료');
+    return responseText;
   } catch (error) {
     console.error('Gemini API 호출 오류:', error);
-    return '';
+    // 오류 발생 시 기본 응답 제공
+    if (error instanceof Error) {
+      return `{"error": "${error.message}", "recommendedAgendas": []}`;
+    }
+    return '{"error": "알 수 없는 오류가 발생했습니다", "recommendedAgendas": []}';
   }
 }

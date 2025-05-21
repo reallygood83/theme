@@ -7,6 +7,7 @@ import { generateContent } from '@/lib/gemini'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    // 요청 파라미터 추출
     const { sessionId, topic, description, studentName, studentGroup, useQuestions = false } = body
     
     if (!sessionId || (!topic && !useQuestions) || !studentName || !studentGroup) {
@@ -115,17 +116,84 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
     // JSON 응답 파싱
     let parsedResponse
     try {
-      // JSON 문자열만 추출하기 위한 처리
-      const jsonMatch = response.match(/\{[\s\S]*\}/)
-      const jsonString = jsonMatch ? jsonMatch[0] : response
-      parsedResponse = JSON.parse(jsonString)
+      // JSON 문자열만 추출하기 위한 더 강화된 처리
+      // 여러 형식의 JSON 추출 패턴 시도
+      let jsonString = response;
+      
+      // 첫 번째 시도: 코드 블록 내 JSON 추출 (```json ... ```)
+      const codeBlockMatch = response.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch && codeBlockMatch[1]) {
+        jsonString = codeBlockMatch[1];
+      } 
+      // 두 번째 시도: 중괄호로 둘러싸인 전체 텍스트
+      else {
+        const jsonObjectMatch = response.match(/(\{[\s\S]*\})/);
+        if (jsonObjectMatch && jsonObjectMatch[1]) {
+          jsonString = jsonObjectMatch[1];
+        }
+      }
+      
+      console.log('파싱 시도할 JSON 문자열:', jsonString);
+      parsedResponse = JSON.parse(jsonString);
+      
+      // 필요한 필드 확인 및 기본값 제공
+      if (!parsedResponse.recommendedAgendas && useQuestions && studentQuestions.length > 0) {
+        // 질문 기반 프롬프트에서는 recommendedAgendas가 필수
+        throw new Error('응답에 recommendedAgendas 필드가 없습니다');
+      }
     } catch (error) {
-      console.error('JSON 파싱 오류:', error)
-      console.log('원본 응답:', response)
-      return NextResponse.json(
-        { error: 'AI 응답을 파싱하는 데 실패했습니다.' },
-        { status: 500 }
-      )
+      console.error('JSON 파싱 오류:', error);
+      console.log('원본 응답:', response);
+      
+      // 응답 포맷 재시도: 직접 JSON 구조 생성
+      try {
+        // AI 응답이 구조화되지 않은 경우 강제로 형식 맞추기 시도
+        const lines = response.split('\n').filter(line => line.trim() !== '');
+        
+        // 기본 구조 생성
+        parsedResponse = {
+          recommendedAgendas: []
+        };
+        
+        // 질문 분석이 있을 경우 (첫 줄이 제목이 아닌 경우)
+        if (useQuestions && lines.length > 0 && !lines[0].includes('논제') && !lines[0].includes('?')) {
+          parsedResponse.questionAnalysis = lines[0];
+        }
+        
+        // 나머지 텍스트에서 논제 추출 시도
+        let currentAgenda = null;
+        for (const line of lines) {
+          if (line.includes('논제') || line.includes('?')) {
+            if (currentAgenda) {
+              parsedResponse.recommendedAgendas.push(currentAgenda);
+            }
+            currentAgenda = {
+              agendaTitle: line.trim(),
+              reason: '',
+              type: '찬반형' // 기본값
+            };
+          } else if (currentAgenda && !currentAgenda.reason && line.trim()) {
+            currentAgenda.reason = line.trim();
+          } else if (currentAgenda && currentAgenda.reason && line.includes('찬반') || line.includes('원인') || line.includes('문제') || line.includes('가치')) {
+            currentAgenda.type = line.trim();
+          }
+        }
+        
+        // 마지막 논제 추가
+        if (currentAgenda) {
+          parsedResponse.recommendedAgendas.push(currentAgenda);
+        }
+        
+        if (parsedResponse.recommendedAgendas.length === 0) {
+          throw new Error('논제를 추출할 수 없습니다');
+        }
+      } catch (fallbackError) {
+        console.error('응답 복구 시도 실패:', fallbackError);
+        return NextResponse.json(
+          { error: 'AI 응답을 파싱하는 데 실패했습니다.' },
+          { status: 500 }
+        );
+      }
     }
     
     // 생성된 논제를 데이터베이스에 저장
