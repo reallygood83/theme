@@ -5,7 +5,7 @@ import Card from '../common/Card'
 import Button from '../common/Button'
 
 interface AgendaRecommenderProps {
-  onRequestAgendas: (topic: string, description: string) => Promise<void>
+  onRequestAgendas: (topic: string, description: string, useQuestions?: boolean) => Promise<void>
   isLoading: boolean
 }
 
