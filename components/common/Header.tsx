@@ -3,13 +3,26 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { logoutUser } from '@/lib/auth'
 
 export default function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { user, userProfile, loading } = useAuth()
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+  }
+  
+  const handleLogout = async () => {
+    try {
+      await logoutUser()
+      // 홈페이지로 이동은 필요시
+      window.location.href = '/'
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+    }
   }
   
   return (
@@ -44,32 +57,107 @@ export default function Header() {
         
         {/* 데스크탑 네비게이션 */}
         <nav className="hidden md:block">
-          <ul className="flex gap-6">
-            <li>
-              <Link 
-                href="/"
-                className={`text-gray-600 hover:text-primary ${pathname === '/' ? 'font-medium text-primary' : ''}`}
-              >
-                홈
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/teacher/session/create"
-                className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/teacher') ? 'font-medium text-primary' : ''}`}
-              >
-                교사용
-              </Link>
-            </li>
-            <li>
-              <Link 
-                href="/guide"
-                className={`text-gray-600 hover:text-primary ${pathname === '/guide' ? 'font-medium text-primary' : ''}`}
-              >
-                이용 가이드
-              </Link>
-            </li>
-          </ul>
+          <div className="flex items-center gap-6">
+            <ul className="flex gap-6">
+              <li>
+                <Link 
+                  href="/"
+                  className={`text-gray-600 hover:text-primary ${pathname === '/' ? 'font-medium text-primary' : ''}`}
+                >
+                  홈
+                </Link>
+              </li>
+              <li>
+                <div className="relative group">
+                  <Link 
+                    href="/teacher/dashboard"
+                    className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/teacher') ? 'font-medium text-primary' : ''}`}
+                  >
+                    교사용
+                  </Link>
+                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
+                    <div className="py-1">
+                      <Link 
+                        href="/teacher/dashboard"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        대시보드
+                      </Link>
+                      <Link 
+                        href="/teacher/session/create"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        세션 생성
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <Link 
+                  href="/un-veterans"
+                  className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/un-veterans') ? 'font-medium text-primary' : ''}`}
+                >
+                  6.25 참전국
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/guide"
+                  className={`text-gray-600 hover:text-primary ${pathname === '/guide' ? 'font-medium text-primary' : ''}`}
+                >
+                  이용 가이드
+                </Link>
+              </li>
+            </ul>
+            
+            {/* 인증 관련 버튼 */}
+            {!loading && (
+              <>
+                {user ? (
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 text-gray-700 hover:text-primary">
+                      <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                        {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
+                      </div>
+                      <span className="hidden lg:inline">{userProfile?.displayName || '사용자'}</span>
+                    </button>
+                    <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
+                      <div className="py-1">
+                        <Link 
+                          href="/teacher/dashboard"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          내 대시보드
+                        </Link>
+                        <button 
+                          onClick={handleLogout}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          로그아웃
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-3">
+                    <Link 
+                      href="/auth/login"
+                      className="text-gray-600 hover:text-primary"
+                    >
+                      로그인
+                    </Link>
+                    <Link 
+                      href="/auth/register"
+                      className="bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
+                    >
+                      회원가입
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </nav>
         
         {/* 모바일 네비게이션 오버레이 */}
@@ -90,12 +178,30 @@ export default function Header() {
                 </Link>
               </li>
               <li>
+                <div className="flex flex-col space-y-4">
+                  <Link 
+                    href="/teacher/dashboard"
+                    className={`text-xl ${pathname === '/teacher/dashboard' ? 'font-medium text-primary' : 'text-gray-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    교사 대시보드
+                  </Link>
+                  <Link 
+                    href="/teacher/session/create"
+                    className={`text-xl ${pathname === '/teacher/session/create' ? 'font-medium text-primary' : 'text-gray-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    세션 생성
+                  </Link>
+                </div>
+              </li>
+              <li>
                 <Link 
-                  href="/teacher/session/create"
-                  className={`text-xl ${pathname?.startsWith('/teacher') ? 'font-medium text-primary' : 'text-gray-600'}`}
+                  href="/un-veterans"
+                  className={`text-xl ${pathname?.startsWith('/un-veterans') ? 'font-medium text-primary' : 'text-gray-600'}`}
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  교사용
+                  6.25 참전국
                 </Link>
               </li>
               <li>
@@ -107,6 +213,48 @@ export default function Header() {
                   이용 가이드
                 </Link>
               </li>
+              
+              {/* 모바일 인증 메뉴 */}
+              {!loading && (
+                <li className="border-t border-gray-100 pt-6 mt-4 w-full">
+                  {user ? (
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-center gap-2 text-primary">
+                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                          {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
+                        </div>
+                        <span>{userProfile?.displayName || '사용자'}</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          handleLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className="text-gray-600 hover:text-primary"
+                      >
+                        로그아웃
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col space-y-4">
+                      <Link 
+                        href="/auth/login"
+                        className="text-xl text-gray-600"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        로그인
+                      </Link>
+                      <Link 
+                        href="/auth/register"
+                        className="text-xl text-primary"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        회원가입
+                      </Link>
+                    </div>
+                  )}
+                </li>
+              )}
             </ul>
           </div>
         </div>

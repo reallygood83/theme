@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { ref, onValue, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
@@ -23,6 +23,16 @@ export default function SessionManager({
   const [questions, setQuestions] = useState<Question[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisComplete, setAnalysisComplete] = useState(false)
+  
+  // 논제 편집 상태
+  const [isEditingAgendas, setIsEditingAgendas] = useState(false)
+  const [editedAgendas, setEditedAgendas] = useState<any[]>([])
+  const [isSavingAgendas, setIsSavingAgendas] = useState(false)
+  
+  // 용어 편집 상태
+  const [isEditingTerms, setIsEditingTerms] = useState(false)
+  const [editedTerms, setEditedTerms] = useState<any[]>([])
+  const [isSavingTerms, setIsSavingTerms] = useState(false)
   
   // 실시간 질문 업데이트 수신
   useEffect(() => {
@@ -102,6 +112,14 @@ export default function SessionManager({
     }
   }, [sessionId])
   
+  // 세션 변경시 논제 데이터 초기화
+  useEffect(() => {
+    if (session.aiAnalysisResult?.recommendedAgendas) {
+      setEditedAgendas(JSON.parse(JSON.stringify(session.aiAnalysisResult.recommendedAgendas)))
+      setAnalysisComplete(true)
+    }
+  }, [session.aiAnalysisResult])
+  
   const handleStartAnalysis = async () => {
     if (questions.length < 3) {
       alert('분석을 시작하기 위해서는 최소 3개 이상의 질문이 필요합니다.')
@@ -134,6 +152,84 @@ export default function SessionManager({
       console.error('AI 분석 오류:', error)
       alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
       setIsAnalyzing(false)
+    }
+  }
+  
+  // 논제 편집 시작
+  const handleEditAgendas = () => {
+    setIsEditingAgendas(true)
+  }
+  
+  // 논제 편집 취소
+  const handleCancelEditAgendas = () => {
+    if (session.aiAnalysisResult?.recommendedAgendas) {
+      setEditedAgendas(JSON.parse(JSON.stringify(session.aiAnalysisResult.recommendedAgendas)))
+    }
+    setIsEditingAgendas(false)
+  }
+  
+  // 개별 논제 항목 변경
+  const handleAgendaChange = (index: number, field: string, value: string) => {
+    const updatedAgendas = [...editedAgendas]
+    updatedAgendas[index] = {
+      ...updatedAgendas[index],
+      [field]: value
+    }
+    setEditedAgendas(updatedAgendas)
+  }
+  
+  // 논제 추가
+  const handleAddAgenda = () => {
+    const newAgenda = {
+      agendaId: `custom-${Date.now()}`,
+      agendaTitle: '',
+      reason: '',
+      type: '찬반형'
+    }
+    setEditedAgendas([...editedAgendas, newAgenda])
+  }
+  
+  // 논제 삭제
+  const handleDeleteAgenda = (index: number) => {
+    const updatedAgendas = [...editedAgendas]
+    updatedAgendas.splice(index, 1)
+    setEditedAgendas(updatedAgendas)
+  }
+  
+  // 논제 저장
+  const handleSaveAgendas = async () => {
+    // 제목 필드가 비어있는지 확인
+    const emptyTitleIndex = editedAgendas.findIndex(agenda => !agenda.agendaTitle.trim())
+    if (emptyTitleIndex !== -1) {
+      alert(`${emptyTitleIndex + 1}번 논제의 제목을 입력해주세요.`)
+      return
+    }
+    
+    setIsSavingAgendas(true)
+    
+    try {
+      const response = await fetch('/api/sessions/update-agendas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          agendas: editedAgendas
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('논제 업데이트에 실패했습니다.')
+      }
+      
+      // 수정 모드 종료
+      setIsEditingAgendas(false)
+    } catch (error) {
+      console.error('논제 업데이트 오류:', error)
+      alert('논제 저장 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsSavingAgendas(false)
     }
   }
   
@@ -251,25 +347,135 @@ export default function SessionManager({
           
           {session.aiAnalysisResult.recommendedAgendas && (
             <Card title="추천 토론 논제">
-              <div className="space-y-4">
-                {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
-                  <div key={index} className="border border-gray-200 rounded-md p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="bg-accent/10 text-accent rounded-full w-8 h-8 flex items-center justify-center font-medium">
-                        {index + 1}
-                      </div>
-                      <h3 className="font-medium text-lg">
-                        {agenda.agendaTitle}
-                      </h3>
-                    </div>
-                    <p className="text-gray-600 mb-2">{agenda.reason}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                        {agenda.type}
-                      </span>
-                    </div>
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  {session.aiAnalysisResult.isCustomized && (
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                      맞춤 수정됨
+                    </span>
+                  )}
+                </div>
+                
+                {isEditingAgendas ? (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50"
+                      onClick={handleCancelEditAgendas}
+                      disabled={isSavingAgendas}
+                    >
+                      취소
+                    </button>
+                    <button
+                      type="button"
+                      className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary/90"
+                      onClick={handleSaveAgendas}
+                      disabled={isSavingAgendas}
+                    >
+                      {isSavingAgendas ? (
+                        <span className="flex items-center">
+                          <svg className="animate-spin h-4 w-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          저장 중...
+                        </span>
+                      ) : '저장'}
+                    </button>
                   </div>
-                ))}
+                ) : (
+                  <button
+                    type="button"
+                    className="px-3 py-1 text-sm border border-primary text-primary rounded hover:bg-primary/5"
+                    onClick={handleEditAgendas}
+                  >
+                    논제 수정
+                  </button>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                {isEditingAgendas ? (
+                  // 편집 모드
+                  <div className="space-y-6">
+                    {editedAgendas.map((agenda, index) => (
+                      <div key={index} className="border border-gray-200 rounded-md p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-accent/10 text-accent rounded-full w-8 h-8 flex items-center justify-center font-medium">
+                              {index + 1}
+                            </div>
+                            <input
+                              type="text"
+                              value={agenda.agendaTitle}
+                              onChange={(e) => handleAgendaChange(index, 'agendaTitle', e.target.value)}
+                              className="font-medium text-lg border-b border-gray-200 focus:border-primary focus:outline-none px-2 py-1 w-full"
+                              placeholder="논제 제목을 입력하세요"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            className="text-red-500 hover:text-red-700"
+                            onClick={() => handleDeleteAgenda(index)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                        <textarea
+                          value={agenda.reason}
+                          onChange={(e) => handleAgendaChange(index, 'reason', e.target.value)}
+                          className="text-gray-600 mb-2 border border-gray-200 rounded w-full p-2 focus:outline-none focus:border-primary"
+                          placeholder="이 논제를 추천하는 이유"
+                          rows={2}
+                        />
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={agenda.type}
+                            onChange={(e) => handleAgendaChange(index, 'type', e.target.value)}
+                            className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-primary"
+                          >
+                            <option value="찬반형">찬반형</option>
+                            <option value="원인탐구형">원인탐구형</option>
+                            <option value="문제해결형">문제해결형</option>
+                            <option value="가치판단형">가치판단형</option>
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    <button
+                      type="button"
+                      className="w-full py-2 border border-dashed border-gray-300 rounded-md hover:bg-gray-50 text-gray-500"
+                      onClick={handleAddAgenda}
+                    >
+                      + 논제 추가하기
+                    </button>
+                  </div>
+                ) : (
+                  // 보기 모드
+                  <>
+                    {editedAgendas.map((agenda, index) => (
+                      <div key={index} className="border border-gray-200 rounded-md p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="bg-accent/10 text-accent rounded-full w-8 h-8 flex items-center justify-center font-medium">
+                            {index + 1}
+                          </div>
+                          <h3 className="font-medium text-lg">
+                            {agenda.agendaTitle}
+                          </h3>
+                        </div>
+                        <p className="text-gray-600 mb-2">{agenda.reason}</p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                            {agenda.type}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </Card>
           )}

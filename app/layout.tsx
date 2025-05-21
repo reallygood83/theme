@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,9 +34,11 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${inter.variable}`}>
       <body className="bg-background min-h-screen">
-        <main className="container mx-auto px-4 py-8">
-          {children}
-        </main>
+        <AuthProvider>
+          <main className="container mx-auto px-4 py-8">
+            {children}
+          </main>
+        </AuthProvider>
       </body>
     </html>
   )

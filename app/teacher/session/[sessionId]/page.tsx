@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Header from '@/components/common/Header'
+import RequireAuth from '@/components/auth/RequireAuth'
 import SessionManager from '@/components/teacher/SessionManager'
 import { database } from '@/lib/firebase'
 import { ref, get, getDatabase, Database } from 'firebase/database'
@@ -85,44 +86,32 @@ export default function SessionPage({ params }: SessionPageProps) {
     fetchSession()
   }, [sessionId])
   
-  if (loading) {
-    return (
-      <>
-        <Header />
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-gray-600">세션 데이터를 불러오는 중...</p>
-        </div>
-      </>
-    )
-  }
-  
-  if (error || !session) {
-    return (
-      <>
-        <Header />
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="bg-red-50 text-red-600 p-4 rounded-md inline-block">
-            <p className="font-medium">{error || '세션 데이터를 찾을 수 없습니다.'}</p>
-            <p className="mt-2 text-sm">
-              올바른 세션 ID를 확인하거나, 새 세션을 생성해주세요.
-            </p>
-          </div>
-        </div>
-      </>
-    )
-  }
-  
   return (
-    <>
+    <RequireAuth>
       <Header />
       <div className="max-w-4xl mx-auto">
-        <SessionManager 
-          sessionId={sessionId} 
-          sessionCode={sessionCode || session.accessCode}
-          initialSessionData={session}
-        />
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-4 text-gray-600">세션 데이터를 불러오는 중...</p>
+          </div>
+        ) : error || !session ? (
+          <div className="text-center py-12">
+            <div className="bg-red-50 text-red-600 p-4 rounded-md inline-block">
+              <p className="font-medium">{error || '세션 데이터를 찾을 수 없습니다.'}</p>
+              <p className="mt-2 text-sm">
+                올바른 세션 ID를 확인하거나, 새 세션을 생성해주세요.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <SessionManager 
+            sessionId={sessionId} 
+            sessionCode={sessionCode || session.accessCode}
+            initialSessionData={session}
+          />
+        )}
       </div>
-    </>
+    </RequireAuth>
   )
 }

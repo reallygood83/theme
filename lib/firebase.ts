@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getDatabase, Database } from 'firebase/database';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 
 // Firebase 환경 변수 설정
 const firebaseConfig = {
@@ -22,6 +23,7 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 // Firebase가 서버 사이드 렌더링 환경에서 안전하게 초기화되도록 조건부 초기화
 let database: Database | null = null;
 let firestore: Firestore | null = null;
+let auth: Auth | null = null;
 
 // 브라우저 환경이거나 Firebase 구성이 완전한 경우에만 초기화
 if (typeof window !== 'undefined' || 
@@ -32,10 +34,13 @@ if (typeof window !== 'undefined' ||
     
     // Firestore 인스턴스
     firestore = getFirestore(app);
+    
+    // Authentication 인스턴스
+    auth = getAuth(app);
   } catch (error) {
     console.error('Firebase 초기화 오류:', error);
   }
 }
 
-export { database, firestore };
+export { database, firestore, auth };
 export default app;

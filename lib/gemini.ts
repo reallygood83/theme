@@ -9,6 +9,9 @@ const genAI = new GoogleGenerativeAI(apiKey);
 // Gemini 모델 (Flash 모델)
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
+// 텍스트 생성을 위한 프로 모델 (번역 등 텍스트 작업에 적합)
+const proModel = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+
 // 질문 유목화 (Clustering) 함수
 export async function clusterQuestions(questions: string[]) {
   try {
@@ -145,5 +148,16 @@ export async function extractKeyTerms(agenda: string) {
   } catch (error) {
     console.error('Gemini API 호출 오류:', error);
     return { terms: [] };
+  }
+}
+
+// 일반 텍스트 생성 함수 (번역 등의 용도)
+export async function translateText(prompt: string): Promise<string> {
+  try {
+    const result = await proModel.generateContent(prompt);
+    return result.response.text();
+  } catch (error) {
+    console.error('Gemini API 텍스트 생성 오류:', error);
+    throw error;
   }
 }

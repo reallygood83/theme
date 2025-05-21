@@ -36,6 +36,9 @@ export interface Session {
     recommendedAgendas?: any[];
     extractedTerms?: any[];
   };
+  questions?: Record<string, Question>;
+  isDuplicated?: boolean;
+  duplicatedFrom?: string;
 }
 
 // 질문 타입 정의

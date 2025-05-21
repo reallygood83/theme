@@ -1,12 +1,13 @@
 'use client'
 
 import Header from '@/components/common/Header'
+import RequireAuth from '@/components/auth/RequireAuth'
 import Card from '@/components/common/Card'
 import CreateSessionForm from '@/components/teacher/CreateSessionForm'
 
 export default function CreateSessionPage() {
   return (
-    <>
+    <RequireAuth>
       <Header />
       <div className="max-w-4xl mx-auto">
         <Card title="새 토론 세션 만들기" className="mb-8">
@@ -51,6 +52,6 @@ export default function CreateSessionPage() {
           </div>
         </Card>
       </div>
-    </>
+    </RequireAuth>
   )
 }
