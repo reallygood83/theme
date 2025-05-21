@@ -95,8 +95,8 @@ export default function EduHub() {
           <h2 className="text-2xl font-semibold text-gray-700 mb-4">
             🌟 토론으로 성장하는 즐거움을 경험하세요 🌟
           </h2>
-          <p className="text-gray-600 max-w-3xl mx-auto">
-            토론은 단순한 주장의 대립이 아닌, 함께 생각하고 성장하는 과정입니다. 
+          <p className="text-gray-600 max-w-3xl mx-auto text-center">
+            토론은 단순한 주장의 대립이 아닌, 함께 생각하고 성장하는 과정입니다.<br />
             다양한 관점을 존중하며 더 나은 해결책을 찾아가는 여정에 초대합니다.
           </p>
         </div>
