@@ -171,7 +171,7 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
         }
         
         // 나머지 텍스트에서 논제 추출 시도
-        let currentAgenda = null;
+        let currentAgenda: { agendaTitle: string; reason: string; type: string } | null = null;
         for (const line of lines) {
           if (line.includes('논제') || line.includes('?')) {
             if (currentAgenda) {
@@ -184,7 +184,7 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
             };
           } else if (currentAgenda && !currentAgenda.reason && line.trim()) {
             currentAgenda.reason = line.trim();
-          } else if (currentAgenda && currentAgenda.reason && line.includes('찬반') || line.includes('원인') || line.includes('문제') || line.includes('가치')) {
+          } else if (currentAgenda && currentAgenda.reason && (line.includes('찬반') || line.includes('원인') || line.includes('문제') || line.includes('가치'))) {
             currentAgenda.type = line.trim();
           }
         }
