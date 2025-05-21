@@ -15,7 +15,7 @@ export default function Home() {
           <span className="sm:hidden">질문톡톡!</span>
         </h1>
         <p className="text-lg md:text-xl text-gray-600 max-w-2xl">
-          학생들의 질문으로 Gemini 2.0 Flash AI가 토론 논제를 발굴하는 교육 플랫폼
+          학생들의 질문으로 토론 논제를 발굴하는 교육 플랫폼
         </p>
       </div>
       
@@ -107,7 +107,15 @@ export default function Home() {
       
       <div className="mt-6 md:mt-8 text-center">
         <p className="text-xs md:text-sm text-gray-500">
-          © 2025 질문톡톡! 논제샘솟! | Google Gemini 2.0 Flash 활용
+          © 2025 질문톡톡! 논제샘솟! | 안양 박달초 김문정 | 
+          <a 
+            href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-primary hover:underline ml-1"
+          >
+            유튜브 배움의 달인
+          </a>
         </p>
       </div>
     </div>
