@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
@@ -8,7 +8,7 @@ import Header from '@/components/common/Header'
 import Button from '@/components/common/Button'
 import { loginUser } from '@/lib/auth'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -49,74 +49,83 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      <Header />
-      <div className="max-w-md mx-auto">
-        <div className="bg-white shadow-md rounded-lg p-6 md:p-8">
-          <h1 className="text-2xl font-bold text-center mb-6">로그인</h1>
-          
-          {error && (
-            <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
-              {error}
-            </div>
-          )}
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                이메일
-              </label>
-              <input
-                id="email"
-                type="email"
-                className="input-field"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                비밀번호
-              </label>
-              <input
-                id="password"
-                type="password"
-                className="input-field"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="flex justify-end">
-              <Link href="/auth/reset-password" className="text-sm text-primary hover:underline">
-                비밀번호를 잊으셨나요?
-              </Link>
-            </div>
-            
-            <Button
-              type="submit"
-              variant="primary"
-              fullWidth
-              isLoading={loading}
-              size="lg"
-            >
-              로그인
-            </Button>
-          </form>
-          
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              계정이 없으신가요? {' '}
-              <Link href="/auth/register" className="text-primary hover:underline font-medium">
-                회원가입
-              </Link>
-            </p>
+    <div className="max-w-md mx-auto">
+      <div className="bg-white shadow-md rounded-lg p-6 md:p-8">
+        <h1 className="text-2xl font-bold text-center mb-6">로그인</h1>
+        
+        {error && (
+          <div className="bg-red-50 text-red-700 p-3 rounded-md mb-4">
+            {error}
           </div>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              이메일
+            </label>
+            <input
+              id="email"
+              type="email"
+              className="input-field"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              비밀번호
+            </label>
+            <input
+              id="password"
+              type="password"
+              className="input-field"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="flex justify-end">
+            <Link href="/auth/reset-password" className="text-sm text-primary hover:underline">
+              비밀번호를 잊으셨나요?
+            </Link>
+          </div>
+          
+          <Button
+            type="submit"
+            variant="primary"
+            fullWidth
+            isLoading={loading}
+            size="lg"
+          >
+            로그인
+          </Button>
+        </form>
+        
+        <div className="mt-6 text-center">
+          <p className="text-sm text-gray-600">
+            계정이 없으신가요? {' '}
+            <Link href="/auth/register" className="text-primary hover:underline font-medium">
+              회원가입
+            </Link>
+          </p>
         </div>
       </div>
+    </div>
+  );
+}
+
+// 메인 페이지 컴포넌트
+export default function LoginPage() {
+  return (
+    <>
+      <Header />
+      <Suspense fallback={<div className="max-w-md mx-auto p-6 text-center">로딩 중...</div>}>
+        <LoginForm />
+      </Suspense>
     </>
-  )
+  );
 }
