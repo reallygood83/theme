@@ -148,17 +148,34 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   ...(value as any)
                 }))
                 
-                // 현재 학생/모둠의 논제만 필터링
-                const filteredAgendas = agendaArray.filter(
-                  a => a.studentGroup === studentGroup || a.studentName === studentName
-                )
+                // 학생 이름과 모둠이 유효한지 확인
+                const validStudentName = studentName?.trim() || '';
+                const validStudentGroup = studentGroup?.trim() || '';
+
+                console.log('학생 정보 확인:', { 이름: validStudentName, 모둠: validStudentGroup });
                 
-                console.log('학생 논제 실시간 업데이트:', { count: filteredAgendas.length, 모둠: studentGroup, 이름: studentName });
-                setStudentAgendas(filteredAgendas)
-                
-                // 논제가 생성되었으면 추천기 숨기기
-                if (filteredAgendas.length > 0) {
-                  setShowAgendaRecommender(false)
+                // 유효한 학생 정보가 있을 때만 필터링
+                if (validStudentName && validStudentGroup) {
+                  // 현재 학생/모둠의 논제만 필터링
+                  const filteredAgendas = agendaArray.filter(
+                    a => (a.studentGroup === validStudentGroup || a.studentName === validStudentName)
+                  );
+                  
+                  console.log('학생 논제 실시간 업데이트:', { 
+                    count: filteredAgendas.length, 
+                    모둠: validStudentGroup, 
+                    이름: validStudentName,
+                    필터링_전_전체갯수: agendaArray.length
+                  });
+                  
+                  setStudentAgendas(filteredAgendas);
+                  
+                  // 논제가 생성되었으면 추천기 숨기기
+                  if (filteredAgendas.length > 0) {
+                    setShowAgendaRecommender(false);
+                  }
+                } else {
+                  console.warn('유효한 학생 정보가 없어 논제를 필터링할 수 없습니다.');
                 }
               }
             })
@@ -186,24 +203,39 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   
   const handleJoinSession = (e: React.FormEvent) => {
     e.preventDefault()
-    if (studentName.trim() && studentGroup.trim()) {
-      setHasJoined(true)
-      
-      // 브라우저 세션 스토리지에 저장
-      sessionStorage.setItem(`session_${sessionCode}_name`, studentName.trim())
-      sessionStorage.setItem(`session_${sessionCode}_group`, studentGroup.trim())
+    
+    const trimmedName = studentName.trim();
+    const trimmedGroup = studentGroup.trim();
+    
+    if (!trimmedName || !trimmedGroup) {
+      alert('이름과 모둠 정보를 모두 입력해주세요.');
+      return;
     }
+    
+    // 입력값 업데이트
+    setStudentName(trimmedName);
+    setStudentGroup(trimmedGroup);
+    setHasJoined(true);
+    
+    // 브라우저 세션 스토리지에 저장
+    sessionStorage.setItem(`session_${sessionCode}_name`, trimmedName);
+    sessionStorage.setItem(`session_${sessionCode}_group`, trimmedGroup);
+    
+    console.log('세션 참여 정보:', { 이름: trimmedName, 모둠: trimmedGroup });
   }
   
   // 세션 스토리지에서 참여 정보 복원
   useEffect(() => {
-    const savedName = sessionStorage.getItem(`session_${sessionCode}_name`)
-    const savedGroup = sessionStorage.getItem(`session_${sessionCode}_group`)
+    const savedName = sessionStorage.getItem(`session_${sessionCode}_name`) || '';
+    const savedGroup = sessionStorage.getItem(`session_${sessionCode}_group`) || '';
     
-    if (savedName && savedGroup) {
-      setStudentName(savedName)
-      setStudentGroup(savedGroup)
-      setHasJoined(true)
+    if (savedName.trim() && savedGroup.trim()) {
+      setStudentName(savedName.trim());
+      setStudentGroup(savedGroup.trim());
+      setHasJoined(true);
+      console.log('세션 정보 복원됨:', { 이름: savedName.trim(), 모둠: savedGroup.trim() });
+    } else {
+      console.log('저장된 세션 정보 없음');
     }
   }, [sessionCode])
   
@@ -211,10 +243,20 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const handleRequestAgendas = async (topic: string, description: string, useQuestions: boolean = false) => {
     if (!sessionId || (!topic && !useQuestions)) return
     
+    if (!studentName.trim() || !studentGroup.trim()) {
+      alert('이름과 모둠 정보가 필요합니다. 다시 로그인해주세요.');
+      return;
+    }
+    
     setIsGeneratingAgendas(true)
     
     try {
-      console.log('논제 추천 요청 시작:', { topic, useQuestions });
+      console.log('논제 추천 요청 시작:', { 
+        topic, 
+        useQuestions,
+        studentName: studentName.trim(), 
+        studentGroup: studentGroup.trim() 
+      });
       
       const response = await fetch('/api/ai/recommend-agendas', {
         method: 'POST',
@@ -225,8 +267,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           sessionId,
           topic,
           description,
-          studentName,
-          studentGroup,
+          studentName: studentName.trim(),
+          studentGroup: studentGroup.trim(),
           useQuestions
         }),
       })
