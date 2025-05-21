@@ -270,16 +270,14 @@ export default function SessionManager({
           </div>
         </div>
         
-        {!analysisComplete && (
-          <Button
-            variant="primary"
-            onClick={handleStartAnalysis}
-            isLoading={isAnalyzing}
-            disabled={isAnalyzing || questions.length < 3}
-          >
-            {isAnalyzing ? 'AI 분석 중...' : 'AI 분석 시작'}
-          </Button>
-        )}
+        <Button
+          variant={analysisComplete ? "secondary" : "primary"}
+          onClick={handleStartAnalysis}
+          isLoading={isAnalyzing}
+          disabled={isAnalyzing || questions.length < 3}
+        >
+          {isAnalyzing ? 'AI 분석 중...' : analysisComplete ? 'AI 재분석 시작' : 'AI 분석 시작'}
+        </Button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
