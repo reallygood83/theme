@@ -214,7 +214,15 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
         const newAgendaRef = push(studentAgendasRef)
         
         // 저장할 데이터 구성
-        const dataToSave = {
+        const dataToSave: {
+          recommendedAgendas: any[];
+          topic: any;
+          description: string;
+          studentName: any;
+          studentGroup: any;
+          createdAt: number;
+          questionAnalysis?: string;
+        } = {
           recommendedAgendas: parsedResponse.recommendedAgendas,
           topic,
           description: description || '',
