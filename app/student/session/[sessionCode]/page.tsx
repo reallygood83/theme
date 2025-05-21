@@ -42,8 +42,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         const snapshot = await get(sessionsRef)
         
         if (snapshot.exists()) {
-          let foundSessionId = null
-          let foundSession = null
+          let foundSessionId: string | null = null
+          let foundSession: Session | null = null
           
           snapshot.forEach((childSnapshot) => {
             const sessionData = childSnapshot.val()
