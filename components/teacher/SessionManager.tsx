@@ -24,6 +24,9 @@ export default function SessionManager({
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisComplete, setAnalysisComplete] = useState(false)
   
+  // 토스트 메시지 상태
+  const [showToast, setShowToast] = useState(false)
+  
   // 논제 편집 상태
   const [isEditingAgendas, setIsEditingAgendas] = useState(false)
   const [editedAgendas, setEditedAgendas] = useState<any[]>([])
@@ -234,26 +237,35 @@ export default function SessionManager({
   }
   
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
+      {showToast && (
+        <div className="fixed bottom-4 right-4 bg-green-100 border border-green-200 text-green-800 px-4 py-3 rounded-lg shadow-lg flex items-center z-50 animate-fade-in-out">
+          <svg className="w-5 h-5 mr-2 text-green-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M5 13l4 4L19 7"></path>
+          </svg>
+          세션 코드가 클립보드에 복사되었습니다
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">토론 세션 관리</h1>
-          <div className="flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2">
             <p className="text-gray-600">
               세션 코드: <span className="font-medium">{sessionCode}</span>
             </p>
             <button
               type="button"
-              className="inline-flex items-center text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded"
+              className="inline-flex items-center text-sm bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-md border border-primary/20"
               onClick={() => {
                 navigator.clipboard.writeText(sessionCode);
-                alert('세션 코드가 클립보드에 복사되었습니다.');
+                setShowToast(true);
+                setTimeout(() => setShowToast(false), 2000);
               }}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
-              복사
+              복사하기
             </button>
           </div>
         </div>
