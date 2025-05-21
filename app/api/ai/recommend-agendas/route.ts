@@ -134,10 +134,16 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
       }
       
       console.log('파싱 시도할 JSON 문자열:', jsonString);
-      parsedResponse = JSON.parse(jsonString);
+      const parsedData = JSON.parse(jsonString);
+      
+      // 타입 안전성을 위해 필요한 필드를 가진 새 객체로 명시적 변환
+      parsedResponse = {
+        recommendedAgendas: parsedData.recommendedAgendas || [],
+        questionAnalysis: parsedData.questionAnalysis
+      };
       
       // 필요한 필드 확인 및 기본값 제공
-      if (!parsedResponse.recommendedAgendas && useQuestions && studentQuestions.length > 0) {
+      if (!parsedResponse.recommendedAgendas.length && useQuestions && studentQuestions.length > 0) {
         // 질문 기반 프롬프트에서는 recommendedAgendas가 필수
         throw new Error('응답에 recommendedAgendas 필드가 없습니다');
       }
@@ -150,9 +156,13 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
         // AI 응답이 구조화되지 않은 경우 강제로 형식 맞추기 시도
         const lines = response.split('\n').filter(line => line.trim() !== '');
         
-        // 기본 구조 생성
+        // 기본 구조 생성 (타입 단언 사용)
         parsedResponse = {
-          recommendedAgendas: []
+          recommendedAgendas: [],
+          questionAnalysis: undefined
+        } as { 
+          recommendedAgendas: any[]; 
+          questionAnalysis?: string;
         };
         
         // 질문 분석이 있을 경우 (첫 줄이 제목이 아닌 경우)
