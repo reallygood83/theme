@@ -349,7 +349,7 @@ export default function SessionManager({
             <Card title="추천 토론 논제">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  {session.aiAnalysisResult.isCustomized && (
+                  {session.aiAnalysisResult?.isCustomized && (
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                       맞춤 수정됨
                     </span>

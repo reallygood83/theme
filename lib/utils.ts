@@ -35,6 +35,7 @@ export interface Session {
     clusteredQuestions?: any[];
     recommendedAgendas?: any[];
     extractedTerms?: any[];
+    isCustomized?: boolean;
   };
   questions?: Record<string, Question>;
   isDuplicated?: boolean;
