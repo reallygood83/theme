@@ -9,6 +9,8 @@ import QuestionInput from '@/components/student/QuestionInput'
 import QuestionList from '@/components/student/QuestionList'
 import QuestionHelper from '@/components/student/QuestionHelper'
 import AgendaValidator from '@/components/student/AgendaValidator'
+import AgendaRecommender from '@/components/student/AgendaRecommender'
+import AgendaDisplay from '@/components/student/AgendaDisplay'
 import TermDefinition from '@/components/student/TermDefinition'
 import { database } from '@/lib/firebase'
 import { ref, get, onValue, getDatabase, Database } from 'firebase/database'
@@ -33,6 +35,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAnalysisResult, setShowAnalysisResult] = useState(false)
+  
+  // AI 논제 추천 관련 상태
+  const [showAgendaRecommender, setShowAgendaRecommender] = useState(false)
+  const [isGeneratingAgendas, setIsGeneratingAgendas] = useState(false)
+  const [studentAgendas, setStudentAgendas] = useState<any[]>([])
   
   // 세션 코드로 세션 정보 조회
   useEffect(() => {
@@ -105,10 +112,47 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                 if (updatedSession.aiAnalysisResult) {
                   setShowAnalysisResult(true)
                 }
+                
+                // 학생 논제 데이터 있는지 확인
+                if (updatedSession.studentAgendas) {
+                  const agendaArray = Object.entries(updatedSession.studentAgendas).map(([key, value]) => ({
+                    agendaId: key,
+                    ...(value as any)
+                  }))
+                  
+                  // 현재 학생/모둠의 논제만 필터링
+                  const filteredAgendas = agendaArray.filter(
+                    a => a.studentGroup === studentGroup || a.studentName === studentName
+                  )
+                  
+                  setStudentAgendas(filteredAgendas)
+                }
               }
             })
             
-            return () => unsubscribe()
+            // 학생 논제 실시간 업데이트 수신
+            const studentAgendasRef = ref(db, `sessions/${foundSessionId}/studentAgendas`)
+            const agendasUnsubscribe = onValue(studentAgendasRef, (snapshot) => {
+              if (snapshot.exists()) {
+                const agendasData = snapshot.val()
+                const agendaArray = Object.entries(agendasData).map(([key, value]) => ({
+                  agendaId: key,
+                  ...(value as any)
+                }))
+                
+                // 현재 학생/모둠의 논제만 필터링
+                const filteredAgendas = agendaArray.filter(
+                  a => a.studentGroup === studentGroup || a.studentName === studentName
+                )
+                
+                setStudentAgendas(filteredAgendas)
+              }
+            })
+            
+            return () => {
+              unsubscribe()
+              agendasUnsubscribe()
+            }
           } else {
             setError('유효하지 않은 세션 코드입니다.')
           }
@@ -148,6 +192,41 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       setHasJoined(true)
     }
   }, [sessionCode])
+  
+  // AI 논제 추천 요청 처리
+  const handleRequestAgendas = async (topic: string, description: string) => {
+    if (!sessionId || !topic) return
+    
+    setIsGeneratingAgendas(true)
+    
+    try {
+      const response = await fetch('/api/ai/recommend-agendas', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          topic,
+          description,
+          studentName,
+          studentGroup
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('논제 추천 요청에 실패했습니다.')
+      }
+      
+      // 서버 응답을 기다릴 필요가 없음 - Firebase 실시간 업데이트로 데이터를 수신함
+      setShowAgendaRecommender(false)
+    } catch (error) {
+      console.error('AI 논제 추천 오류:', error)
+      alert('논제 추천 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsGeneratingAgendas(false)
+    }
+  }
   
   if (loading) {
     return (
@@ -289,9 +368,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               <a href="#helper" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 질문 도우미
               </a>
+              <a href="#ai-agenda" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                AI 논제 추천
+              </a>
               {showAnalysisResult && (
                 <a href="#result" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                  AI 분석 결과
+                  교사 분석 결과
                 </a>
               )}
             </nav>
@@ -319,9 +401,38 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               <QuestionHelper />
             </div>
             
+            {/* AI 논제 관련 컴포넌트 */}
+            <div id="ai-agenda" className="mt-4 md:mt-6">
+              {showAgendaRecommender ? (
+                <AgendaRecommender
+                  onRequestAgendas={handleRequestAgendas}
+                  isLoading={isGeneratingAgendas}
+                />
+              ) : studentAgendas.length > 0 ? (
+                <AgendaDisplay
+                  agendas={studentAgendas}
+                  onCreateNew={() => setShowAgendaRecommender(true)}
+                />
+              ) : (
+                <Card title="AI 논제 추천">
+                  <div className="text-center py-6">
+                    <p className="text-gray-600 mb-4">
+                      모둠에서 토론하고 싶은 주제에 대해 AI가 논제를 추천해드립니다.
+                    </p>
+                    <Button 
+                      variant="primary"
+                      onClick={() => setShowAgendaRecommender(true)}
+                    >
+                      AI 논제 추천 시작하기
+                    </Button>
+                  </div>
+                </Card>
+              )}
+            </div>
+            
             {showAnalysisResult && session.aiAnalysisResult && (
-              <div id="result">
-                <Card title="AI 추천 논제" className="shadow-md hover:shadow-lg transition-shadow">
+              <div id="result" className="mt-4 md:mt-6">
+                <Card title="교사 분석 논제" className="shadow-md hover:shadow-lg transition-shadow">
                   {session.aiAnalysisResult.recommendedAgendas && (
                     <div className="space-y-4">
                       {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
@@ -368,12 +479,18 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               </svg>
               <span className="text-xs mt-1">도우미</span>
             </a>
+            <a href="#ai-agenda" className="flex flex-col items-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="text-xs mt-1">AI 논제</span>
+            </a>
             {showAnalysisResult && (
               <a href="#result" className="flex flex-col items-center text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span className="text-xs mt-1">논제</span>
+                <span className="text-xs mt-1">교사 논제</span>
               </a>
             )}
           </div>
