@@ -1,23 +1,75 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
-import { ref, push, set } from 'firebase/database'
+import { ref, push, set, get } from 'firebase/database'
 import { generateContent } from '@/lib/gemini'
 
 // 학생용 AI 논제 추천 API
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { sessionId, topic, description, studentName, studentGroup } = body
+    const { sessionId, topic, description, studentName, studentGroup, useQuestions = false } = body
     
-    if (!sessionId || !topic || !studentName || !studentGroup) {
+    if (!sessionId || (!topic && !useQuestions) || !studentName || !studentGroup) {
       return NextResponse.json(
         { error: '필수 정보가 누락되었습니다.' },
         { status: 400 }
       )
     }
     
+    // 학생들의 질문 수집 (useQuestions가 true인 경우)
+    let studentQuestions: string[] = []
+    if (useQuestions && database) {
+      try {
+        const questionsRef = ref(database, `sessions/${sessionId}/questions`)
+        const snapshot = await get(questionsRef)
+        
+        if (snapshot.exists()) {
+          const questionsData = snapshot.val()
+          const questionsList = Object.values(questionsData)
+          
+          // 질문 텍스트만 추출
+          studentQuestions = questionsList.map((q: any) => q.text || '').filter(Boolean)
+        }
+      } catch (error) {
+        console.error('질문 데이터 로드 오류:', error)
+      }
+    }
+    
     // Gemini 모델을 사용하여 토론 논제 생성
-    const prompt = `
+    let prompt = '';
+    
+    if (useQuestions && studentQuestions.length > 0) {
+      // 학생 질문 기반 프롬프트 (질문이 있고 useQuestions가 true인 경우)
+      prompt = `
+당신은 학생들의 토론 활동을 돕는 AI 교육 도우미입니다.
+학생들이 수업에서 제출한 질문들을 분석하여 그들이 가장 관심을 갖고 있는 주제에 대한 토론 논제 3개를 생성해주세요.
+
+${topic ? `주제: ${topic}` : ''}
+${description ? `추가 설명: ${description}` : ''}
+
+학생들의 질문 목록:
+${studentQuestions.map((q, i) => `${i+1}. ${q}`).join('\n')}
+
+1. 위 질문들을 분석하여 학생들이 가장 관심을 가지고 있는 주제와 논점을 파악하세요.
+2. 학생들의 질문에서 나타난 관심사와 궁금증을 반영한 토론 논제를 생성하세요.
+3. 질문에서 드러난 다양한 관점과 쟁점을 고려하세요.
+
+다음 형식으로 응답해 주세요:
+{
+  "questionAnalysis": "학생들의 질문에서 발견한 주요 관심사와 패턴에 대한 간략한 설명 (2-3문장)",
+  "recommendedAgendas": [
+    {
+      "agendaTitle": "논제 제목 (질문 형태로)",
+      "reason": "이 논제를 추천하는 이유와 어떤 학생 질문에서 영감을 얻었는지 (2-3문장)",
+      "type": "논제 유형 (찬반형, 원인탐구형, 문제해결형, 가치판단형 중 하나)"
+    },
+    // 나머지 논제들...
+  ]
+}
+`;
+    } else {
+      // 일반 주제 기반 프롬프트 (질문이 없거나 useQuestions가 false인 경우)
+      prompt = `
 당신은 학생들의 토론 활동을 돕는 AI 교육 도우미입니다. 
 학생들이 제안한 주제에 맞는 좋은 토론 논제 3개를 생성해주세요.
 
@@ -35,7 +87,11 @@ ${description ? `추가 설명: ${description}` : ''}
     // 나머지 논제들...
   ]
 }
-
+`;
+    }
+    
+    // 두 프롬프트 모두에 적용되는 공통 가이드라인
+    prompt += `
 생성할 때 다음 사항을 고려하세요:
 1. 논제는 찬성과 반대 입장이 명확하게 나뉠 수 있어야 합니다.
 2. 연령대에 적합하고 이해하기 쉬운 언어로 작성하세요.

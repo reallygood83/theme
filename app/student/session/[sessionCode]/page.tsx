@@ -194,8 +194,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   }, [sessionCode])
   
   // AI 논제 추천 요청 처리
-  const handleRequestAgendas = async (topic: string, description: string) => {
-    if (!sessionId || !topic) return
+  const handleRequestAgendas = async (topic: string, description: string, useQuestions: boolean = false) => {
+    if (!sessionId || (!topic && !useQuestions)) return
     
     setIsGeneratingAgendas(true)
     
@@ -210,7 +210,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           topic,
           description,
           studentName,
-          studentGroup
+          studentGroup,
+          useQuestions
         }),
       })
       

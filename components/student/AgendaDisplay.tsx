@@ -12,6 +12,7 @@ interface Agenda {
 
 interface StudentAgenda {
   recommendedAgendas: Agenda[]
+  questionAnalysis?: string  // 질문 분석 결과 (선택적)
   topic: string
   description: string
   studentName: string
@@ -89,7 +90,7 @@ export default function AgendaDisplay({ agendas, onCreateNew }: AgendaDisplayPro
         {selectedAgenda && (
           <div className="mb-4">
             <div className="bg-primary/5 p-4 rounded-md mb-4">
-              <h3 className="font-medium text-primary mb-1">주제: {selectedAgenda.topic}</h3>
+              <h3 className="font-medium text-primary mb-1">주제: {selectedAgenda.topic || '(질문 기반 분석)'}</h3>
               {selectedAgenda.description && (
                 <p className="text-sm text-gray-600">{selectedAgenda.description}</p>
               )}
@@ -98,6 +99,14 @@ export default function AgendaDisplay({ agendas, onCreateNew }: AgendaDisplayPro
                 {new Date(selectedAgenda.createdAt).toLocaleString('ko-KR')}
               </div>
             </div>
+            
+            {/* 질문 분석 결과 표시 (있는 경우) */}
+            {selectedAgenda.questionAnalysis && (
+              <div className="mb-4 bg-blue-50 p-4 rounded-md">
+                <h3 className="font-medium text-blue-800 mb-1">질문 분석 결과</h3>
+                <p className="text-sm text-blue-700">{selectedAgenda.questionAnalysis}</p>
+              </div>
+            )}
             
             <div className="space-y-4">
               {selectedAgenda.recommendedAgendas.map((agenda, index) => (
