@@ -106,9 +106,8 @@ ${nationData.type === 'combat'
     
     setTranslating(true)
     try {
-      const language = selectedNation.languages?.[0] || 'en'
-      const translated = await translateLetter(letterForm.content, language)
-      setTranslatedContent(translated)
+      // 번역 기능이 비활성화되었으므로 임시 메시지 표시
+      setTranslatedContent("번역 기능은 현재 사용할 수 없습니다. 추후 업데이트 예정입니다.")
       setPreviewMode(true)
     } catch (error) {
       console.error('번역 오류:', error)

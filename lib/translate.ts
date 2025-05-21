@@ -42,76 +42,17 @@ export const languageNames: Record<SupportedLanguage, string> = {
 }
 
 /**
- * Translates a letter from Korean to the specified language
- * @param text The Korean text to translate
- * @param targetLang The target language code
- * @returns The translated text
+ * This function is disabled in the current version of the application.
+ * It was used for the Korean War Veterans letter translation feature.
  */
 export async function translateLetter(text: string, targetLang: string = 'en'): Promise<string> {
-  try {
-    // In a real implementation, this would use an API like Google Translate
-    // For now, we'll use Gemini to perform the translation
-    
-    // Check if the target language is supported
-    if (!Object.keys(languageNames).includes(targetLang)) {
-      console.warn(`Language '${targetLang}' not directly supported, falling back to English.`)
-      targetLang = 'en'
-    }
-    
-    const prompt = `
-      You are a professional translator specializing in translating educational content from Korean students.
-      
-      Please translate the following Korean text to ${targetLang === 'en' ? 'English' : languageNames[targetLang as SupportedLanguage]}. 
-      
-      Maintain the tone, emotion, and meaning of the original text while making it natural in the target language.
-      Preserve paragraph breaks and formatting.
-      
-      Korean text to translate:
-      "${text}"
-      
-      Translation:
-    `
-    
-    const translation = await translateText(prompt)
-    return translation
-  } catch (error) {
-    console.error('Translation error:', error)
-    throw new Error('Translation failed. Please try again later.')
-  }
+  return "Translation functionality is disabled.";
 }
 
 /**
- * Gets a sample translation for development/testing purposes
- * @param targetLang The target language code
- * @returns A sample translated text
+ * This function is disabled in the current version of the application.
+ * It was used for sample translations in the Korean War Veterans feature.
  */
 export function getSampleTranslation(targetLang: string): string {
-  // This is just for development/demo purposes
-  const sampleTranslations: Record<string, string> = {
-    en: `Question: Why do you think debate is important in a democratic society?
-
-I think debate is important in a democratic society because it allows for different perspectives to be heard and considered. When people engage in thoughtful debate, they are exposed to ideas and viewpoints they might not have considered before.
-
-Debate also helps us refine our thinking and identify flaws in our reasoning. By having our ideas challenged, we can develop stronger arguments and better solutions to complex problems.
-
-Finally, debate teaches important skills like critical thinking, active listening, and respectful disagreement - all necessary for citizens in a healthy democracy.`,
-    
-    fr: `Question: Pourquoi pensez-vous que le débat est important dans une société démocratique?
-
-Je pense que le débat est important dans une société démocratique car il permet d'entendre et de prendre en compte différentes perspectives. Lorsque les gens participent à un débat réfléchi, ils sont exposés à des idées et des points de vue qu'ils n'auraient peut-être pas envisagés auparavant.
-
-Le débat nous aide également à affiner notre réflexion et à identifier les failles dans notre raisonnement. En ayant nos idées remises en question, nous pouvons développer des arguments plus solides et de meilleures solutions aux problèmes complexes.
-
-Enfin, le débat enseigne des compétences importantes comme la pensée critique, l'écoute active et le désaccord respectueux - toutes nécessaires aux citoyens dans une démocratie saine.`,
-    
-    tr: `Soru: Demokratik bir toplumda tartışmanın neden önemli olduğunu düşünüyorsunuz?
-
-Demokratik bir toplumda tartışmanın önemli olduğunu düşünüyorum çünkü farklı bakış açılarının duyulmasına ve dikkate alınmasına olanak tanıyor. İnsanlar düşünceli bir tartışmaya girdiklerinde, daha önce düşünmemiş olabilecekleri fikir ve bakış açılarına maruz kalırlar.
-
-Tartışma aynı zamanda düşüncemizi geliştirmemize ve mantığımızdaki kusurları belirlememize yardımcı olur. Fikirlerimiz sorgulandığında, karmaşık sorunlara daha güçlü argümanlar ve daha iyi çözümler geliştirebiliriz.
-
-Son olarak, tartışma, eleştirel düşünme, aktif dinleme ve saygılı anlaşmazlık gibi sağlıklı bir demokraside vatandaşlar için gerekli olan önemli becerileri öğretir.`
-  }
-  
-  return sampleTranslations[targetLang] || sampleTranslations['en']
+  return "Sample translation functionality is disabled.";
 }
