@@ -59,14 +59,14 @@ export async function translateLetter(text: string, targetLang: string = 'en'): 
     }
     
     const prompt = `
-      You are a professional translator specializing in translating heartfelt letters from Korean students to the veterans and citizens of countries that participated in the Korean War.
+      You are a professional translator specializing in translating messages from Korean students.
       
-      Please translate the following Korean letter to ${targetLang === 'en' ? 'English' : languageNames[targetLang as SupportedLanguage]}. 
+      Please translate the following Korean text to ${targetLang === 'en' ? 'English' : languageNames[targetLang as SupportedLanguage]}. 
       
       Maintain the tone, emotion, and meaning of the original text while making it natural in the target language.
       Preserve paragraph breaks and formatting.
       
-      Korean letter to translate:
+      Korean text to translate:
       "${text}"
       
       Translation:
@@ -88,35 +88,35 @@ export async function translateLetter(text: string, targetLang: string = 'en'): 
 export function getSampleTranslation(targetLang: string): string {
   // This is just for development/demo purposes
   const sampleTranslations: Record<string, string> = {
-    en: `Dear veterans and citizens of the United States,
+    en: `Dear friends,
 
-I am a student from South Korea, and I would like to express my deepest gratitude for the courage and sacrifice your country showed for Korea during the Korean War from 1950 to 1953.
+I am a student from South Korea, and I would like to share my thoughts on the topic we discussed in class today.
 
-The 1,789,000 soldiers sent from your country fought for freedom and peace.
+I found the discussion very interesting and learned a lot from hearing different perspectives.
 
-Without your sacrifice and help, today's South Korea would not exist. We will never forget this debt of gratitude, and hope that the friendship between our two countries will continue to deepen in the future.
+I hope we can continue these kinds of discussions in the future as they help us develop critical thinking skills.
 
-Thank you from the bottom of my heart.`,
+Thank you for reading my message.`,
     
-    fr: `Chers vétérans et citoyens de la France,
+    fr: `Chers amis,
 
-Je suis un étudiant de la Corée du Sud, et je voudrais exprimer ma plus profonde gratitude pour le courage et le sacrifice dont votre pays a fait preuve pour la Corée pendant la guerre de Corée de 1950 à 1953.
+Je suis un étudiant de la Corée du Sud, et je voudrais partager mes réflexions sur le sujet que nous avons discuté en classe aujourd'hui.
 
-Les soldats envoyés par votre pays ont combattu pour la liberté et la paix.
+J'ai trouvé la discussion très intéressante et j'ai beaucoup appris en entendant différentes perspectives.
 
-Sans votre sacrifice et votre aide, la Corée du Sud d'aujourd'hui n'existerait pas. Nous n'oublierons jamais cette dette de gratitude, et espérons que l'amitié entre nos deux pays continuera à s'approfondir à l'avenir.
+J'espère que nous pourrons continuer ce genre de discussions à l'avenir car elles nous aident à développer des compétences de pensée critique.
 
-Je vous remercie du fond du cœur.`,
+Merci d'avoir lu mon message.`,
     
-    tr: `Türkiye'nin değerli gazileri ve vatandaşları,
+    tr: `Değerli arkadaşlar,
 
-Ben Güney Kore'den bir öğrenciyim ve 1950'den 1953'e kadar süren Kore Savaşı sırasında ülkenizin Kore için gösterdiği cesaret ve fedakarlık için en derin minnettarlığımı ifade etmek istiyorum.
+Ben Güney Kore'den bir öğrenciyim ve bugün sınıfta tartıştığımız konu hakkındaki düşüncelerimi paylaşmak istiyorum.
 
-Ülkenizden gönderilen 21.212 asker özgürlük ve barış için savaştı.
+Tartışmayı çok ilginç buldum ve farklı bakış açılarını duyarak çok şey öğrendim.
 
-Sizin fedakarlığınız ve yardımınız olmasaydı, bugünkü Güney Kore var olmazdı. Bu minnettarlık borcunu asla unutmayacağız ve iki ülkemiz arasındaki dostluğun gelecekte daha da derinleşmesini umuyoruz.
+Eleştirel düşünme becerilerimizi geliştirmemize yardımcı oldukları için gelecekte bu tür tartışmalara devam edebileceğimizi umuyorum.
 
-Kalbimin derinliklerinden teşekkür ederim.`
+Mesajımı okuduğunuz için teşekkür ederim.`
   }
   
   return sampleTranslations[targetLang] || sampleTranslations['en']
