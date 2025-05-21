@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { ref, onValue } from 'firebase/database'
+import { ref, onValue, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
+import { initializeApp } from 'firebase/app'
 import Button from '../common/Button'
 import Card from '../common/Card'
 import { Session, Question } from '@/lib/utils'
@@ -25,7 +26,39 @@ export default function SessionManager({
   
   // 실시간 질문 업데이트 수신
   useEffect(() => {
-    const questionsRef = ref(database, `sessions/${sessionId}/questions`)
+    // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
+    let db: Database | null = database;
+    
+    // Firebase 환경 변수 확인 및 필요시 재초기화
+    if (!db) {
+      const firebaseConfig = {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
+          (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
+            ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
+            : undefined)
+      };
+      
+      if (!firebaseConfig.databaseURL) {
+        console.error('Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.');
+        return;
+      }
+      
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+      } catch (error) {
+        console.error('Firebase 초기화 오류:', error);
+        return;
+      }
+    }
+    
+    const questionsRef = ref(db, `sessions/${sessionId}/questions`)
     
     const unsubscribe = onValue(questionsRef, (snapshot) => {
       const questionsData = snapshot.val()
@@ -44,7 +77,7 @@ export default function SessionManager({
     })
     
     // 세션 정보 실시간 동기화
-    const sessionRef = ref(database, `sessions/${sessionId}`)
+    const sessionRef = ref(db, `sessions/${sessionId}`)
     
     const sessionUnsubscribe = onValue(sessionRef, (snapshot) => {
       const sessionData = snapshot.val()

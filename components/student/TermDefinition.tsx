@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, FormEvent, useEffect } from 'react'
-import { ref, onValue, push, set } from 'firebase/database'
+import { ref, onValue, push, set, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
+import { initializeApp } from 'firebase/app'
 import Card from '../common/Card'
 import Button from '../common/Button'
 import { TermDefinition } from '@/lib/utils'
@@ -25,7 +26,39 @@ export default function TermDefinitionComponent({
   
   // 기존 용어 정의 목록 가져오기
   useEffect(() => {
-    const definitionsRef = ref(database, `sessions/${sessionId}/termDefinitions`)
+    // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
+    let db: Database | null = database;
+    
+    // Firebase 환경 변수 확인 및 필요시 재초기화
+    if (!db) {
+      const firebaseConfig = {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
+          (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
+            ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
+            : undefined)
+      };
+      
+      if (!firebaseConfig.databaseURL) {
+        console.error('Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.');
+        return;
+      }
+      
+      try {
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+      } catch (error) {
+        console.error('Firebase 초기화 오류:', error);
+        return;
+      }
+    }
+    
+    const definitionsRef = ref(db, `sessions/${sessionId}/termDefinitions`)
     
     const unsubscribe = onValue(definitionsRef, (snapshot) => {
       const definitionsData = snapshot.val()
@@ -53,8 +86,33 @@ export default function TermDefinitionComponent({
     setIsSubmitting(true)
     
     try {
+      // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
+      let db: Database | null = database;
+      
+      if (!db) {
+        const firebaseConfig = {
+          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+          databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
+            (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
+              ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
+              : undefined)
+        };
+        
+        if (!firebaseConfig.databaseURL) {
+          throw new Error('Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.');
+        }
+        
+        const app = initializeApp(firebaseConfig);
+        db = getDatabase(app);
+      }
+      
       // 데이터베이스에 용어 정의 추가
-      const definitionsRef = ref(database, `sessions/${sessionId}/termDefinitions`)
+      const definitionsRef = ref(db, `sessions/${sessionId}/termDefinitions`)
       const newDefinitionRef = push(definitionsRef)
       
       await set(newDefinitionRef, {
