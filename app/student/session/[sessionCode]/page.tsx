@@ -463,21 +463,21 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           )}
         </Card>
         
-        {/* 모바일에서는 탭 형태로 전환 */}
-        <div className="block lg:hidden">
-          <div className="border-b border-gray-200 mb-4">
-            <nav className="-mb-px flex space-x-6 overflow-x-auto pb-1 scrollbar-hide">
-              <a href="#questions" className="whitespace-nowrap py-2 px-1 border-b-2 border-primary font-medium text-sm text-primary">
+        {/* 네비게이션 탭 (데스크톱 & 모바일) */}
+        <div className="mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex flex-wrap justify-center md:justify-start gap-2 md:gap-8 overflow-x-auto pb-1 scrollbar-hide">
+              <a href="#questions" className="whitespace-nowrap py-3 px-3 border-b-2 border-primary font-medium text-primary">
                 질문 작성 및 목록
               </a>
-              <a href="#helper" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                질문 도우미
-              </a>
-              <a href="#ai-agenda" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+              <a href="#ai-agenda" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 AI 논제 추천
               </a>
+              <a href="#helper" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                질문 도우미
+              </a>
               {showAnalysisResult && (
-                <a href="#result" className="whitespace-nowrap py-2 px-1 border-b-2 border-transparent font-medium text-sm text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                <a href="#result" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                   교사 분석 결과
                 </a>
               )}
@@ -485,91 +485,99 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-          <div className="lg:col-span-2" id="questions">
-            <QuestionInput 
-              sessionId={sessionId!} 
-              studentName={studentName}
-              onQuestionSubmit={() => {}}
-            />
-            
-            <div className="mt-4 md:mt-6">
-              <QuestionList
-                sessionId={sessionId!}
-                studentName={studentName}
-              />
-            </div>
-          </div>
+        {/* 질문 작성 및 목록 섹션 */}
+        <div id="questions" className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">질문 작성하기</h2>
+          <QuestionInput 
+            sessionId={sessionId!} 
+            studentName={studentName}
+            onQuestionSubmit={() => {}}
+          />
           
-          <div className="space-y-4 md:space-y-6 mt-6 lg:mt-0">
-            <div id="helper">
-              <QuestionHelper />
-            </div>
-            
-            {/* AI 논제 관련 컴포넌트 */}
-            <div id="ai-agenda" className="mt-4 md:mt-6">
-              {showAgendaRecommender ? (
-                <AgendaRecommender
-                  onRequestAgendas={handleRequestAgendas}
-                  isLoading={isGeneratingAgendas}
-                />
-              ) : studentAgendas.length > 0 ? (
-                <AgendaDisplay
-                  agendas={studentAgendas}
-                  onCreateNew={() => setShowAgendaRecommender(true)}
-                />
-              ) : (
-                <Card title="AI 논제 추천">
-                  <div className="text-center py-6">
-                    <p className="text-gray-600 mb-4">
-                      모둠에서 토론하고 싶은 주제에 대해 AI가 논제를 추천해드립니다.
-                    </p>
-                    <Button 
-                      variant="primary"
-                      onClick={() => setShowAgendaRecommender(true)}
-                    >
-                      AI 논제 추천 시작하기
-                    </Button>
-                  </div>
-                </Card>
-              )}
-            </div>
-            
-            {showAnalysisResult && session.aiAnalysisResult && (
-              <div id="result" className="mt-4 md:mt-6">
-                <Card title="교사 분석 논제" className="shadow-md hover:shadow-lg transition-shadow">
-                  {session.aiAnalysisResult.recommendedAgendas && (
-                    <div className="space-y-4">
-                      {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
-                        <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
-                          <h3 className="font-medium mb-1 text-sm md:text-base">{agenda.agendaTitle}</h3>
-                          <p className="text-xs md:text-sm text-gray-600 mb-2">{agenda.reason}</p>
-                          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                            {agenda.type}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-                
-                <div className="mt-4 md:mt-6">
-                  <AgendaValidator />
+          <div className="mt-6">
+            <h2 className="text-xl font-semibold mb-4">학생 질문 목록</h2>
+            <QuestionList
+              sessionId={sessionId!}
+              studentName={studentName}
+            />
+          </div>
+        </div>
+        
+        {/* AI 논제 추천 섹션 */}
+        <div id="ai-agenda" className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">AI 논제 추천</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+            {showAgendaRecommender ? (
+              <AgendaRecommender
+                onRequestAgendas={handleRequestAgendas}
+                isLoading={isGeneratingAgendas}
+              />
+            ) : studentAgendas.length > 0 ? (
+              <AgendaDisplay
+                agendas={studentAgendas}
+                onCreateNew={() => setShowAgendaRecommender(true)}
+              />
+            ) : (
+              <Card title="AI 논제 추천">
+                <div className="text-center py-8">
+                  <p className="text-gray-600 mb-4">
+                    모둠에서 토론하고 싶은 주제에 대해 AI가 논제를 추천해드립니다.
+                  </p>
+                  <Button 
+                    variant="primary"
+                    onClick={() => setShowAgendaRecommender(true)}
+                  >
+                    AI 논제 추천 시작하기
+                  </Button>
                 </div>
-                
-                <div className="mt-4 md:mt-6">
-                  <TermDefinition
-                    sessionId={sessionId!}
-                    studentGroup={studentGroup}
-                    initialTerms={session.aiAnalysisResult.extractedTerms}
-                  />
-                </div>
-              </div>
+              </Card>
             )}
           </div>
         </div>
         
-        {/* 모바일 탭 전환을 위한 하단 탭 바 */}
+        {/* 질문 도우미 섹션 */}
+        <div id="helper" className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">질문 도우미</h2>
+          <QuestionHelper />
+        </div>
+        
+        {/* 교사 분석 결과 */}
+        {showAnalysisResult && session.aiAnalysisResult && (
+          <div id="result" className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">교사 분석 결과</h2>
+            
+            <Card title="교사 추천 논제" className="shadow-md hover:shadow-lg transition-shadow mb-6">
+              {session.aiAnalysisResult.recommendedAgendas && (
+                <div className="space-y-4">
+                  {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
+                    <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
+                      <h3 className="font-medium mb-1 text-sm md:text-base">{agenda.agendaTitle}</h3>
+                      <p className="text-xs md:text-sm text-gray-600 mb-2">{agenda.reason}</p>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                        {agenda.type}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+            
+            <div className="mb-6">
+              <AgendaValidator />
+            </div>
+            
+            <div>
+              <TermDefinition
+                sessionId={sessionId!}
+                studentGroup={studentGroup}
+                initialTerms={session.aiAnalysisResult.extractedTerms}
+              />
+            </div>
+          </div>
+        )}
+        
+        
+        {/* 모바일 하단 탭 바 */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-2 px-4 lg:hidden">
           <div className="flex justify-around max-w-md mx-auto">
             <a href="#questions" className="flex flex-col items-center text-primary">
@@ -578,17 +586,17 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               </svg>
               <span className="text-xs mt-1">질문</span>
             </a>
+            <a href="#ai-agenda" className="flex flex-col items-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              <span className="text-xs mt-1">논제 추천</span>
+            </a>
             <a href="#helper" className="flex flex-col items-center text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
               <span className="text-xs mt-1">도우미</span>
-            </a>
-            <a href="#ai-agenda" className="flex flex-col items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <span className="text-xs mt-1">AI 논제</span>
             </a>
             {showAnalysisResult && (
               <a href="#result" className="flex flex-col items-center text-gray-500">
