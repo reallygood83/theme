@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { RequireAuth } from '@/components/auth/RequireAuth';
-import { Card } from '@/components/common/Card';
-import { Button } from '@/components/common/Button';
+import RequireAuth from '@/components/auth/RequireAuth';
+import Card from '@/components/common/Card';
+import Button from '@/components/common/Button';
 
 interface Worksheet {
   id: string;
@@ -398,7 +398,7 @@ export default function MaterialsPage() {
   };
 
   return (
-    <RequireAuth allowedRoles={['teacher']}>
+    <RequireAuth>
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
