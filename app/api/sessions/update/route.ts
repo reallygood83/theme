@@ -18,6 +18,7 @@ export async function PUT(request: Request) {
     
     // 업데이트할 데이터 준비
     const sessionUpdateData = {
+      title: updateData.title || '제목 없음',
       materialText: updateData.materialText || '',
       materialUrl: updateData.materialUrl || '',
       keywords: updateData.keywords || [],

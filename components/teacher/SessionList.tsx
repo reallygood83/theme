@@ -30,18 +30,23 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
     .filter(session => {
       if (!searchTerm) return true
       
+      const searchLower = searchTerm.toLowerCase()
+      
+      // 제목이 포함된 경우
+      const titleMatch = session.title?.toLowerCase().includes(searchLower)
+      
       // 키워드가 포함된 경우
       const keywordsMatch = session.keywords?.some(
-        keyword => keyword.toLowerCase().includes(searchTerm.toLowerCase())
+        keyword => keyword.toLowerCase().includes(searchLower)
       )
       
       // 학습 자료 텍스트가 포함된 경우
-      const textMatch = session.materialText?.toLowerCase().includes(searchTerm.toLowerCase())
+      const textMatch = session.materialText?.toLowerCase().includes(searchLower)
       
       // 세션 코드가 포함된 경우
-      const codeMatch = session.accessCode?.toLowerCase().includes(searchTerm.toLowerCase())
+      const codeMatch = session.accessCode?.toLowerCase().includes(searchLower)
       
-      return keywordsMatch || textMatch || codeMatch
+      return titleMatch || keywordsMatch || textMatch || codeMatch
     })
     // 정렬
     .sort((a, b) => {
@@ -241,7 +246,7 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
         <div className="relative flex-1">
           <input
             type="text"
-            placeholder="세션 검색 (키워드, 학습 자료 등)"
+            placeholder="세션 검색 (제목, 키워드, 학습 자료 등)"
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary pr-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -320,6 +325,13 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
                           {formatDate(session.createdAt)}
                         </span>
                       </div>
+                      
+                      {/* 세션 제목 */}
+                      {session.title && (
+                        <div className="mb-2">
+                          <h3 className="font-semibold text-gray-900">{session.title}</h3>
+                        </div>
+                      )}
                       
                       <div className="mb-2">
                         {session.materialText ? (

@@ -17,6 +17,7 @@ export async function POST(request: Request) {
     
     // 세션 데이터 준비
     const sessionData = {
+      title: data.title || '제목 없음',
       materialText: data.materialText || '',
       materialUrl: data.materialUrl || '',
       keywords: data.keywords || [],

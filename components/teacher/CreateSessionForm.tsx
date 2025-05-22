@@ -7,6 +7,7 @@ import { generateSessionCode } from '@/lib/utils'
 
 export default function CreateSessionForm() {
   const router = useRouter()
+  const [sessionTitle, setSessionTitle] = useState('')
   const [materialType, setMaterialType] = useState<'text' | 'youtube'>('text')
   const [materialText, setMaterialText] = useState('')
   const [materialUrl, setMaterialUrl] = useState('')
@@ -33,6 +34,7 @@ export default function CreateSessionForm() {
       // 세션 정보 준비
       const sessionCode = generateSessionCode()
       const sessionData = {
+        title: sessionTitle.trim() || '제목 없음',
         materialText: materialType === 'text' ? materialText : '',
         materialUrl: materialType === 'youtube' ? materialUrl : '',
         keywords,
@@ -67,6 +69,24 @@ export default function CreateSessionForm() {
   
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          세션 제목 <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={sessionTitle}
+          onChange={(e) => setSessionTitle(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+          placeholder="예: 환경보호와 경제발전의 균형"
+          required
+          maxLength={100}
+        />
+        <p className="text-sm text-gray-500 mt-1">
+          토론 세션을 쉽게 구분할 수 있는 제목을 입력하세요. (최대 100자)
+        </p>
+      </div>
+
       <div>
         <h2 className="text-xl font-semibold mb-4">학습 자료 유형 선택</h2>
         <div className="flex gap-4">

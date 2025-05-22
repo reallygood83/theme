@@ -12,6 +12,7 @@ interface EditSessionModalProps {
 }
 
 export default function EditSessionModal({ session, isOpen, onClose, onUpdate }: EditSessionModalProps) {
+  const [sessionTitle, setSessionTitle] = useState('')
   const [materialType, setMaterialType] = useState<'text' | 'youtube'>('text')
   const [materialText, setMaterialText] = useState('')
   const [materialUrl, setMaterialUrl] = useState('')
@@ -22,6 +23,7 @@ export default function EditSessionModal({ session, isOpen, onClose, onUpdate }:
   // 모달이 열릴 때 세션 데이터로 폼 초기화
   useEffect(() => {
     if (session && isOpen) {
+      setSessionTitle(session.title || '')
       setMaterialText(session.materialText || '')
       setMaterialUrl(session.materialUrl || '')
       setKeywords(session.keywords || [])
@@ -50,6 +52,7 @@ export default function EditSessionModal({ session, isOpen, onClose, onUpdate }:
     try {
       const updateData = {
         sessionId: session.sessionId,
+        title: sessionTitle.trim() || '제목 없음',
         materialText: materialType === 'text' ? materialText : '',
         materialUrl: materialType === 'youtube' ? materialUrl : '',
         keywords
@@ -97,6 +100,21 @@ export default function EditSessionModal({ session, isOpen, onClose, onUpdate }:
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              세션 제목 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={sessionTitle}
+              onChange={(e) => setSessionTitle(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="예: 환경보호와 경제발전의 균형"
+              required
+              maxLength={100}
+            />
+          </div>
+
           <div>
             <h3 className="text-lg font-medium mb-4">학습 자료 유형 선택</h3>
             <div className="flex gap-4">
@@ -215,7 +233,7 @@ export default function EditSessionModal({ session, isOpen, onClose, onUpdate }:
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || (materialType === 'text' && !materialText.trim()) || (materialType === 'youtube' && !materialUrl.trim())}
+              disabled={isLoading || !sessionTitle.trim() || (materialType === 'text' && !materialText.trim()) || (materialType === 'youtube' && !materialUrl.trim())}
               className="flex-1"
             >
               {isLoading ? '수정 중...' : '수정하기'}

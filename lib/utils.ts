@@ -25,12 +25,14 @@ export function extractYoutubeVideoId(url: string): string | null {
 // 세션 타입 정의
 export interface Session {
   sessionId: string;
+  title?: string;
   teacherId?: string;
   materialText?: string;
   materialUrl?: string;
   keywords?: string[];
   accessCode: string;
   createdAt: number;
+  updatedAt?: number;
   aiAnalysisResult?: {
     clusteredQuestions?: any[];
     recommendedAgendas?: any[];
