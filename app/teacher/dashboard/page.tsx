@@ -21,7 +21,12 @@ export default function TeacherDashboardPage() {
       console.log('세션 목록 조회 시작...')
       
       const response = await fetch('/api/sessions/list', {
-        cache: 'no-store' // 캐시 무시하고 매번 새로 가져오기
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
       })
       console.log('세션 목록 응답 상태:', response.status)
       
@@ -42,6 +47,16 @@ export default function TeacherDashboardPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // 세션 삭제 후 즉시 상태 업데이트
+  const handleSessionDeleted = (deletedSessionId: string) => {
+    console.log('세션 삭제 알림 받음:', deletedSessionId)
+    setSessions(prevSessions => {
+      const updatedSessions = prevSessions.filter(session => session.sessionId !== deletedSessionId)
+      console.log('즉시 상태 업데이트 - 기존 세션 수:', prevSessions.length, '→ 업데이트 후:', updatedSessions.length)
+      return updatedSessions
+    })
   }
 
   useEffect(() => {
@@ -92,7 +107,8 @@ export default function TeacherDashboardPage() {
             sessions={sessions} 
             loading={loading} 
             error={error}
-            onRefresh={fetchSessions} 
+            onRefresh={fetchSessions}
+            onSessionDeleted={handleSessionDeleted}
           />
         </Card>
         

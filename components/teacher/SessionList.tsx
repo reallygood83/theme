@@ -12,9 +12,10 @@ interface SessionListProps {
   loading: boolean
   error: string | null
   onRefresh?: () => void
+  onSessionDeleted?: (sessionId: string) => void
 }
 
-export default function SessionList({ sessions, loading, error, onRefresh }: SessionListProps) {
+export default function SessionList({ sessions, loading, error, onRefresh, onSessionDeleted }: SessionListProps) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'questions'>('date')
@@ -153,9 +154,17 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       
       console.log('세션 삭제 성공, 목록 새로고침 중...')
       
-      // 세션 목록 새로고침
+      // 부모 컴포넌트에 삭제된 세션 알림 (즉시 상태 업데이트)
+      if (onSessionDeleted) {
+        onSessionDeleted(sessionId)
+      }
+      
+      // 서버에서 최신 데이터 새로고침 (확인용)
       if (onRefresh) {
-        await onRefresh()
+        setTimeout(async () => {
+          console.log('서버에서 최신 세션 목록 재조회...')
+          await onRefresh()
+        }, 500)
       }
       
       alert('세션이 성공적으로 삭제되었습니다.')
