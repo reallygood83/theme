@@ -9,12 +9,13 @@ import Card from '@/components/common/Card'
 import SessionList from '@/components/teacher/SessionList'
 import Button from '@/components/common/Button'
 import { Session } from '@/lib/utils'
+import { database } from '@/lib/firebase'
+import { ref, onValue, off } from 'firebase/database'
 
 export default function TeacherDashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [forceUpdateKey, setForceUpdateKey] = useState(0)
 
   const fetchSessions = async () => {
     try {
@@ -57,116 +58,59 @@ export default function TeacherDashboardPage() {
     }
   }
 
-  // 세션 삭제 후 즉시 상태 업데이트
-  const handleSessionDeleted = (deletedSessionId: string) => {
-    console.log('세션 삭제 알림 받음:', deletedSessionId)
-    setSessions(prevSessions => {
-      console.log('삭제 전 세션 목록:', prevSessions.map(s => s.sessionId))
-      const updatedSessions = prevSessions.filter(session => session.sessionId !== deletedSessionId)
-      console.log('삭제 후 세션 목록:', updatedSessions.map(s => s.sessionId))
-      console.log('즉시 상태 업데이트 - 기존 세션 수:', prevSessions.length, '→ 업데이트 후:', updatedSessions.length)
-      
-      // 실제로 삭제되었는지 확인
-      const wasDeleted = prevSessions.length !== updatedSessions.length
-      console.log('세션이 실제로 로컬 상태에서 제거됨:', wasDeleted)
-      
-      return updatedSessions
-    })
-    
-    // 강제 리렌더링 트리거
-    setForceUpdateKey(prev => prev + 1)
-    console.log('강제 리렌더링 트리거됨')
-  }
+  // Firebase 실시간 리스너가 자동으로 처리하므로 불필요
 
   useEffect(() => {
-    fetchSessions()
-    
-    // 페이지 가시성 변화 감지 (다른 탭에서 돌아올 때)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log('페이지가 다시 보여짐, 세션 목록 새로고침')
-        setTimeout(() => {
-          fetchSessions()
-        }, 500) // 0.5초 딜레이 후 새로고침
-      }
+    if (!database) {
+      console.error('Firebase database가 초기화되지 않음')
+      fetchSessions() // 폴백으로 API 호출
+      return
     }
+
+    console.log('Firebase 실시간 리스너 설정 중...')
+    const sessionsRef = ref(database, 'sessions')
     
-    // 페이지가 포커스될 때마다 세션 목록 새로고침
-    const handleFocus = () => {
-      console.log('페이지 포커스됨, 세션 목록 새로고침')
-      setTimeout(() => {
-        fetchSessions()
-      }, 500)
-    }
-    
-    // localStorage 변화 감지 (새 세션 생성/삭제 시)
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'newSessionCreated') {
-        console.log('새 세션 생성 감지됨, 목록 새로고침')
-        setTimeout(() => {
-          fetchSessions()
-        }, 1000) // 1초 딜레이 후 새로고침
-      } else if (e.key === 'sessionDeleted') {
-        console.log('세션 삭제 감지됨, 목록 새로고침')
-        setTimeout(() => {
-          fetchSessions()
-        }, 500) // 0.5초 딜레이 후 새로고침
-      }
-    }
-    
-    // 같은 탭에서의 localStorage 변화 감지
-    const checkForChanges = () => {
-      // 새 세션 생성 감지
-      const lastCreated = localStorage.getItem('newSessionCreated')
-      const lastCheckedCreated = localStorage.getItem('lastCheckedNewSession')
+    // Firebase 실시간 리스너 설정
+    const unsubscribe = onValue(sessionsRef, (snapshot) => {
+      setLoading(true)
+      console.log('Firebase 실시간 데이터 변화 감지됨')
       
-      if (lastCreated && lastCreated !== lastCheckedCreated) {
-        console.log('새 세션 생성 감지됨 (같은 탭), 목록 새로고침')
-        localStorage.setItem('lastCheckedNewSession', lastCreated)
-        setTimeout(() => {
-          fetchSessions()
-        }, 500)
-      }
-      
-      // 세션 삭제 감지
-      const lastDeleted = localStorage.getItem('sessionDeleted')
-      const lastCheckedDeleted = localStorage.getItem('lastCheckedSessionDeleted')
-      
-      if (lastDeleted && lastDeleted !== lastCheckedDeleted) {
-        console.log('세션 삭제 감지됨 (같은 탭), 목록 새로고침')
-        localStorage.setItem('lastCheckedSessionDeleted', lastDeleted)
+      if (snapshot.exists()) {
+        const sessionsData = snapshot.val()
+        console.log('실시간으로 받은 세션 데이터:', sessionsData)
         
-        // 삭제된 세션 정보 파싱
-        try {
-          const deletedInfo = JSON.parse(lastDeleted)
-          console.log('삭제된 세션 ID:', deletedInfo.sessionId)
-          
-          // 즉시 로컬 상태에서 제거
-          handleSessionDeleted(deletedInfo.sessionId)
-          
-          // 서버에서도 재조회
-          setTimeout(() => {
-            fetchSessions()
-          }, 500)
-        } catch (error) {
-          console.error('삭제된 세션 정보 파싱 오류:', error)
-          fetchSessions()
-        }
+        // 세션 데이터를 배열로 변환
+        const sessionsArray = Object.entries(sessionsData).map(([sessionId, data]) => ({
+          sessionId,
+          ...(data as any)
+        }))
+        
+        // 최신순으로 정렬
+        sessionsArray.sort((a, b) => b.createdAt - a.createdAt)
+        
+        console.log('실시간 업데이트된 세션 목록:', sessionsArray.length, '개')
+        console.log('세션 ID 목록:', sessionsArray.map(s => s.sessionId))
+        
+        setSessions(sessionsArray)
+        setError(null)
+      } else {
+        console.log('Firebase에 세션 데이터 없음')
+        setSessions([])
       }
-    }
-    
-    // 주기적으로 체크 (같은 탭에서 세션 생성/삭제 후 대시보드로 돌아올 때)
-    const intervalId = setInterval(checkForChanges, 1000) // 1초마다 체크
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange)
-    window.addEventListener('focus', handleFocus)
-    window.addEventListener('storage', handleStorageChange)
-    
+      
+      setLoading(false)
+    }, (error) => {
+      console.error('Firebase 실시간 리스너 오류:', error)
+      setError('실시간 데이터 연결에 문제가 발생했습니다.')
+      setLoading(false)
+      
+      // 실시간 연결 실패 시 폴백으로 API 호출
+      fetchSessions()
+    })
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
-      window.removeEventListener('focus', handleFocus)
-      window.removeEventListener('storage', handleStorageChange)
-      clearInterval(intervalId)
+      console.log('Firebase 실시간 리스너 해제')
+      unsubscribe()
     }
   }, [])
 
@@ -211,12 +155,10 @@ export default function TeacherDashboardPage() {
             </button>
           </div>
           <SessionList 
-            key={`session-list-${forceUpdateKey}`}
             sessions={sessions} 
             loading={loading} 
             error={error}
             onRefresh={fetchSessions}
-            onSessionDeleted={handleSessionDeleted}
           />
         </Card>
         

@@ -12,10 +12,9 @@ interface SessionListProps {
   loading: boolean
   error: string | null
   onRefresh?: () => void
-  onSessionDeleted?: (sessionId: string) => void
 }
 
-export default function SessionList({ sessions, loading, error, onRefresh, onSessionDeleted }: SessionListProps) {
+export default function SessionList({ sessions, loading, error, onRefresh }: SessionListProps) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'questions'>('date')
@@ -167,51 +166,12 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
         throw new Error(responseData.error || '세션 삭제에 실패했습니다.')
       }
       
-      console.log('세션 삭제 성공, 목록 업데이트 중...')
+      console.log('세션 삭제 성공!')
       
-      // 1. 즉시 로컬 상태에서 세션 제거 (즉각적인 UI 반응)
-      if (onSessionDeleted) {
-        console.log('즉시 로컬 상태에서 세션 제거:', sessionId)
-        onSessionDeleted(sessionId)
-      }
+      // Firebase 실시간 리스너가 자동으로 UI를 업데이트하므로 
+      // 별도의 상태 조작이나 새로고침이 불필요함
       
-      // 2. localStorage에 삭제 이벤트 기록 (다른 탭/페이지에서 감지용)
-      localStorage.setItem('sessionDeleted', JSON.stringify({
-        sessionId,
-        timestamp: Date.now()
-      }))
-      
-      // 3. 서버에서 최신 데이터 새로고침 (데이터 일관성 확보)
-      if (onRefresh) {
-        console.log('서버에서 최신 세션 목록 재조회...')
-        setTimeout(async () => {
-          await onRefresh()
-          console.log('삭제 후 서버 데이터 새로고침 완료')
-        }, 1000) // 1초 후 재조회
-      }
-      
-      // 4. 강제 새로고침 (확실한 동기화)
-      setTimeout(async () => {
-        if (onRefresh) {
-          console.log('삭제 후 강제 전체 새로고침 실행')
-          await onRefresh()
-          
-          // 그래도 문제가 있다면 브라우저 새로고침
-          setTimeout(() => {
-            console.log('최종 브라우저 새로고침 확인')
-            const shouldForceReload = !document.querySelector(`[data-session-id="${sessionId}"]`)
-            if (document.querySelector(`[data-session-id="${sessionId}"]`)) {
-              console.warn('삭제된 세션이 여전히 DOM에 존재함, 페이지 새로고침')
-              window.location.reload()
-            }
-          }, 1000)
-        }
-      }, 2000) // 2초 후 한 번 더 새로고침
-      
-      // 5. 성공 알림
-      setTimeout(() => {
-        alert('세션이 성공적으로 삭제되었습니다.')
-      }, 100) // UI 업데이트 후 알림
+      alert('세션이 성공적으로 삭제되었습니다.')
     } catch (error) {
       console.error('세션 삭제 오류:', error)
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'

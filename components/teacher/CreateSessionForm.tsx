@@ -70,8 +70,8 @@ export default function CreateSessionForm() {
       
       console.log('세션 생성 성공:', sessionId)
       
-      // 세션 생성 이벤트를 localStorage에 저장 (대시보드 새로고침용)
-      localStorage.setItem('newSessionCreated', Date.now().toString())
+      // Firebase 실시간 리스너가 자동으로 대시보드를 업데이트하므로
+      // localStorage 이벤트는 불필요함
       
       // 성공 옵션 화면 표시
       setCreatedSessionId(sessionId)
