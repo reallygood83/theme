@@ -5,19 +5,23 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Session } from '@/lib/utils'
 import Button from '../common/Button'
+import EditSessionModal from './EditSessionModal'
 
 interface SessionListProps {
   sessions: Session[]
   loading: boolean
   error: string | null
+  onRefresh?: () => void
 }
 
-export default function SessionList({ sessions, loading, error }: SessionListProps) {
+export default function SessionList({ sessions, loading, error, onRefresh }: SessionListProps) {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'questions'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [duplicatingSessionId, setDuplicatingSessionId] = useState<string | null>(null)
+  const [editingSession, setEditingSession] = useState<Session | null>(null)
+  const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
   
   // 검색 및 정렬된 세션 목록
   const filteredAndSortedSessions = [...sessions]
@@ -113,6 +117,57 @@ export default function SessionList({ sessions, loading, error }: SessionListPro
       alert('세션 복제에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setDuplicatingSessionId(null)
+    }
+  }
+
+  // 세션 삭제 함수
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (deletingSessionId || !confirm('정말로 이 세션을 삭제하시겠습니까?\n삭제된 세션은 복구할 수 없습니다.')) {
+      return
+    }
+    
+    try {
+      setDeletingSessionId(sessionId)
+      
+      const response = await fetch('/api/sessions/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ sessionId }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('세션 삭제에 실패했습니다.')
+      }
+      
+      // 세션 목록 새로고침
+      if (onRefresh) {
+        onRefresh()
+      }
+    } catch (error) {
+      console.error('세션 삭제 오류:', error)
+      alert('세션 삭제에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setDeletingSessionId(null)
+    }
+  }
+
+  // 세션 수정 모달 열기
+  const handleEditSession = (session: Session, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingSession(session)
+  }
+
+  // 세션 수정 완료 후 처리
+  const handleUpdateComplete = () => {
+    setEditingSession(null)
+    if (onRefresh) {
+      onRefresh()
     }
   }
   
@@ -220,7 +275,7 @@ export default function SessionList({ sessions, loading, error }: SessionListPro
             const hasAnalysisResult = !!session.aiAnalysisResult
             
             return (
-              <li key={session.sessionId} className="border border-gray-200 rounded-lg overflow-hidden hover:border-primary transition-colors">
+              <li key={session.sessionId} className="group border border-gray-200 rounded-lg overflow-hidden hover:border-primary transition-colors">
                 <div className="relative">
                   <Link href={`/teacher/session/${session.sessionId}?code=${session.accessCode}`}>
                     <div className="p-4">
@@ -284,22 +339,54 @@ export default function SessionList({ sessions, loading, error }: SessionListPro
                   
                   {/* 세션 액션 버튼 */}
                   <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-100">
-                    <button
-                      className={`p-2 bg-white rounded-full shadow hover:bg-gray-50 ${duplicatingSessionId === session.sessionId ? 'opacity-50 pointer-events-none' : ''}`}
-                      onClick={(e) => handleDuplicateSession(session.sessionId, e)}
-                      title="세션 복제"
-                    >
-                      {duplicatingSessionId === session.sessionId ? (
-                        <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <div className="flex gap-2">
+                      {/* 수정 버튼 */}
+                      <button
+                        className="p-2 bg-white rounded-full shadow hover:bg-gray-50"
+                        onClick={(e) => handleEditSession(session, e)}
+                        title="세션 수정"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                        </svg>
-                      )}
-                    </button>
+                      </button>
+
+                      {/* 복제 버튼 */}
+                      <button
+                        className={`p-2 bg-white rounded-full shadow hover:bg-gray-50 ${duplicatingSessionId === session.sessionId ? 'opacity-50 pointer-events-none' : ''}`}
+                        onClick={(e) => handleDuplicateSession(session.sessionId, e)}
+                        title="세션 복제"
+                      >
+                        {duplicatingSessionId === session.sessionId ? (
+                          <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                          </svg>
+                        )}
+                      </button>
+
+                      {/* 삭제 버튼 */}
+                      <button
+                        className={`p-2 bg-white rounded-full shadow hover:bg-gray-50 ${deletingSessionId === session.sessionId ? 'opacity-50 pointer-events-none' : ''}`}
+                        onClick={(e) => handleDeleteSession(session.sessionId, e)}
+                        title="세션 삭제"
+                      >
+                        {deletingSessionId === session.sessionId ? (
+                          <svg className="animate-spin h-5 w-5 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H8a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </li>
@@ -311,6 +398,14 @@ export default function SessionList({ sessions, loading, error }: SessionListPro
           <p className="text-gray-500">검색 결과가 없습니다.</p>
         </div>
       )}
+
+      {/* 세션 수정 모달 */}
+      <EditSessionModal
+        session={editingSession}
+        isOpen={!!editingSession}
+        onClose={() => setEditingSession(null)}
+        onUpdate={handleUpdateComplete}
+      />
     </div>
   )
 }

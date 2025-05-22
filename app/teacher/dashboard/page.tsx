@@ -91,7 +91,8 @@ export default function TeacherDashboardPage() {
           <SessionList 
             sessions={sessions} 
             loading={loading} 
-            error={error} 
+            error={error}
+            onRefresh={fetchSessions} 
           />
         </Card>
         
