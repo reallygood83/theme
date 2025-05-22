@@ -45,7 +45,7 @@ export default function TeacherDashboardPage() {
       
       // 각 세션의 ID 목록 출력 (디버깅용)
       if (data.sessions && data.sessions.length > 0) {
-        const sessionIds = data.sessions.map(s => s.sessionId)
+        const sessionIds = data.sessions.map((s: Session) => s.sessionId)
         console.log('조회된 세션 ID 목록:', sessionIds)
       }
       
@@ -89,7 +89,7 @@ export default function TeacherDashboardPage() {
         sessionsArray.sort((a, b) => b.createdAt - a.createdAt)
         
         console.log('실시간 업데이트된 세션 목록:', sessionsArray.length, '개')
-        console.log('세션 ID 목록:', sessionsArray.map(s => s.sessionId))
+        console.log('세션 ID 목록:', sessionsArray.map((s: Session) => s.sessionId))
         
         setSessions(sessionsArray)
         setError(null)

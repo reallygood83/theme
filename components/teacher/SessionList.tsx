@@ -27,7 +27,7 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
   useEffect(() => {
     console.log('SessionList: sessions prop 변경됨')
     console.log('현재 세션 수:', sessions.length)
-    console.log('세션 ID 목록:', sessions.map(s => s.sessionId))
+    console.log('세션 ID 목록:', sessions.map((s: Session) => s.sessionId))
   }, [sessions])
   
   // 검색 및 정렬된 세션 목록 (useMemo로 최적화)
