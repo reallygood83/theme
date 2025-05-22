@@ -86,11 +86,28 @@ export async function DELETE(request: Request) {
       }, { status: 500 })
     }
     
-    console.log('세션 삭제 완료:', sessionId)
+    console.log('Firebase에서 세션 삭제 완료 확인:', sessionId)
+    
+    // 추가 확인: 전체 세션 목록에서 해당 세션이 없는지 재확인
+    const allSessionsRef = ref(db, 'sessions')
+    const allSessionsSnapshot = await get(allSessionsRef)
+    
+    if (allSessionsSnapshot.exists()) {
+      const allSessions = allSessionsSnapshot.val()
+      if (allSessions[sessionId]) {
+        console.error('전체 세션 목록에서 여전히 세션이 발견됨:', sessionId)
+        return NextResponse.json({ 
+          error: '세션 삭제 확인에 실패했습니다.' 
+        }, { status: 500 })
+      }
+    }
+    
+    console.log('세션 삭제 완료 및 확인 완료:', sessionId)
     
     return NextResponse.json({ 
       success: true,
-      message: '세션이 성공적으로 삭제되었습니다.'
+      message: '세션이 성공적으로 삭제되었습니다.',
+      deletedSessionId: sessionId
     })
   } catch (error) {
     console.error('세션 삭제 오류:', error)

@@ -81,32 +81,64 @@ export default function TeacherDashboardPage() {
       }, 500)
     }
     
-    // localStorage 변화 감지 (새 세션 생성 시)
+    // localStorage 변화 감지 (새 세션 생성/삭제 시)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'newSessionCreated') {
         console.log('새 세션 생성 감지됨, 목록 새로고침')
         setTimeout(() => {
           fetchSessions()
         }, 1000) // 1초 딜레이 후 새로고침
+      } else if (e.key === 'sessionDeleted') {
+        console.log('세션 삭제 감지됨, 목록 새로고침')
+        setTimeout(() => {
+          fetchSessions()
+        }, 500) // 0.5초 딜레이 후 새로고침
       }
     }
     
     // 같은 탭에서의 localStorage 변화 감지
-    const checkForNewSession = () => {
+    const checkForChanges = () => {
+      // 새 세션 생성 감지
       const lastCreated = localStorage.getItem('newSessionCreated')
-      const lastChecked = localStorage.getItem('lastCheckedNewSession')
+      const lastCheckedCreated = localStorage.getItem('lastCheckedNewSession')
       
-      if (lastCreated && lastCreated !== lastChecked) {
+      if (lastCreated && lastCreated !== lastCheckedCreated) {
         console.log('새 세션 생성 감지됨 (같은 탭), 목록 새로고침')
         localStorage.setItem('lastCheckedNewSession', lastCreated)
         setTimeout(() => {
           fetchSessions()
         }, 500)
       }
+      
+      // 세션 삭제 감지
+      const lastDeleted = localStorage.getItem('sessionDeleted')
+      const lastCheckedDeleted = localStorage.getItem('lastCheckedSessionDeleted')
+      
+      if (lastDeleted && lastDeleted !== lastCheckedDeleted) {
+        console.log('세션 삭제 감지됨 (같은 탭), 목록 새로고침')
+        localStorage.setItem('lastCheckedSessionDeleted', lastDeleted)
+        
+        // 삭제된 세션 정보 파싱
+        try {
+          const deletedInfo = JSON.parse(lastDeleted)
+          console.log('삭제된 세션 ID:', deletedInfo.sessionId)
+          
+          // 즉시 로컬 상태에서 제거
+          handleSessionDeleted(deletedInfo.sessionId)
+          
+          // 서버에서도 재조회
+          setTimeout(() => {
+            fetchSessions()
+          }, 500)
+        } catch (error) {
+          console.error('삭제된 세션 정보 파싱 오류:', error)
+          fetchSessions()
+        }
+      }
     }
     
-    // 주기적으로 체크 (같은 탭에서 세션 생성 후 대시보드로 돌아올 때)
-    const intervalId = setInterval(checkForNewSession, 1000) // 1초마다 체크
+    // 주기적으로 체크 (같은 탭에서 세션 생성/삭제 후 대시보드로 돌아올 때)
+    const intervalId = setInterval(checkForChanges, 1000) // 1초마다 체크
     
     document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleFocus)
