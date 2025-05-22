@@ -14,6 +14,9 @@ export default function CreateSessionForm() {
   const [keywords, setKeywords] = useState<string[]>([])
   const [keywordInput, setKeywordInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [showSuccessOptions, setShowSuccessOptions] = useState(false)
+  const [createdSessionId, setCreatedSessionId] = useState('')
+  const [createdSessionCode, setCreatedSessionCode] = useState('')
   
   const handleAddKeyword = () => {
     if (keywordInput.trim() && keywords.length < 3) {
@@ -24,6 +27,14 @@ export default function CreateSessionForm() {
   
   const handleRemoveKeyword = (index: number) => {
     setKeywords(keywords.filter((_, i) => i !== index))
+  }
+
+  const handleGoToDashboard = () => {
+    router.push('/teacher/dashboard')
+  }
+
+  const handleGoToSession = () => {
+    router.push(`/teacher/session/${createdSessionId}?code=${createdSessionCode}`)
   }
   
   const handleSubmit = async (e: FormEvent) => {
@@ -62,8 +73,10 @@ export default function CreateSessionForm() {
       // 세션 생성 이벤트를 localStorage에 저장 (대시보드 새로고침용)
       localStorage.setItem('newSessionCreated', Date.now().toString())
       
-      // 생성된 세션 페이지로 이동
-      router.push(`/teacher/session/${sessionId}?code=${sessionCode}`)
+      // 성공 옵션 화면 표시
+      setCreatedSessionId(sessionId)
+      setCreatedSessionCode(sessionCode)
+      setShowSuccessOptions(true)
     } catch (error) {
       console.error('세션 생성 오류:', error)
       alert('세션 생성에 실패했습니다. 다시 시도해주세요.')
@@ -72,6 +85,65 @@ export default function CreateSessionForm() {
     }
   }
   
+  if (showSuccessOptions) {
+    return (
+      <div className="max-w-2xl mx-auto text-center">
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <div className="flex justify-center mb-4">
+            <svg className="h-12 w-12 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-green-800 mb-2">
+            세션이 성공적으로 생성되었습니다!
+          </h2>
+          <p className="text-green-700 mb-4">
+            세션 코드: <span className="font-mono font-bold text-lg">{createdSessionCode}</span>
+          </p>
+          <p className="text-sm text-green-600">
+            학생들에게 위 세션 코드를 공유하여 질문 작성에 참여하도록 안내하세요.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            다음 단계를 선택하세요
+          </h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Button
+              onClick={handleGoToDashboard}
+              variant="primary"
+              className="w-full py-3"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+              </svg>
+              대시보드로 이동
+            </Button>
+            
+            <Button
+              onClick={handleGoToSession}
+              variant="secondary"
+              className="w-full py-3"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              세션 관리 페이지로 이동
+            </Button>
+          </div>
+          
+          <p className="text-sm text-gray-600 mt-6">
+            대시보드에서는 모든 세션을 한눈에 보고 관리할 수 있습니다.<br/>
+            세션 관리 페이지에서는 학생 질문을 실시간으로 확인하고 AI 분석을 시작할 수 있습니다.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
       <div>

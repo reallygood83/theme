@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
 import RequireAuth from '@/components/auth/RequireAuth'
@@ -62,10 +63,22 @@ export default function TeacherDashboardPage() {
   useEffect(() => {
     fetchSessions()
     
+    // 페이지 가시성 변화 감지 (다른 탭에서 돌아올 때)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log('페이지가 다시 보여짐, 세션 목록 새로고침')
+        setTimeout(() => {
+          fetchSessions()
+        }, 500) // 0.5초 딜레이 후 새로고침
+      }
+    }
+    
     // 페이지가 포커스될 때마다 세션 목록 새로고침
     const handleFocus = () => {
       console.log('페이지 포커스됨, 세션 목록 새로고침')
-      fetchSessions()
+      setTimeout(() => {
+        fetchSessions()
+      }, 500)
     }
     
     // localStorage 변화 감지 (새 세션 생성 시)
@@ -86,17 +99,21 @@ export default function TeacherDashboardPage() {
       if (lastCreated && lastCreated !== lastChecked) {
         console.log('새 세션 생성 감지됨 (같은 탭), 목록 새로고침')
         localStorage.setItem('lastCheckedNewSession', lastCreated)
-        fetchSessions()
+        setTimeout(() => {
+          fetchSessions()
+        }, 500)
       }
     }
     
     // 주기적으로 체크 (같은 탭에서 세션 생성 후 대시보드로 돌아올 때)
-    const intervalId = setInterval(checkForNewSession, 2000)
+    const intervalId = setInterval(checkForNewSession, 1000) // 1초마다 체크
     
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     window.addEventListener('focus', handleFocus)
     window.addEventListener('storage', handleStorageChange)
     
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.removeEventListener('focus', handleFocus)
       window.removeEventListener('storage', handleStorageChange)
       clearInterval(intervalId)
