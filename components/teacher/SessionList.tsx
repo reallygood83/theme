@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Session } from '@/lib/utils'
@@ -23,9 +23,18 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
   const [duplicatingSessionId, setDuplicatingSessionId] = useState<string | null>(null)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
+
+  // sessions prop 변화 감지 (디버깅용)
+  useEffect(() => {
+    console.log('SessionList: sessions prop 변경됨')
+    console.log('현재 세션 수:', sessions.length)
+    console.log('세션 ID 목록:', sessions.map(s => s.sessionId))
+  }, [sessions])
   
-  // 검색 및 정렬된 세션 목록
-  const filteredAndSortedSessions = [...sessions]
+  // 검색 및 정렬된 세션 목록 (useMemo로 최적화)
+  const filteredAndSortedSessions = useMemo(() => {
+    console.log('filteredAndSortedSessions 재계산됨, 입력 세션 수:', sessions.length)
+    return [...sessions]
     // 검색어로 필터링
     .filter(session => {
       if (!searchTerm) return true
@@ -62,6 +71,7 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
           : bQuestions - aQuestions
       }
     })
+  }, [sessions, searchTerm, sortBy, sortOrder])
   
   // 날짜 형식화 함수
   const formatDate = (timestamp: number) => {
@@ -180,7 +190,25 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
         }, 1000) // 1초 후 재조회
       }
       
-      // 4. 성공 알림
+      // 4. 강제 새로고침 (확실한 동기화)
+      setTimeout(async () => {
+        if (onRefresh) {
+          console.log('삭제 후 강제 전체 새로고침 실행')
+          await onRefresh()
+          
+          // 그래도 문제가 있다면 브라우저 새로고침
+          setTimeout(() => {
+            console.log('최종 브라우저 새로고침 확인')
+            const shouldForceReload = !document.querySelector(`[data-session-id="${sessionId}"]`)
+            if (document.querySelector(`[data-session-id="${sessionId}"]`)) {
+              console.warn('삭제된 세션이 여전히 DOM에 존재함, 페이지 새로고침')
+              window.location.reload()
+            }
+          }, 1000)
+        }
+      }, 2000) // 2초 후 한 번 더 새로고침
+      
+      // 5. 성공 알림
       setTimeout(() => {
         alert('세션이 성공적으로 삭제되었습니다.')
       }, 100) // UI 업데이트 후 알림
@@ -311,8 +339,14 @@ export default function SessionList({ sessions, loading, error, onRefresh, onSes
             const questionCount = Object.keys(session.questions || {}).length
             const hasAnalysisResult = !!session.aiAnalysisResult
             
+            console.log('렌더링 중인 세션:', session.sessionId, session.title || '제목없음')
+            
             return (
-              <li key={session.sessionId} className="group border border-gray-200 rounded-lg overflow-hidden hover:border-primary transition-colors">
+              <li 
+                key={session.sessionId} 
+                data-session-id={session.sessionId}
+                className="group border border-gray-200 rounded-lg overflow-hidden hover:border-primary transition-colors"
+              >
                 <div className="relative">
                   <Link href={`/teacher/session/${session.sessionId}?code=${session.accessCode}`}>
                     <div className="p-4">

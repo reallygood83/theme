@@ -14,6 +14,7 @@ export default function TeacherDashboardPage() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [forceUpdateKey, setForceUpdateKey] = useState(0)
 
   const fetchSessions = async () => {
     try {
@@ -41,6 +42,12 @@ export default function TeacherDashboardPage() {
       console.log('받아온 세션 데이터:', data)
       console.log('세션 개수:', data.sessions?.length || 0)
       
+      // 각 세션의 ID 목록 출력 (디버깅용)
+      if (data.sessions && data.sessions.length > 0) {
+        const sessionIds = data.sessions.map(s => s.sessionId)
+        console.log('조회된 세션 ID 목록:', sessionIds)
+      }
+      
       setSessions(data.sessions || [])
     } catch (err) {
       console.error('세션 목록 로드 오류:', err)
@@ -54,10 +61,21 @@ export default function TeacherDashboardPage() {
   const handleSessionDeleted = (deletedSessionId: string) => {
     console.log('세션 삭제 알림 받음:', deletedSessionId)
     setSessions(prevSessions => {
+      console.log('삭제 전 세션 목록:', prevSessions.map(s => s.sessionId))
       const updatedSessions = prevSessions.filter(session => session.sessionId !== deletedSessionId)
+      console.log('삭제 후 세션 목록:', updatedSessions.map(s => s.sessionId))
       console.log('즉시 상태 업데이트 - 기존 세션 수:', prevSessions.length, '→ 업데이트 후:', updatedSessions.length)
+      
+      // 실제로 삭제되었는지 확인
+      const wasDeleted = prevSessions.length !== updatedSessions.length
+      console.log('세션이 실제로 로컬 상태에서 제거됨:', wasDeleted)
+      
       return updatedSessions
     })
+    
+    // 강제 리렌더링 트리거
+    setForceUpdateKey(prev => prev + 1)
+    console.log('강제 리렌더링 트리거됨')
   }
 
   useEffect(() => {
@@ -193,6 +211,7 @@ export default function TeacherDashboardPage() {
             </button>
           </div>
           <SessionList 
+            key={`session-list-${forceUpdateKey}`}
             sessions={sessions} 
             loading={loading} 
             error={error}
