@@ -61,6 +61,46 @@ export default function TeacherDashboardPage() {
 
   useEffect(() => {
     fetchSessions()
+    
+    // 페이지가 포커스될 때마다 세션 목록 새로고침
+    const handleFocus = () => {
+      console.log('페이지 포커스됨, 세션 목록 새로고침')
+      fetchSessions()
+    }
+    
+    // localStorage 변화 감지 (새 세션 생성 시)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'newSessionCreated') {
+        console.log('새 세션 생성 감지됨, 목록 새로고침')
+        setTimeout(() => {
+          fetchSessions()
+        }, 1000) // 1초 딜레이 후 새로고침
+      }
+    }
+    
+    // 같은 탭에서의 localStorage 변화 감지
+    const checkForNewSession = () => {
+      const lastCreated = localStorage.getItem('newSessionCreated')
+      const lastChecked = localStorage.getItem('lastCheckedNewSession')
+      
+      if (lastCreated && lastCreated !== lastChecked) {
+        console.log('새 세션 생성 감지됨 (같은 탭), 목록 새로고침')
+        localStorage.setItem('lastCheckedNewSession', lastCreated)
+        fetchSessions()
+      }
+    }
+    
+    // 주기적으로 체크 (같은 탭에서 세션 생성 후 대시보드로 돌아올 때)
+    const intervalId = setInterval(checkForNewSession, 2000)
+    
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('storage', handleStorageChange)
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(intervalId)
+    }
   }, [])
 
   return (

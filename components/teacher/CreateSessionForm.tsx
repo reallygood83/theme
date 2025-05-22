@@ -57,6 +57,11 @@ export default function CreateSessionForm() {
       
       const { sessionId } = await response.json()
       
+      console.log('세션 생성 성공:', sessionId)
+      
+      // 세션 생성 이벤트를 localStorage에 저장 (대시보드 새로고침용)
+      localStorage.setItem('newSessionCreated', Date.now().toString())
+      
       // 생성된 세션 페이지로 이동
       router.push(`/teacher/session/${sessionId}?code=${sessionCode}`)
     } catch (error) {

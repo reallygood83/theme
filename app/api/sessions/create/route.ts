@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
-import { ref, push, set, getDatabase, Database } from 'firebase/database'
+import { ref, push, set, get, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 
 export async function POST(request: Request) {
@@ -64,6 +64,18 @@ export async function POST(request: Request) {
     })
     
     await set(newSessionRef, sessionData)
+    
+    console.log('Firebase에 세션 저장 완료:', newSessionRef.key)
+    
+    // 저장 후 다시 확인
+    const savedSessionRef = ref(db, `sessions/${newSessionRef.key}`)
+    const savedSnapshot = await get(savedSessionRef)
+    
+    if (savedSnapshot.exists()) {
+      console.log('저장 확인 성공:', savedSnapshot.val())
+    } else {
+      console.error('저장 확인 실패: 세션이 Firebase에서 조회되지 않음')
+    }
     
     console.log('세션 생성 완료:', newSessionRef.key)
     
