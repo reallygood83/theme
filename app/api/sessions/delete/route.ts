@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
-import { ref, remove, getDatabase, Database } from 'firebase/database'
+import { ref, remove, get, set, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 
 export async function DELETE(request: Request) {
@@ -48,8 +48,43 @@ export async function DELETE(request: Request) {
     const sessionRef = ref(db, `sessions/${sessionId}`)
     
     console.log('세션 삭제 시도:', sessionId)
+    console.log('삭제할 세션 경로:', `sessions/${sessionId}`)
     
-    await remove(sessionRef)
+    // 먼저 세션이 존재하는지 확인
+    const snapshot = await get(sessionRef)
+    console.log('삭제 전 세션 존재 여부:', snapshot.exists())
+    
+    if (!snapshot.exists()) {
+      console.log('삭제하려는 세션이 존재하지 않음:', sessionId)
+      return NextResponse.json({ 
+        error: '삭제하려는 세션을 찾을 수 없습니다.' 
+      }, { status: 404 })
+    }
+    
+    console.log('삭제 전 세션 데이터:', snapshot.val())
+    
+    // 두 가지 방법으로 삭제 시도
+    try {
+      // 방법 1: remove() 사용
+      await remove(sessionRef)
+      console.log('remove() 메서드로 삭제 시도 완료')
+    } catch (removeError) {
+      console.error('remove() 삭제 실패, set(null) 시도:', removeError)
+      // 방법 2: set(null) 사용 (대안)
+      await set(sessionRef, null)
+      console.log('set(null) 메서드로 삭제 시도 완료')
+    }
+    
+    // 삭제 후 다시 확인
+    const afterSnapshot = await get(sessionRef)
+    console.log('삭제 후 세션 존재 여부:', afterSnapshot.exists())
+    
+    if (afterSnapshot.exists()) {
+      console.error('삭제 후에도 세션이 여전히 존재함')
+      return NextResponse.json({ 
+        error: '세션 삭제가 완료되지 않았습니다.' 
+      }, { status: 500 })
+    }
     
     console.log('세션 삭제 완료:', sessionId)
     

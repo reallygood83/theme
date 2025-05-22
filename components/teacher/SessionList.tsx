@@ -132,6 +132,8 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     try {
       setDeletingSessionId(sessionId)
       
+      console.log('세션 삭제 요청 시작:', sessionId)
+      
       const response = await fetch('/api/sessions/delete', {
         method: 'DELETE',
         headers: {
@@ -140,17 +142,26 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
         body: JSON.stringify({ sessionId }),
       })
       
+      console.log('삭제 API 응답 상태:', response.status)
+      
+      const responseData = await response.json()
+      console.log('삭제 API 응답 데이터:', responseData)
+      
       if (!response.ok) {
-        throw new Error('세션 삭제에 실패했습니다.')
+        throw new Error(responseData.error || '세션 삭제에 실패했습니다.')
       }
+      
+      console.log('세션 삭제 성공, 목록 새로고침 중...')
       
       // 세션 목록 새로고침
       if (onRefresh) {
-        onRefresh()
+        await onRefresh()
       }
+      
+      alert('세션이 성공적으로 삭제되었습니다.')
     } catch (error) {
       console.error('세션 삭제 오류:', error)
-      alert('세션 삭제에 실패했습니다. 다시 시도해주세요.')
+      alert(`세션 삭제에 실패했습니다: ${error.message}`)
     } finally {
       setDeletingSessionId(null)
     }
