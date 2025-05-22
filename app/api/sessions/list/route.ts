@@ -36,13 +36,19 @@ export async function GET() {
     
     // 세션 데이터 가져오기
     const sessionsRef = ref(db, 'sessions')
+    console.log('Firebase 세션 데이터 조회 중...')
+    
     const snapshot = await get(sessionsRef)
+    console.log('Firebase 스냅샷 존재 여부:', snapshot.exists())
     
     if (!snapshot.exists()) {
+      console.log('세션 데이터가 존재하지 않음')
       return NextResponse.json({ sessions: [] })
     }
     
     const sessionsData = snapshot.val()
+    console.log('Firebase에서 가져온 원본 데이터:', sessionsData)
+    console.log('세션 키 목록:', Object.keys(sessionsData))
     
     // 세션 데이터 형식화 및 배열로 변환
     const sessions = Object.entries(sessionsData).map(([sessionId, data]) => ({
@@ -50,8 +56,13 @@ export async function GET() {
       ...(data as any)
     }))
     
+    console.log('변환된 세션 배열:', sessions)
+    console.log('세션 배열 길이:', sessions.length)
+    
     // 세션 정렬 (최신순)
     sessions.sort((a, b) => b.createdAt - a.createdAt)
+    
+    console.log('정렬된 세션 배열:', sessions)
     
     return NextResponse.json({ sessions })
   } catch (error) {

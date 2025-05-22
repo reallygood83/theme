@@ -14,26 +14,37 @@ export default function TeacherDashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const fetchSessions = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/sessions/list')
-        
-        if (!response.ok) {
-          throw new Error('세션 목록을 불러오는데 실패했습니다.')
-        }
-        
-        const data = await response.json()
-        setSessions(data.sessions || [])
-      } catch (err) {
-        console.error('세션 목록 로드 오류:', err)
-        setError('세션 목록을 불러오는 중 오류가 발생했습니다.')
-      } finally {
-        setLoading(false)
+  const fetchSessions = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log('세션 목록 조회 시작...')
+      
+      const response = await fetch('/api/sessions/list', {
+        cache: 'no-store' // 캐시 무시하고 매번 새로 가져오기
+      })
+      console.log('세션 목록 응답 상태:', response.status)
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('세션 목록 조회 오류:', errorData)
+        throw new Error('세션 목록을 불러오는데 실패했습니다.')
       }
+      
+      const data = await response.json()
+      console.log('받아온 세션 데이터:', data)
+      console.log('세션 개수:', data.sessions?.length || 0)
+      
+      setSessions(data.sessions || [])
+    } catch (err) {
+      console.error('세션 목록 로드 오류:', err)
+      setError('세션 목록을 불러오는 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
     }
-    
+  }
+
+  useEffect(() => {
     fetchSessions()
   }, [])
 
@@ -62,6 +73,21 @@ export default function TeacherDashboardPage() {
         </div>
         
         <Card title="내 토론 세션">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-sm text-gray-600">
+              총 {sessions.length}개의 세션
+            </div>
+            <button
+              onClick={fetchSessions}
+              disabled={loading}
+              className="text-sm text-primary hover:text-primary-dark disabled:opacity-50 flex items-center gap-1"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              새로고침
+            </button>
+          </div>
           <SessionList 
             sessions={sessions} 
             loading={loading} 

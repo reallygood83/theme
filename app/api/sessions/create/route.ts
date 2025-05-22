@@ -56,7 +56,15 @@ export async function POST(request: Request) {
     // 세션 생성
     const sessionsRef = ref(db, 'sessions')
     const newSessionRef = push(sessionsRef)
+    
+    console.log('세션 생성 시도:', {
+      sessionId: newSessionRef.key,
+      sessionData
+    })
+    
     await set(newSessionRef, sessionData)
+    
+    console.log('세션 생성 완료:', newSessionRef.key)
     
     // 세션 ID 반환
     return NextResponse.json({ 
