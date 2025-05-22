@@ -161,7 +161,8 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       alert('세션이 성공적으로 삭제되었습니다.')
     } catch (error) {
       console.error('세션 삭제 오류:', error)
-      alert(`세션 삭제에 실패했습니다: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+      alert(`세션 삭제에 실패했습니다: ${errorMessage}`)
     } finally {
       setDeletingSessionId(null)
     }
