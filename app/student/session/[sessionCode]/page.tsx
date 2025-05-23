@@ -431,7 +431,62 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         </div>
         
         <Card title="학습 자료" className="shadow-md hover:shadow-lg transition-shadow">
-          {session.materialText ? (
+          {/* 다중 자료 지원 */}
+          {session.materials && session.materials.length > 0 ? (
+            <div className="space-y-6">
+              {session.materials.map((material: any, index: number) => (
+                <div key={index} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">자료 {index + 1}</h3>
+                  
+                  {material.type === 'text' && material.content && (
+                    <div className="prose max-w-none text-sm md:text-base">
+                      <p className="whitespace-pre-wrap">{material.content}</p>
+                    </div>
+                  )}
+                  
+                  {material.type === 'youtube' && material.url && (
+                    <div className="aspect-video rounded-md overflow-hidden">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${extractYoutubeVideoId(material.url)}`}
+                        className="w-full h-full"
+                        title={`학습 자료 영상 ${index + 1}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      ></iframe>
+                    </div>
+                  )}
+                  
+                  {material.type === 'file' && material.fileUrl && (
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                          </svg>
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{material.fileName}</p>
+                            <p className="text-xs text-gray-500">파일 자료</p>
+                          </div>
+                        </div>
+                        <a
+                          href={material.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                          </svg>
+                          다운로드
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : session.materialText ? (
+            /* 기존 단일 자료와의 호환성 유지 */
             <div className="prose max-w-none text-sm md:text-base">
               <p className="whitespace-pre-wrap">{session.materialText}</p>
             </div>

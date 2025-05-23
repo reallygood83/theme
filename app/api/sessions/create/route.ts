@@ -15,14 +15,16 @@ export async function POST(request: Request) {
       )
     }
     
-    // 세션 데이터 준비
+    // 세션 데이터 준비 - 다중 자료 지원
     const sessionData = {
       title: data.title || '제목 없음',
-      materialText: data.materialText || '',
-      materialUrl: data.materialUrl || '',
+      materials: data.materials || [], // 다중 자료 배열
       keywords: data.keywords || [],
       accessCode: data.accessCode,
-      createdAt: data.createdAt || Date.now()
+      createdAt: data.createdAt || Date.now(),
+      // 기존 데이터와의 호환성을 위해 첫 번째 자료 정보도 저장
+      materialText: data.materials?.[0]?.type === 'text' ? data.materials[0].content : '',
+      materialUrl: data.materials?.[0]?.type === 'youtube' ? data.materials[0].url : ''
     }
     
     // Firebase 라이브러리가 정상적으로 초기화되었는지 확인

@@ -60,6 +60,8 @@ export async function POST(request: Request) {
     // 새 세션 데이터 준비
     const newSessionCode = generateSessionCode()
     const newSessionData = {
+      title: originalSession.title ? `${originalSession.title} (복사본)` : '제목 없음 (복사본)',
+      materials: originalSession.materials || [], // 다중 자료 복제
       materialText: originalSession.materialText || '',
       materialUrl: originalSession.materialUrl || '',
       keywords: originalSession.keywords || [],

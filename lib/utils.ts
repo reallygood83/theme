@@ -29,6 +29,13 @@ export interface Session {
   teacherId?: string;
   materialText?: string;
   materialUrl?: string;
+  materials?: Array<{
+    type: 'text' | 'youtube' | 'file';
+    content?: string;
+    url?: string;
+    fileName?: string;
+    fileUrl?: string;
+  }>;
   keywords?: string[];
   accessCode: string;
   createdAt: number;

@@ -339,7 +339,34 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                       )}
                       
                       <div className="mb-2">
-                        {session.materialText ? (
+                        {/* 다중 자료 지원 */}
+                        {session.materials && session.materials.length > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">자료 {session.materials.length}개:</span>
+                            <div className="flex gap-1">
+                              {session.materials.map((material: any, index: number) => (
+                                <span key={index} className="inline-flex items-center">
+                                  {material.type === 'text' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                  )}
+                                  {material.type === 'youtube' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                  )}
+                                  {material.type === 'file' && (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ) : session.materialText ? (
                           <p className="text-gray-700 line-clamp-2">{session.materialText}</p>
                         ) : session.materialUrl ? (
                           <p className="text-gray-700 flex items-center">

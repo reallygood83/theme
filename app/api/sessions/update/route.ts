@@ -17,12 +17,22 @@ export async function PUT(request: Request) {
     }
     
     // 업데이트할 데이터 준비
-    const sessionUpdateData = {
+    const sessionUpdateData: any = {
       title: updateData.title || '제목 없음',
-      materialText: updateData.materialText || '',
-      materialUrl: updateData.materialUrl || '',
       keywords: updateData.keywords || [],
       updatedAt: Date.now()
+    }
+    
+    // materials 배열이 있으면 사용, 없으면 이전 형식 사용
+    if (updateData.materials && Array.isArray(updateData.materials)) {
+      sessionUpdateData.materials = updateData.materials
+      // 이전 형식 필드 제거
+      sessionUpdateData.materialText = null
+      sessionUpdateData.materialUrl = null
+    } else {
+      // 이전 형식 유지 (backward compatibility)
+      sessionUpdateData.materialText = updateData.materialText || ''
+      sessionUpdateData.materialUrl = updateData.materialUrl || ''
     }
     
     // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
