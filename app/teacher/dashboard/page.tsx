@@ -63,13 +63,19 @@ export default function TeacherDashboardPage() {
   // Firebase 실시간 리스너가 자동으로 처리하므로 불필요
 
   useEffect(() => {
+    // user가 아직 로드되지 않았으면 대기
+    if (!user) {
+      console.log('사용자 정보 대기 중...')
+      return
+    }
+    
     if (!database) {
       console.error('Firebase database가 초기화되지 않음')
       fetchSessions() // 폴백으로 API 호출
       return
     }
 
-    console.log('Firebase 실시간 리스너 설정 중...')
+    console.log('Firebase 실시간 리스너 설정 중... 교사 ID:', user.uid)
     const sessionsRef = ref(database, 'sessions')
     
     // Firebase 실시간 리스너 설정
@@ -89,8 +95,11 @@ export default function TeacherDashboardPage() {
         
         // 현재 로그인한 교사의 세션만 필터링
         const mySessionsArray = sessionsArray.filter(session => 
-          session.teacherId === user?.uid
+          session.teacherId === user.uid
         )
+        
+        console.log('User UID:', user.uid)
+        console.log('세션 teacherId 목록:', sessionsArray.map(s => ({ id: s.sessionId, teacherId: s.teacherId })))
         
         // 최신순으로 정렬
         mySessionsArray.sort((a, b) => b.createdAt - a.createdAt)

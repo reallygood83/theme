@@ -18,6 +18,7 @@ export async function POST(request: Request) {
     // 세션 데이터 준비 - 다중 자료 지원
     const sessionData = {
       title: data.title || '제목 없음',
+      teacherId: data.teacherId || '', // 교사 ID 추가
       materials: data.materials || [], // 다중 자료 배열
       keywords: data.keywords || [],
       accessCode: data.accessCode,
@@ -62,7 +63,9 @@ export async function POST(request: Request) {
     
     console.log('세션 생성 시도:', {
       sessionId: newSessionRef.key,
-      sessionData
+      teacherId: sessionData.teacherId,
+      title: sessionData.title,
+      materialsCount: sessionData.materials.length
     })
     
     await set(newSessionRef, sessionData)
