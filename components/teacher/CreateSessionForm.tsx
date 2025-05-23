@@ -183,6 +183,8 @@ export default function CreateSessionForm() {
     try {
       // 세션 정보 준비
       const sessionCode = generateSessionCode()
+      console.log('세션 생성 시 user 정보:', { uid: user?.uid, email: user?.email })
+      
       const sessionData = {
         title: sessionTitle.trim() || '제목 없음',
         teacherId: user?.uid || '', // 교사 ID 추가

@@ -14,7 +14,7 @@ import { ref, onValue, off } from 'firebase/database'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function TeacherDashboardPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,9 +63,17 @@ export default function TeacherDashboardPage() {
   // Firebase 실시간 리스너가 자동으로 처리하므로 불필요
 
   useEffect(() => {
-    // user가 아직 로드되지 않았으면 대기
+    // 인증 정보가 아직 로딩 중이면 대기
+    if (authLoading) {
+      console.log('인증 정보 로딩 중...')
+      return
+    }
+    
+    // user가 없으면 (로그아웃 상태) 빈 배열 설정
     if (!user) {
-      console.log('사용자 정보 대기 중...')
+      console.log('사용자가 로그인하지 않음')
+      setSessions([])
+      setLoading(false)
       return
     }
     
@@ -94,12 +102,17 @@ export default function TeacherDashboardPage() {
         }))
         
         // 현재 로그인한 교사의 세션만 필터링
+        // teacherId가 없는 기존 세션도 표시 (하위 호환성)
         const mySessionsArray = sessionsArray.filter(session => 
-          session.teacherId === user.uid
+          session.teacherId === user.uid || !session.teacherId
         )
         
-        console.log('User UID:', user.uid)
-        console.log('세션 teacherId 목록:', sessionsArray.map(s => ({ id: s.sessionId, teacherId: s.teacherId })))
+        console.log('=== 세션 필터링 디버깅 ===')
+        console.log('현재 User UID:', user.uid)
+        console.log('전체 세션 정보:')
+        sessionsArray.forEach(s => {
+          console.log(`- 세션 ID: ${s.sessionId}, teacherId: ${s.teacherId}, 일치: ${s.teacherId === user.uid}`)
+        })
         
         // 최신순으로 정렬
         mySessionsArray.sort((a, b) => b.createdAt - a.createdAt)
@@ -129,7 +142,7 @@ export default function TeacherDashboardPage() {
       console.log('Firebase 실시간 리스너 해제')
       unsubscribe()
     }
-  }, [user])
+  }, [user, authLoading])
 
   return (
     <RequireAuth>
@@ -173,7 +186,7 @@ export default function TeacherDashboardPage() {
           </div>
           <SessionList 
             sessions={sessions} 
-            loading={loading} 
+            loading={loading || authLoading} 
             error={error}
             onRefresh={fetchSessions}
           />
