@@ -35,6 +35,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showAnalysisResult, setShowAnalysisResult] = useState(false)
+  const [isMaterialsExpanded, setIsMaterialsExpanded] = useState(false) // 기본적으로 접힌 상태
   
   // AI 논제 추천 관련 상태
   const [showAgendaRecommender, setShowAgendaRecommender] = useState(false)
@@ -430,9 +431,77 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           </div>
         </div>
         
-        <Card title="학습 자료" className="shadow-md hover:shadow-lg transition-shadow">
+        <Card 
+          title={
+            <div className="flex items-center justify-between">
+              <span>학습 자료</span>
+              <button
+                onClick={() => setIsMaterialsExpanded(!isMaterialsExpanded)}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  className={`h-5 w-5 transition-transform duration-200 ${isMaterialsExpanded ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          }
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          {/* 자료 개수 및 요약 표시 */}
+          {!isMaterialsExpanded && (
+            <div className="bg-gray-50 rounded-lg p-3 -mx-6 -mb-6 mt-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-600">
+                  {session.materials && session.materials.length > 0 ? (
+                    <div className="flex items-center gap-3">
+                      <span className="font-medium">자료 {session.materials.length}개</span>
+                      <div className="flex gap-2">
+                        {session.materials.map((material: any, index: number) => (
+                          <span key={index} className="inline-flex items-center">
+                            {material.type === 'text' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                            )}
+                            {material.type === 'youtube' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                            {material.type === 'file' && (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                              </svg>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : session.materialText || session.materialUrl ? (
+                    <span className="font-medium">자료 1개</span>
+                  ) : (
+                    <span className="text-gray-500">자료 없음</span>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsMaterialsExpanded(true)}
+                  className="text-xs text-primary hover:text-primary-dark font-medium"
+                >
+                  자료 보기
+                </button>
+              </div>
+            </div>
+          )}
+          
           {/* 다중 자료 지원 */}
-          {session.materials && session.materials.length > 0 ? (
+          {isMaterialsExpanded && session.materials && session.materials.length > 0 ? (
             <div className="space-y-6">
               {session.materials.map((material: any, index: number) => (
                 <div key={index} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
@@ -485,12 +554,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                 </div>
               ))}
             </div>
-          ) : session.materialText ? (
+          ) : isMaterialsExpanded && session.materialText ? (
             /* 기존 단일 자료와의 호환성 유지 */
             <div className="prose max-w-none text-sm md:text-base">
               <p className="whitespace-pre-wrap">{session.materialText}</p>
             </div>
-          ) : session.materialUrl ? (
+          ) : isMaterialsExpanded && session.materialUrl ? (
             <div className="aspect-video rounded-md overflow-hidden">
               <iframe
                 src={`https://www.youtube.com/embed/${extractYoutubeVideoId(session.materialUrl)}`}
@@ -500,11 +569,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                 allowFullScreen
               ></iframe>
             </div>
-          ) : (
+          ) : isMaterialsExpanded && (
             <p className="text-gray-500">학습 자료가 없습니다.</p>
           )}
           
-          {session.keywords && session.keywords.length > 0 && (
+          {isMaterialsExpanded && session.keywords && session.keywords.length > 0 && (
             <div className="mt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-2">키워드:</h3>
               <div className="flex flex-wrap gap-2">
