@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Button from '../common/Button'
 import { generateSessionCode } from '@/lib/utils'
 import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface Material {
   id: string
@@ -18,6 +19,7 @@ interface Material {
 
 export default function CreateSessionForm() {
   const router = useRouter()
+  const { user } = useAuth()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [sessionTitle, setSessionTitle] = useState('')
   const [materials, setMaterials] = useState<Material[]>([])
@@ -183,6 +185,7 @@ export default function CreateSessionForm() {
       const sessionCode = generateSessionCode()
       const sessionData = {
         title: sessionTitle.trim() || '제목 없음',
+        teacherId: user?.uid || '', // 교사 ID 추가
         materials: materials.map(material => ({
           type: material.type,
           content: material.content,

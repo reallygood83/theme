@@ -11,8 +11,10 @@ import Button from '@/components/common/Button'
 import { Session } from '@/lib/utils'
 import { database } from '@/lib/firebase'
 import { ref, onValue, off } from 'firebase/database'
+import { useAuth } from '@/contexts/AuthContext'
 
 export default function TeacherDashboardPage() {
+  const { user } = useAuth()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -85,13 +87,19 @@ export default function TeacherDashboardPage() {
           ...(data as any)
         }))
         
+        // 현재 로그인한 교사의 세션만 필터링
+        const mySessionsArray = sessionsArray.filter(session => 
+          session.teacherId === user?.uid
+        )
+        
         // 최신순으로 정렬
-        sessionsArray.sort((a, b) => b.createdAt - a.createdAt)
+        mySessionsArray.sort((a, b) => b.createdAt - a.createdAt)
         
-        console.log('실시간 업데이트된 세션 목록:', sessionsArray.length, '개')
-        console.log('세션 ID 목록:', sessionsArray.map((s: Session) => s.sessionId))
+        console.log('전체 세션:', sessionsArray.length, '개')
+        console.log('내 세션:', mySessionsArray.length, '개')
+        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s.sessionId))
         
-        setSessions(sessionsArray)
+        setSessions(mySessionsArray)
         setError(null)
       } else {
         console.log('Firebase에 세션 데이터 없음')
@@ -112,7 +120,7 @@ export default function TeacherDashboardPage() {
       console.log('Firebase 실시간 리스너 해제')
       unsubscribe()
     }
-  }, [])
+  }, [user])
 
   return (
     <RequireAuth>

@@ -61,6 +61,7 @@ export async function POST(request: Request) {
     const newSessionCode = generateSessionCode()
     const newSessionData = {
       title: originalSession.title ? `${originalSession.title} (복사본)` : '제목 없음 (복사본)',
+      teacherId: originalSession.teacherId || '', // 교사 ID 복제
       materials: originalSession.materials || [], // 다중 자료 복제
       materialText: originalSession.materialText || '',
       materialUrl: originalSession.materialUrl || '',
