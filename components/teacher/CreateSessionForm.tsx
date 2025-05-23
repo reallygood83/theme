@@ -8,11 +8,12 @@ import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'fire
 
 interface Material {
   id: string
-  type: 'text' | 'youtube' | 'file'
+  type: 'text' | 'youtube' | 'file' | 'link'
   content?: string
   url?: string
   fileName?: string
   fileUrl?: string
+  linkTitle?: string
 }
 
 export default function CreateSessionForm() {
@@ -33,7 +34,8 @@ export default function CreateSessionForm() {
       id: Date.now().toString(),
       type,
       content: type === 'text' ? '' : undefined,
-      url: type === 'youtube' ? '' : undefined,
+      url: type === 'youtube' || type === 'link' ? '' : undefined,
+      linkTitle: type === 'link' ? '' : undefined,
     }
     setMaterials([...materials, newMaterial])
   }
@@ -140,6 +142,23 @@ export default function CreateSessionForm() {
         alert('파일을 업로드해주세요.')
         return false
       }
+      if (material.type === 'link') {
+        if (!material.url?.trim()) {
+          alert('링크 URL을 입력해주세요.')
+          return false
+        }
+        if (!material.linkTitle?.trim()) {
+          alert('링크 제목을 입력해주세요.')
+          return false
+        }
+        // URL 형식 검증
+        try {
+          new URL(material.url)
+        } catch (e) {
+          alert('올바른 URL 형식이 아닙니다. (예: https://example.com)')
+          return false
+        }
+      }
     }
     return true
   }
@@ -169,7 +188,8 @@ export default function CreateSessionForm() {
           content: material.content,
           url: material.url,
           fileName: material.fileName,
-          fileUrl: material.fileUrl
+          fileUrl: material.fileUrl,
+          linkTitle: material.linkTitle
         })),
         keywords,
         accessCode: sessionCode,
@@ -293,7 +313,7 @@ export default function CreateSessionForm() {
             <div key={material.id} className="border border-gray-300 rounded-lg p-4">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-medium text-gray-700">
-                  자료 {index + 1} - {material.type === 'text' ? '텍스트' : material.type === 'youtube' ? '유튜브 영상' : '파일'}
+                  자료 {index + 1} - {material.type === 'text' ? '텍스트' : material.type === 'youtube' ? '유튜브 영상' : material.type === 'link' ? '링크' : '파일'}
                 </h3>
                 <button
                   type="button"
@@ -326,6 +346,40 @@ export default function CreateSessionForm() {
                   onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
                   required
                 />
+              )}
+              
+              {material.type === 'link' && (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      링크 제목
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="예: '환경보호와 경제발전' 관련 기사"
+                      value={material.linkTitle || ''}
+                      onChange={(e) => updateMaterial(material.id, { linkTitle: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      URL
+                    </label>
+                    <input
+                      type="url"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="https://example.com/article"
+                      value={material.url || ''}
+                      onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
+                      required
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      신문 기사, 블로그, 웹 페이지 등의 링크를 입력하세요.
+                    </p>
+                  </div>
+                </div>
               )}
               
               {material.type === 'file' && (
@@ -386,42 +440,54 @@ export default function CreateSessionForm() {
         </div>
         
         {/* 자료 추가 버튼 */}
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={() => addMaterial('text')}
-            className="flex-1"
+            className="w-full"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            텍스트 추가
+            텍스트
           </Button>
           
           <Button
             type="button"
             variant="outline"
             onClick={() => addMaterial('youtube')}
-            className="flex-1"
+            className="w-full"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            유튜브 추가
+            유튜브
+          </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => addMaterial('link')}
+            className="w-full"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+            링크
           </Button>
           
           <Button
             type="button"
             variant="outline"
             onClick={() => addMaterial('file')}
-            className="flex-1"
+            className="w-full"
           >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            파일 추가
+            파일
           </Button>
         </div>
         

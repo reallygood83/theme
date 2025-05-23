@@ -30,11 +30,12 @@ export interface Session {
   materialText?: string;
   materialUrl?: string;
   materials?: Array<{
-    type: 'text' | 'youtube' | 'file';
+    type: 'text' | 'youtube' | 'file' | 'link';
     content?: string;
     url?: string;
     fileName?: string;
     fileUrl?: string;
+    linkTitle?: string;
   }>;
   keywords?: string[];
   accessCode: string;
