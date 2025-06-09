@@ -52,36 +52,16 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     
     const fetchSessionByCode = async () => {
       try {
-        // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-        let db: Database | null = database;
-        
-        // Firebase 환경 변수 확인 및 필요시 재초기화
-        if (!db) {
-          const firebaseConfig = {
-            apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-            authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-            appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-            databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
-              (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-                ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
-                : undefined)
-          };
-          
-          if (!firebaseConfig.databaseURL) {
-            setError('Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.');
-            setLoading(false);
-            return;
-          }
-          
-          const app = initializeApp(firebaseConfig);
-          db = getDatabase(app);
+        // Firebase 연결 확인
+        if (!database) {
+          console.error('Firebase 데이터베이스 연결 실패');
+          setError('데이터베이스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          setLoading(false);
+          return;
         }
         
         // 세션 코드로 세션 ID 조회
-        const sessionsRef = ref(db, 'sessions')
+        const sessionsRef = ref(database, 'sessions')
         const snapshot = await get(sessionsRef)
         
         if (snapshot.exists()) {
@@ -106,7 +86,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             setSession(foundSession)
             
             // 이 세션에 대한 실시간 업데이트 수신
-            const sessionRef = ref(db, `sessions/${foundSessionId}`)
+            const sessionRef = ref(database, `sessions/${foundSessionId}`)
             const unsubscribe = onValue(sessionRef, (snapshot) => {
               const updatedSession = snapshot.val()
               if (updatedSession) {
@@ -147,7 +127,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             
             // 클로저 문제를 피하기 위한 함수 정의
             const setupAgendaListener = () => {
-              const studentAgendasRef = ref(db, `sessions/${foundSessionId}/studentAgendas`);
+              const studentAgendasRef = ref(database, `sessions/${foundSessionId}/studentAgendas`);
               
               return onValue(studentAgendasRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -216,11 +196,16 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             setError('유효하지 않은 세션 코드입니다.')
           }
         } else {
+          console.log('세션 데이터가 존재하지 않습니다.')
           setError('세션 정보를 찾을 수 없습니다.')
         }
       } catch (err) {
         console.error('세션 조회 오류:', err)
-        setError('세션 정보를 불러오는 중 오류가 발생했습니다.')
+        if (err instanceof Error) {
+          setError(`세션 정보를 불러오는 중 오류가 발생했습니다: ${err.message}`)
+        } else {
+          setError('세션 정보를 불러오는 중 알 수 없는 오류가 발생했습니다.')
+        }
       } finally {
         setLoading(false)
       }
@@ -341,6 +326,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         <div className="max-w-4xl mx-auto text-center py-12">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="mt-4 text-gray-600">세션 정보를 불러오는 중...</p>
+          <p className="mt-2 text-sm text-gray-500">세션 코드: {sessionCode}</p>
         </div>
       </>
     )
