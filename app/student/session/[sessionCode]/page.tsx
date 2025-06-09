@@ -44,7 +44,14 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   
   // 세션 코드로 세션 정보 조회
   useEffect(() => {
-    console.log('세션 정보 조회 시작 - 현재 학생 정보:', { 
+    console.log('=== 세션 조회 시작 ===');
+    console.log('환경 정보:', {
+      userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
+      브라우저: typeof window !== 'undefined' ? window.navigator.vendor : 'server',
+      뷰포트: typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'server',
+      연결상태: typeof window !== 'undefined' && 'onLine' in window.navigator ? window.navigator.onLine : 'unknown'
+    });
+    console.log('세션 정보:', { 
       이름: studentName, 
       모둠: studentGroup,
       세션코드: sessionCode
@@ -52,30 +59,52 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     
     const fetchSessionByCode = async () => {
       try {
+        console.log('Firebase database 객체:', database);
+        
         // Firebase 연결 확인
         if (!database) {
-          console.error('Firebase 데이터베이스 연결 실패');
-          setError('데이터베이스 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+          console.error('Firebase 데이터베이스 연결 실패 - database 객체가 null');
+          setError('데이터베이스 연결에 실패했습니다. 페이지를 새로고침해주세요.');
           setLoading(false);
           return;
         }
         
+        console.log('Firebase 연결 확인됨, 세션 조회 시작...');
+        
         // 세션 코드로 세션 ID 조회
+        console.log('세션 데이터 조회 중...');
         const sessionsRef = ref(database, 'sessions')
         const snapshot = await get(sessionsRef)
+        
+        console.log('Firebase 응답:', {
+          exists: snapshot.exists(),
+          hasData: snapshot.val() !== null
+        });
         
         if (snapshot.exists()) {
           let foundSessionId: string | null = null
           let foundSession: Session | null = null
+          const allSessions = snapshot.val();
+          
+          console.log('전체 세션 수:', Object.keys(allSessions || {}).length);
+          console.log('찾는 세션 코드:', sessionCode);
           
           snapshot.forEach((childSnapshot) => {
             const sessionData = childSnapshot.val()
+            console.log('세션 확인:', {
+              sessionId: childSnapshot.key,
+              accessCode: sessionData.accessCode,
+              title: sessionData.title,
+              매치여부: sessionData.accessCode === sessionCode
+            });
+            
             if (sessionData.accessCode === sessionCode) {
               foundSessionId = childSnapshot.key
               foundSession = {
                 sessionId: childSnapshot.key,
                 ...sessionData
               }
+              console.log('🎉 세션 발견!', foundSessionId);
               return true // forEach 순회 중단
             }
             return false
@@ -197,26 +226,52 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             setError('유효하지 않은 세션 코드입니다.')
           }
         } else {
-          console.log('세션 데이터가 존재하지 않습니다.')
-          setError('세션 정보를 찾을 수 없습니다.')
+          console.log('❌ 세션 데이터가 존재하지 않습니다.')
+          console.log('Firebase 데이터베이스에 세션이 없거나 권한 문제일 수 있습니다.');
+          setError('세션 정보를 찾을 수 없습니다. 네트워크 연결을 확인하고 다시 시도해주세요.')
         }
       } catch (err) {
-        console.error('세션 조회 오류:', err)
+        console.error('❌ 세션 조회 중 오류 발생:', err)
+        console.error('에러 상세:', {
+          name: err instanceof Error ? err.name : 'Unknown',
+          message: err instanceof Error ? err.message : String(err),
+          stack: err instanceof Error ? err.stack : 'No stack'
+        });
+        
         if (err instanceof Error) {
-          setError(`세션 정보를 불러오는 중 오류가 발생했습니다: ${err.message}`)
+          if (err.message.includes('network') || err.message.includes('offline')) {
+            setError('네트워크 연결을 확인해주세요. 인터넷에 연결된 상태에서 다시 시도해주세요.')
+          } else if (err.message.includes('permission') || err.message.includes('auth')) {
+            setError('접근 권한 문제가 발생했습니다. 페이지를 새로고침해주세요.')
+          } else {
+            setError(`세션 정보를 불러오는 중 오류가 발생했습니다: ${err.message}`)
+          }
         } else {
-          setError('세션 정보를 불러오는 중 알 수 없는 오류가 발생했습니다.')
+          setError('세션 정보를 불러오는 중 알 수 없는 오류가 발생했습니다. 페이지를 새로고침해주세요.')
         }
       } finally {
+        console.log('=== 세션 조회 완료 ===');
         setLoading(false)
       }
     }
     
-    fetchSessionByCode()
+    // 타임아웃 설정 (모바일 환경에서 네트워크가 느릴 수 있음)
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        console.warn('⚠️ 세션 조회 타임아웃 (30초)');
+        setError('세션을 불러오는 데 시간이 너무 오래 걸립니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
+        setLoading(false);
+      }
+    }, 30000); // 30초 타임아웃
+    
+    fetchSessionByCode().finally(() => {
+      clearTimeout(timeoutId);
+    });
     
     // 이름이나 모둠이 변경되면 데이터를 다시 필터링해야 함
     return () => {
       console.log('세션 정보 조회 정리 - 학생 정보 변경됨');
+      clearTimeout(timeoutId);
     };
   }, [sessionCode, studentName, studentGroup])
   
@@ -328,6 +383,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           <p className="mt-4 text-gray-600">세션 정보를 불러오는 중...</p>
           <p className="mt-2 text-sm text-gray-500">세션 코드: {sessionCode}</p>
+          <div className="mt-6 text-xs text-gray-400 space-y-1">
+            <p>💡 잠시만 기다려주세요</p>
+            <p>📱 태블릿이나 모바일에서는 조금 더 오래 걸릴 수 있습니다</p>
+            <p>🌐 네트워크 연결을 확인해주세요</p>
+          </div>
         </div>
       </>
     )
