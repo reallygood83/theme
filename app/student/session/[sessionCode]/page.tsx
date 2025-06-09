@@ -12,7 +12,7 @@ import AgendaValidator from '@/components/student/AgendaValidator'
 import AgendaRecommender from '@/components/student/AgendaRecommender'
 import AgendaDisplay from '@/components/student/AgendaDisplay'
 import TermDefinition from '@/components/student/TermDefinition'
-import { database } from '@/lib/firebase'
+import { database, getFirebaseDatabase, isInitialized } from '@/lib/firebase'
 import { ref, get, onValue, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 import { Session, extractYoutubeVideoId } from '@/lib/utils'
@@ -59,12 +59,14 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     
     const fetchSessionByCode = async () => {
       try {
+        console.log('Firebase 초기화 상태:', isInitialized);
         console.log('Firebase database 객체:', database);
         
-        // Firebase 연결 확인
-        if (!database) {
+        // Firebase 연결 확인 및 재시도
+        const db = getFirebaseDatabase();
+        if (!db) {
           console.error('Firebase 데이터베이스 연결 실패 - database 객체가 null');
-          setError('데이터베이스 연결에 실패했습니다. 페이지를 새로고침해주세요.');
+          setError('데이터베이스 연결에 실패했습니다. 네트워크 연결을 확인하고 페이지를 새로고침해주세요.');
           setLoading(false);
           return;
         }
@@ -73,7 +75,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         
         // 세션 코드로 세션 ID 조회
         console.log('세션 데이터 조회 중...');
-        const sessionsRef = ref(database, 'sessions')
+        const sessionsRef = ref(db, 'sessions')
         const snapshot = await get(sessionsRef)
         
         console.log('Firebase 응답:', {
@@ -115,7 +117,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             setSession(foundSession)
             
             // 이 세션에 대한 실시간 업데이트 수신
-            const sessionRef = ref(database, `sessions/${foundSessionId}`)
+            const sessionRef = ref(db, `sessions/${foundSessionId}`)
             const unsubscribe = onValue(sessionRef, (snapshot) => {
               const updatedSession = snapshot.val()
               if (updatedSession) {
@@ -156,8 +158,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             
             // 클로저 문제를 피하기 위한 함수 정의
             const setupAgendaListener = () => {
-              if (!database) return () => {}; // database가 null인 경우 빈 함수 반환
-              const studentAgendasRef = ref(database, `sessions/${foundSessionId}/studentAgendas`);
+              if (!db) return () => {}; // database가 null인 경우 빈 함수 반환
+              const studentAgendasRef = ref(db, `sessions/${foundSessionId}/studentAgendas`);
               
               return onValue(studentAgendasRef, (snapshot) => {
                 if (snapshot.exists()) {
@@ -397,12 +399,34 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     return (
       <>
         <Header />
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="bg-red-50 text-red-600 p-4 rounded-md inline-block">
-            <p className="font-medium">{error || '세션 정보를 찾을 수 없습니다.'}</p>
-            <p className="mt-2 text-sm">
-              올바른 세션 코드를 확인하여 다시 시도해주세요.
+        <div className="max-w-4xl mx-auto text-center py-12 px-4">
+          <div className="bg-red-50 text-red-600 p-6 rounded-md inline-block max-w-md">
+            <div className="mb-4">
+              <svg className="mx-auto h-12 w-12 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <p className="font-medium text-lg mb-3">{error || '세션 정보를 찾을 수 없습니다.'}</p>
+            <p className="text-sm mb-4">
+              세션 코드: <span className="font-mono font-bold bg-red-100 px-2 py-1 rounded">{sessionCode}</span>
             </p>
+            
+            <div className="bg-white p-4 rounded-md text-left text-sm space-y-2">
+              <p className="font-semibold text-red-800">📱 모바일/태블릿 사용자:</p>
+              <ul className="text-red-700 space-y-1 pl-4">
+                <li>• 페이지 새로고침 (당겨서 새로고침)</li>
+                <li>• Wi-Fi 연결 확인</li>
+                <li>• 브라우저 캐시 삭제</li>
+                <li>• 다른 브라우저 시도 (Chrome, Safari)</li>
+              </ul>
+            </div>
+            
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
+            >
+              🔄 페이지 새로고침
+            </button>
           </div>
         </div>
       </>

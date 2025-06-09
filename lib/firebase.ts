@@ -21,31 +21,61 @@ const firebaseConfig = {
 // Firebase 앱 초기화 (중복 초기화 방지)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Firebase가 서버 사이드 렌더링 환경에서 안전하게 초기화되도록 조건부 초기화
+// Firebase 서비스 인스턴스 초기화
 let database: Database | null = null;
 let firestore: Firestore | null = null;
 let auth: Auth | null = null;
 let storage: ReturnType<typeof getStorage> | null = null;
 
-// 브라우저 환경이거나 Firebase 구성이 완전한 경우에만 초기화
-if (typeof window !== 'undefined' || 
-    (firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.databaseURL)) {
-  try {
-    // Realtime Database 인스턴스
-    database = getDatabase(app);
-    
-    // Firestore 인스턴스
-    firestore = getFirestore(app);
-    
-    // Authentication 인스턴스
-    auth = getAuth(app);
-    
-    // Storage 인스턴스
-    storage = getStorage(app);
-  } catch (error) {
-    console.error('Firebase 초기화 오류:', error);
+// Firebase 구성이 완전한 경우 초기화 (SSR과 클라이언트 모두 지원)
+const initializeFirebaseServices = () => {
+  if (firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.databaseURL) {
+    try {
+      console.log('Firebase 서비스 초기화 중...', {
+        apiKey: firebaseConfig.apiKey ? '설정됨' : '없음',
+        projectId: firebaseConfig.projectId,
+        databaseURL: firebaseConfig.databaseURL
+      });
+      
+      // Realtime Database 인스턴스
+      database = getDatabase(app);
+      
+      // Firestore 인스턴스
+      firestore = getFirestore(app);
+      
+      // Authentication 인스턴스
+      auth = getAuth(app);
+      
+      // Storage 인스턴스
+      storage = getStorage(app);
+      
+      console.log('✅ Firebase 서비스 초기화 완료');
+      return true;
+    } catch (error) {
+      console.error('❌ Firebase 초기화 오류:', error);
+      return false;
+    }
+  } else {
+    console.error('❌ Firebase 환경 변수가 불완전합니다:', {
+      apiKey: !!firebaseConfig.apiKey,
+      projectId: !!firebaseConfig.projectId,
+      databaseURL: !!firebaseConfig.databaseURL
+    });
+    return false;
   }
-}
+};
 
-export { database, firestore, auth, storage };
+// 초기화 실행
+const isInitialized = initializeFirebaseServices();
+
+// 동적으로 database 인스턴스를 반환하는 함수 (모바일 환경 대응)
+export const getFirebaseDatabase = () => {
+  if (!database) {
+    console.warn('⚠️ Database가 초기화되지 않음, 재시도 중...');
+    initializeFirebaseServices();
+  }
+  return database;
+};
+
+export { database, firestore, auth, storage, isInitialized };
 export default app;
