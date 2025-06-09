@@ -41,47 +41,49 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [showAgendaRecommender, setShowAgendaRecommender] = useState(false)
   const [isGeneratingAgendas, setIsGeneratingAgendas] = useState(false)
   const [studentAgendas, setStudentAgendas] = useState<any[]>([])
+  const [debugInfo, setDebugInfo] = useState<string[]>([])
+  
+  // 디버깅 정보 추가 함수
+  const addDebugInfo = (message: string) => {
+    console.log(message);
+    setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+  }
   
   // 세션 코드로 세션 정보 조회
   useEffect(() => {
-    console.log('=== 세션 조회 시작 ===');
-    console.log('환경 정보:', {
+    addDebugInfo('=== 세션 조회 시작 ===');
+    
+    const envInfo = {
       userAgent: typeof window !== 'undefined' ? window.navigator.userAgent : 'server',
       브라우저: typeof window !== 'undefined' ? window.navigator.vendor : 'server',
       뷰포트: typeof window !== 'undefined' ? `${window.innerWidth}x${window.innerHeight}` : 'server',
       연결상태: typeof window !== 'undefined' && 'onLine' in window.navigator ? window.navigator.onLine : 'unknown'
-    });
-    console.log('세션 정보:', { 
-      이름: studentName, 
-      모둠: studentGroup,
-      세션코드: sessionCode
-    });
+    };
+    addDebugInfo(`환경 정보: ${JSON.stringify(envInfo)}`);
+    addDebugInfo(`세션 정보: 이름=${studentName}, 모둠=${studentGroup}, 세션코드=${sessionCode}`);
     
     const fetchSessionByCode = async () => {
       try {
-        console.log('Firebase 초기화 상태:', isInitialized);
-        console.log('Firebase database 객체:', database);
+        addDebugInfo(`Firebase 초기화 상태: ${isInitialized}`);
+        addDebugInfo(`Firebase database 객체: ${database ? '존재함' : 'null'}`);
         
         // Firebase 연결 확인 및 재시도
         const db = getFirebaseDatabase();
         if (!db) {
-          console.error('Firebase 데이터베이스 연결 실패 - database 객체가 null');
+          addDebugInfo('❌ Firebase 데이터베이스 연결 실패 - database 객체가 null');
           setError('데이터베이스 연결에 실패했습니다. 네트워크 연결을 확인하고 페이지를 새로고침해주세요.');
           setLoading(false);
           return;
         }
         
-        console.log('Firebase 연결 확인됨, 세션 조회 시작...');
+        addDebugInfo('✅ Firebase 연결 확인됨, 세션 조회 시작...');
         
         // 세션 코드로 세션 ID 조회
-        console.log('세션 데이터 조회 중...');
+        addDebugInfo('📡 세션 데이터 조회 중...');
         const sessionsRef = ref(db, 'sessions')
         const snapshot = await get(sessionsRef)
         
-        console.log('Firebase 응답:', {
-          exists: snapshot.exists(),
-          hasData: snapshot.val() !== null
-        });
+        addDebugInfo(`📡 Firebase 응답: exists=${snapshot.exists()}, hasData=${snapshot.val() !== null}`);
         
         if (snapshot.exists()) {
           let foundSessionId: string | null = null
@@ -381,15 +383,39 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     return (
       <>
         <Header />
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-gray-600">세션 정보를 불러오는 중...</p>
-          <p className="mt-2 text-sm text-gray-500">세션 코드: {sessionCode}</p>
-          <div className="mt-6 text-xs text-gray-400 space-y-1">
-            <p>💡 잠시만 기다려주세요</p>
-            <p>📱 태블릿이나 모바일에서는 조금 더 오래 걸릴 수 있습니다</p>
-            <p>🌐 네트워크 연결을 확인해주세요</p>
+        <div className="max-w-4xl mx-auto py-12 px-4">
+          <div className="text-center mb-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="mt-4 text-gray-600">세션 정보를 불러오는 중...</p>
+            <p className="mt-2 text-sm text-gray-500">세션 코드: {sessionCode}</p>
+            <div className="mt-6 text-xs text-gray-400 space-y-1">
+              <p>💡 잠시만 기다려주세요</p>
+              <p>📱 태블릿이나 모바일에서는 조금 더 오래 걸릴 수 있습니다</p>
+              <p>🌐 네트워크 연결을 확인해주세요</p>
+            </div>
           </div>
+          
+          {/* 실시간 디버깅 정보 */}
+          {debugInfo.length > 0 && (
+            <div className="bg-gray-100 p-4 rounded-lg">
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-medium text-gray-700">🔍 연결 상태</h3>
+                <button 
+                  onClick={() => setDebugInfo([])}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  지우기
+                </button>
+              </div>
+              <div className="max-h-40 overflow-y-auto text-xs text-gray-600 space-y-1 font-mono">
+                {debugInfo.map((info, index) => (
+                  <div key={index} className="break-all">
+                    {info}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </>
     )
@@ -428,6 +454,23 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               🔄 페이지 새로고침
             </button>
           </div>
+          
+          {/* 에러 시에도 디버깅 정보 표시 */}
+          {debugInfo.length > 0 && (
+            <div className="mt-8 bg-gray-100 p-4 rounded-lg max-w-2xl mx-auto">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">🔍 연결 과정 (기술진단용)</h3>
+              <div className="max-h-32 overflow-y-auto text-xs text-gray-600 space-y-1 font-mono">
+                {debugInfo.slice(-10).map((info, index) => (
+                  <div key={index} className="break-all">
+                    {info}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                💡 이 정보를 선생님께 보여주시면 문제 해결에 도움이 됩니다
+              </p>
+            </div>
+          )}
         </div>
       </>
     )
