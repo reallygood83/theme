@@ -127,6 +127,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             
             // 클로저 문제를 피하기 위한 함수 정의
             const setupAgendaListener = () => {
+              if (!database) return () => {}; // database가 null인 경우 빈 함수 반환
               const studentAgendasRef = ref(database, `sessions/${foundSessionId}/studentAgendas`);
               
               return onValue(studentAgendasRef, (snapshot) => {
