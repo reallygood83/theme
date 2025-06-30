@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Gemini API 키는 환경 변수에서 가져옵니다.
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+// Gemini API 키는 환경 변수에서 가져옵니다. (서버 전용)
+const apiKey = process.env.GEMINI_API_KEY || '';
 
 // API 키 유효성 확인
 if (!apiKey || apiKey.trim() === '') {
