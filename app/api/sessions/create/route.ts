@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
-import { database } from '@/lib/firebase'
 import { ref, push, set, get, getDatabase, Database } from 'firebase/database'
-import { initializeApp } from 'firebase/app'
+import { initializeApp, getApps } from 'firebase/app'
 
 export async function POST(request: Request) {
   try {
@@ -37,34 +36,49 @@ export async function POST(request: Request) {
       materialUrl: data.materials?.[0]?.type === 'youtube' ? data.materials[0].url : ''
     }
     
-    // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-    let db: Database | null = database;
+    // 서버사이드에서 Firebase 직접 초기화
+    console.log('Firebase 설정 준비 중...')
     
-    // Firebase 환경 변수 확인 및 필요시 재초기화
-    if (!db) {
-      const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
-          (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-            ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
-            : undefined)
-      };
-      
-      if (!firebaseConfig.databaseURL) {
-        return NextResponse.json(
-          { error: 'Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.' }, 
-          { status: 500 }
-        );
-      }
-      
-      const app = initializeApp(firebaseConfig);
-      db = getDatabase(app);
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    };
+    
+    console.log('Firebase 설정 확인:', {
+      apiKey: !!firebaseConfig.apiKey,
+      authDomain: firebaseConfig.authDomain,
+      projectId: firebaseConfig.projectId,
+      databaseURL: firebaseConfig.databaseURL
+    })
+    
+    // 필수 설정 확인
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.databaseURL) {
+      console.log('❌ Firebase 필수 설정 누락')
+      return NextResponse.json(
+        { error: 'Firebase 설정이 불완전합니다.' }, 
+        { status: 500 }
+      );
     }
+    
+    // Firebase 앱 초기화 (중복 방지)
+    console.log('Firebase 앱 초기화 중...')
+    let app;
+    if (getApps().length === 0) {
+      app = initializeApp(firebaseConfig);
+      console.log('✅ 새 Firebase 앱 초기화 완료')
+    } else {
+      app = getApps()[0];
+      console.log('✅ 기존 Firebase 앱 사용')
+    }
+    
+    // Database 인스턴스 생성
+    const db = getDatabase(app);
+    console.log('✅ Firebase Database 연결 완료')
     
     // 세션 생성
     const sessionsRef = ref(db, 'sessions')
