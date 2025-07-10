@@ -5,10 +5,19 @@ import { initializeApp } from 'firebase/app'
 
 export async function POST(request: Request) {
   try {
+    console.log('=== 세션 생성 API 시작 ===')
+    console.log('환경변수 확인:', {
+      FIREBASE_API_KEY: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      FIREBASE_DATABASE_URL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    })
+    
     const data = await request.json()
+    console.log('받은 데이터:', data)
     
     // 필수 필드 검증
     if (!data.accessCode) {
+      console.log('❌ 세션 코드 누락')
       return NextResponse.json(
         { error: '세션 코드는 필수입니다.' }, 
         { status: 400 }
@@ -90,9 +99,16 @@ export async function POST(request: Request) {
       sessionId: newSessionRef.key 
     })
   } catch (error) {
-    console.error('세션 생성 오류:', error)
+    console.error('❌ 세션 생성 오류 상세:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      error
+    })
     return NextResponse.json(
-      { error: '세션 생성에 실패했습니다.' }, 
+      { 
+        error: '세션 생성에 실패했습니다.',
+        details: error instanceof Error ? error.message : String(error)
+      }, 
       { status: 500 }
     )
   }
