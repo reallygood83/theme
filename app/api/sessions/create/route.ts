@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { ref, push, set, get, getDatabase, Database } from 'firebase/database'
+import { ref, push, set } from 'firebase/database'
 import { initializeApp, getApps } from 'firebase/app'
+import { getDatabase } from 'firebase/database'
 
 export async function POST(request: Request) {
   try {
@@ -36,8 +37,8 @@ export async function POST(request: Request) {
       materialUrl: data.materials?.[0]?.type === 'youtube' ? data.materials[0].url : ''
     }
     
-    // 서버사이드에서 Firebase 직접 초기화
-    console.log('Firebase 설정 준비 중...')
+    // Firebase Client SDK로 간단하게 처리
+    console.log('Firebase 연결 중...')
     
     const firebaseConfig = {
       apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -49,36 +50,16 @@ export async function POST(request: Request) {
       databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
     };
     
-    console.log('Firebase 설정 확인:', {
-      apiKey: !!firebaseConfig.apiKey,
-      authDomain: firebaseConfig.authDomain,
-      projectId: firebaseConfig.projectId,
-      databaseURL: firebaseConfig.databaseURL
-    })
-    
-    // 필수 설정 확인
-    if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.databaseURL) {
-      console.log('❌ Firebase 필수 설정 누락')
-      return NextResponse.json(
-        { error: 'Firebase 설정이 불완전합니다.' }, 
-        { status: 500 }
-      );
-    }
-    
-    // Firebase 앱 초기화 (중복 방지)
-    console.log('Firebase 앱 초기화 중...')
+    // Firebase 앱 초기화
     let app;
     if (getApps().length === 0) {
       app = initializeApp(firebaseConfig);
-      console.log('✅ 새 Firebase 앱 초기화 완료')
     } else {
       app = getApps()[0];
-      console.log('✅ 기존 Firebase 앱 사용')
     }
     
-    // Database 인스턴스 생성
     const db = getDatabase(app);
-    console.log('✅ Firebase Database 연결 완료')
+    console.log('✅ Firebase 연결 완료')
     
     // 세션 생성
     const sessionsRef = ref(db, 'sessions')
@@ -87,27 +68,12 @@ export async function POST(request: Request) {
     console.log('세션 생성 시도:', {
       sessionId: newSessionRef.key,
       teacherId: sessionData.teacherId,
-      title: sessionData.title,
-      materialsCount: sessionData.materials.length
+      title: sessionData.title
     })
     
     await set(newSessionRef, sessionData)
+    console.log('✅ 세션 생성 완료:', newSessionRef.key)
     
-    console.log('Firebase에 세션 저장 완료:', newSessionRef.key)
-    
-    // 저장 후 다시 확인
-    const savedSessionRef = ref(db, `sessions/${newSessionRef.key}`)
-    const savedSnapshot = await get(savedSessionRef)
-    
-    if (savedSnapshot.exists()) {
-      console.log('저장 확인 성공:', savedSnapshot.val())
-    } else {
-      console.error('저장 확인 실패: 세션이 Firebase에서 조회되지 않음')
-    }
-    
-    console.log('세션 생성 완료:', newSessionRef.key)
-    
-    // 세션 ID 반환
     return NextResponse.json({ 
       success: true, 
       sessionId: newSessionRef.key 
