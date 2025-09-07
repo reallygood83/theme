@@ -6,13 +6,19 @@ import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
 import { loginWithGoogle } from '@/lib/auth'
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '@/lib/firebase'
 
 function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const redirect = searchParams.get('redirect') || '/teacher/dashboard'
   
   // 로그인 상태라면 리디렉션
@@ -21,6 +27,47 @@ function RegisterForm() {
       router.push(redirect)
     }
   }, [user, authLoading, router, redirect])
+
+  const handleEmailRegister = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (password !== confirmPassword) {
+      setError('비밀번호가 일치하지 않습니다.')
+      return
+    }
+
+    if (password.length < 6) {
+      setError('비밀번호는 6자 이상이어야 합니다.')
+      return
+    }
+
+    try {
+      setEmailLoading(true)
+      setError(null)
+      
+      await createUserWithEmailAndPassword(auth, email, password)
+      
+      // 심사위원 이메일인지 확인
+      if (email === 'judge@questiontalk.demo') {
+        router.push('/teacher/dashboard?viewAs=MSMk1a3iHBfbLzLwwnwpFnwJjS63')
+      } else {
+        router.push(redirect)
+      }
+    } catch (err: any) {
+      console.error('Registration error:', err)
+      if (err.code === 'auth/email-already-in-use') {
+        setError('이미 사용 중인 이메일입니다.')
+      } else if (err.code === 'auth/weak-password') {
+        setError('비밀번호가 너무 약합니다.')
+      } else if (err.code === 'auth/invalid-email') {
+        setError('유효하지 않은 이메일 주소입니다.')
+      } else {
+        setError(err.message || '회원가입 중 오류가 발생했습니다.')
+      }
+    } finally {
+      setEmailLoading(false)
+    }
+  }
 
   const handleGoogleLogin = async () => {
     try {
@@ -48,6 +95,68 @@ function RegisterForm() {
             {error}
           </div>
         )}
+        
+        {/* 이메일/비밀번호 회원가입 */}
+        <form onSubmit={handleEmailRegister} className="space-y-4">
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              이메일
+            </label>
+            <input
+              id="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="이메일을 입력하세요"
+            />
+          </div>
+          
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              비밀번호
+            </label>
+            <input
+              id="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="비밀번호를 입력하세요 (6자 이상)"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              비밀번호 확인
+            </label>
+            <input
+              id="confirmPassword"
+              type="password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="비밀번호를 다시 입력하세요"
+            />
+          </div>
+          
+          <button
+            type="submit"
+            disabled={emailLoading}
+            className="w-full bg-primary hover:bg-primary-dark text-white font-medium py-2.5 px-4 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {emailLoading ? '회원가입 중...' : '계정 생성'}
+          </button>
+        </form>
+        
+        <div className="mt-6 flex items-center">
+          <div className="flex-1 border-t border-gray-300"></div>
+          <span className="px-4 text-sm text-gray-500">또는</span>
+          <div className="flex-1 border-t border-gray-300"></div>
+        </div>
         
         <div className="mt-4">
           <button
