@@ -9,7 +9,6 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const navigationLinks = [
-    { name: "홈", url: "/", target: "_self" },
     { name: "이용 가이드", url: "/guide", target: "_self" }
   ]
 
