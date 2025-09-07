@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
 import RequireAuth from '@/components/auth/RequireAuth'
@@ -13,11 +13,17 @@ import { database } from '@/lib/firebase'
 import { ref, onValue, off } from 'firebase/database'
 import { useAuth } from '@/contexts/AuthContext'
 
-export default function TeacherDashboardPage() {
+function TeacherDashboardContent() {
   const { user, loading: authLoading } = useAuth()
+  const searchParams = useSearchParams()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  
+  // 심사위원 모드 확인
+  const viewAsUid = searchParams.get('viewAs')
+  const isJudgeMode = !!viewAsUid
+  const effectiveUserId = viewAsUid || user?.uid
 
   const fetchSessions = async () => {
     try {
@@ -101,17 +107,18 @@ export default function TeacherDashboardPage() {
           ...(data as any)
         }))
         
-        // 현재 로그인한 교사의 세션만 필터링
-        // teacherId가 없는 기존 세션도 표시 (하위 호환성)
+        // 현재 로그인한 교사의 세션만 필터링 (심사위원 모드 시 특정 UID 필터링)
         const mySessionsArray = sessionsArray.filter(session => 
-          session.teacherId === user.uid || !session.teacherId
+          session.teacherId === effectiveUserId || (!session.teacherId && !isJudgeMode)
         )
         
         console.log('=== 세션 필터링 디버깅 ===')
         console.log('현재 User UID:', user.uid)
+        console.log('심사위원 모드:', isJudgeMode)
+        console.log('유효 사용자 ID:', effectiveUserId)
         console.log('전체 세션 정보:')
         sessionsArray.forEach(s => {
-          console.log(`- 세션 ID: ${s.sessionId}, teacherId: ${s.teacherId}, 일치: ${s.teacherId === user.uid}`)
+          console.log(`- 세션 ID: ${s.sessionId}, teacherId: ${s.teacherId}, 일치: ${s.teacherId === effectiveUserId}`)
         })
         
         // 최신순으로 정렬
@@ -142,33 +149,56 @@ export default function TeacherDashboardPage() {
       console.log('Firebase 실시간 리스너 해제')
       unsubscribe()
     }
-  }, [user, authLoading])
+  }, [user, authLoading, effectiveUserId, isJudgeMode])
 
   return (
     <RequireAuth>
       <Header />
       <div className="max-w-4xl mx-auto">
+        {isJudgeMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center">
+              <svg className="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-blue-800">심사위원 모드</h3>
+                <p className="text-sm text-blue-700">
+                  공모전 심사를 위해 특정 교사 계정의 대시보드를 열람하고 있습니다. (UID: {viewAsUid})
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">교사 대시보드</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+              {isJudgeMode ? '심사용 교사 대시보드' : '교사 대시보드'}
+            </h1>
             <p className="text-gray-600">
-              토론 세션을 생성하고 관리할 수 있습니다.
+              {isJudgeMode 
+                ? '이 교사가 생성한 토론 세션들을 확인할 수 있습니다.' 
+                : '토론 세션을 생성하고 관리할 수 있습니다.'
+              }
             </p>
           </div>
           
-          <div className="mt-4 md:mt-0">
-            <Link href="/teacher/session/create">
-              <Button variant="primary">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                새 토론 세션 만들기
-              </Button>
-            </Link>
-          </div>
+          {!isJudgeMode && (
+            <div className="mt-4 md:mt-0">
+              <Link href="/teacher/session/create">
+                <Button variant="primary">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  새 토론 세션 만들기
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
         
-        <Card title="내 토론 세션">
+        <Card title={isJudgeMode ? "교사의 토론 세션" : "내 토론 세션"}>
           <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-gray-600">
               총 {sessions.length}개의 세션
@@ -275,5 +305,13 @@ export default function TeacherDashboardPage() {
         </div>
       </div>
     </RequireAuth>
+  )
+}
+
+export default function TeacherDashboardPage() {
+  return (
+    <Suspense fallback={<div className="flex justify-center items-center min-h-screen">로딩 중...</div>}>
+      <TeacherDashboardContent />
+    </Suspense>
   )
 }

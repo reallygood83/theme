@@ -165,6 +165,17 @@ export default function Home() {
       </div>
       
       <div className="mt-6 md:mt-8 text-center">
+        <div className="mb-4">
+          <Link 
+            href="/auth/judge-login" 
+            className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm transition-colors"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            심사위원 로그인
+          </Link>
+        </div>
         <p className="text-xs md:text-sm text-gray-500">
           © 2025 질문톡톡! 논제샘솟! - 교육용 토론 플랫폼
         </p>
