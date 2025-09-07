@@ -10,8 +10,6 @@ export default function Home() {
 
   const navigationLinks = [
     { name: "홈", url: "/", target: "_self" },
-    { name: "토론 메이트", url: "https://evidence-search.vercel.app/", target: "_blank" },
-    { name: "LovableDebate", url: "https://debate25.vercel.app/", target: "_blank" },
     { name: "이용 가이드", url: "/guide", target: "_self" }
   ]
 
