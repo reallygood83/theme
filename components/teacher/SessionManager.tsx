@@ -6,6 +6,7 @@ import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
 import Button from '../common/Button'
 import Card from '../common/Card'
+import AIAnalysisModal from './AIAnalysisModal'
 import { Session, Question } from '@/lib/utils'
 
 interface SessionManagerProps {
@@ -23,6 +24,10 @@ export default function SessionManager({
   const [questions, setQuestions] = useState<Question[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [analysisComplete, setAnalysisComplete] = useState(false)
+  
+  // AI 분석 모달 상태
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
+  const [analysisStep, setAnalysisStep] = useState(0)
   
   // 토스트 메시지 상태
   const [showToast, setShowToast] = useState(false)
@@ -129,10 +134,27 @@ export default function SessionManager({
       return
     }
     
+    // 모달 표시 및 분석 시작
     setIsAnalyzing(true)
+    setShowAnalysisModal(true)
+    setAnalysisStep(1)
     
     try {
-      // AI 분석 API 호출
+      console.log('🚀 AI 분석 시작:', { 
+        질문수: questions.length, 
+        세션ID: sessionId,
+        키워드: session.keywords 
+      })
+      
+      // 단계 1: 질문 검토
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      setAnalysisStep(2)
+      
+      // 단계 2: 질문 유목화
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setAnalysisStep(3)
+      
+      // 단계 3: 논제 추천 (실제 API 호출)
       const response = await fetch('/api/ai/analyze-questions', {
         method: 'POST',
         headers: {
@@ -145,17 +167,56 @@ export default function SessionManager({
         }),
       })
       
+      const result = await response.json()
+      console.log('📊 AI 분석 결과:', result)
+      
       if (!response.ok) {
-        throw new Error('분석 요청에 실패했습니다.')
+        throw new Error(result.error || '분석 요청에 실패했습니다.')
       }
       
-      // 분석 완료
-      setAnalysisComplete(true)
+      // 단계 4: 핵심 용어 추출
+      setAnalysisStep(4)
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      
+      if (result.success && result.result) {
+        console.log('✅ 분석 완료 - 추천 논제 수:', result.result.recommendedAgendas?.length || 0)
+        
+        // 단계 5: 분석 완료
+        setAnalysisStep(5)
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        
+        setAnalysisComplete(true)
+        setIsAnalyzing(false)
+      } else {
+        throw new Error('분석 결과가 올바르지 않습니다.')
+      }
+      
     } catch (error) {
-      console.error('AI 분석 오류:', error)
-      alert('분석 중 오류가 발생했습니다. 다시 시도해주세요.')
+      console.error('❌ AI 분석 오류:', error)
+      
+      // 모달 닫기 및 오류 처리
+      setShowAnalysisModal(false)
+      setAnalysisStep(0)
+      
+      // 구체적인 오류 메시지 표시
+      if (error instanceof Error) {
+        if (error.message.includes('API 키')) {
+          alert('⚠️ AI 분석을 위한 Gemini API 키가 설정되지 않았습니다.\n\n관리자에게 문의하여 API 키를 설정해주세요.')
+        } else {
+          alert(`분석 중 오류가 발생했습니다:\n${error.message}\n\n다시 시도해주세요.`)
+        }
+      } else {
+        alert('분석 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.')
+      }
+      
       setIsAnalyzing(false)
     }
+  }
+  
+  // 모달 닫기 핸들러
+  const handleCloseAnalysisModal = () => {
+    setShowAnalysisModal(false)
+    setAnalysisStep(0)
   }
   
   // 논제 편집 시작
@@ -594,6 +655,13 @@ export default function SessionManager({
           )}
         </div>
       )}
+      
+      {/* AI 분석 진행 상태 모달 */}
+      <AIAnalysisModal
+        isVisible={showAnalysisModal}
+        currentStep={analysisStep}
+        onClose={handleCloseAnalysisModal}
+      />
     </div>
   )
 }
