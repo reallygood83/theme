@@ -166,15 +166,7 @@ export default function Home() {
       
       <div className="mt-6 md:mt-8 text-center">
         <p className="text-xs md:text-sm text-gray-500">
-          © 2025 질문톡톡! 논제샘솟! | 안양 박달초 김문정 | 
-          <a 
-            href="https://www.youtube.com/@%EB%B0%B0%EC%9B%80%EC%9D%98%EB%8B%AC%EC%9D%B8-p5v" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-primary hover:underline ml-1"
-          >
-            유튜브 배움의 달인
-          </a>
+          © 2025 질문톡톡! 논제샘솟! - 교육용 토론 플랫폼
         </p>
       </div>
     </div>
