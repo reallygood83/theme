@@ -5,9 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
-import { loginWithGoogle } from '@/lib/auth'
-import { createUserWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
+import { loginWithGoogle, registerUser } from '@/lib/auth'
 
 function RegisterForm() {
   const router = useRouter()
@@ -45,7 +43,7 @@ function RegisterForm() {
       setEmailLoading(true)
       setError(null)
       
-      await createUserWithEmailAndPassword(auth, email, password)
+      await registerUser(email, password, '사용자')
       
       // 심사위원 이메일인지 확인
       if (email === 'judge@questiontalk.demo') {
@@ -55,15 +53,7 @@ function RegisterForm() {
       }
     } catch (err: any) {
       console.error('Registration error:', err)
-      if (err.code === 'auth/email-already-in-use') {
-        setError('이미 사용 중인 이메일입니다.')
-      } else if (err.code === 'auth/weak-password') {
-        setError('비밀번호가 너무 약합니다.')
-      } else if (err.code === 'auth/invalid-email') {
-        setError('유효하지 않은 이메일 주소입니다.')
-      } else {
-        setError(err.message || '회원가입 중 오류가 발생했습니다.')
-      }
+      setError(err.message || '회원가입 중 오류가 발생했습니다.')
     } finally {
       setEmailLoading(false)
     }
