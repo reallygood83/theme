@@ -363,7 +363,7 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                         <div>
                           <span className="font-medium text-green-700">찬성 논거</span>
                           <ul className="mt-1 space-y-1">
-                            {topic.pros.map((pro, i) => (
+                            {(topic.pros || []).map((pro, i) => (
                               <li key={i} className="text-green-600">• {pro}</li>
                             ))}
                           </ul>
@@ -372,7 +372,7 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                         <div>
                           <span className="font-medium text-red-700">반대 논거</span>
                           <ul className="mt-1 space-y-1">
-                            {topic.cons.map((con, i) => (
+                            {(topic.cons || []).map((con, i) => (
                               <li key={i} className="text-red-600">• {con}</li>
                             ))}
                           </ul>
@@ -462,7 +462,7 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                   🎯 <span className="ml-2">학습 목표</span>
                 </h5>
                 <ul className="space-y-1 text-sm">
-                  {generatedScenario.objectives.map((obj, index) => (
+                  {(generatedScenario.objectives || []).map((obj, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-primary mr-2">•</span>
                       <span>{obj}</span>
@@ -493,7 +493,7 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                 ⏰ <span className="ml-2">수업 진행 과정</span>
               </h5>
               <div className="space-y-3">
-                {generatedScenario.process.map((step, index) => (
+                {(generatedScenario.process || []).map((step, index) => (
                   <div key={index} className="flex">
                     <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
                       {step.step}
@@ -532,7 +532,7 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                   🌟 <span className="ml-2">심화 활동</span>
                 </h5>
                 <ul className="text-sm space-y-1">
-                  {generatedScenario.extensions.map((ext, index) => (
+                  {(generatedScenario.extensions || []).map((ext, index) => (
                     <li key={index} className="flex items-start">
                       <span className="text-primary mr-2">•</span>
                       <span>{ext}</span>

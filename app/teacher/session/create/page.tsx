@@ -1,11 +1,16 @@
 'use client'
 
+import { useState } from 'react'
 import Header from '@/components/common/Header'
 import RequireAuth from '@/components/auth/RequireAuth'
 import Card from '@/components/common/Card'
 import CreateSessionForm from '@/components/teacher/CreateSessionForm'
+import DebateScenarioModal from '@/components/teacher/DebateScenarioModal'
+import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
 
 export default function CreateSessionPage() {
+  const [isDebateScenarioModalOpen, setIsDebateScenarioModalOpen] = useState(false)
+  const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
   return (
     <RequireAuth>
       <Header />
@@ -19,6 +24,41 @@ export default function CreateSessionPage() {
           <CreateSessionForm />
         </Card>
         
+        {/* AI 지원 도구 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* 토론 주제 생성 모달 */}
+          <Card 
+            title="🎯 토론 주제 생성하기" 
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={() => setIsDebateScenarioModalOpen(true)}
+          >
+            <p className="text-gray-600 mb-4">
+              AI가 주제별 맞춤 토론 시나리오를 생성해드립니다.
+            </p>
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-800">
+                💡 클릭하여 AI 토론 주제 생성기 실행
+              </p>
+            </div>
+          </Card>
+
+          {/* 근거자료 검색 모달 */}
+          <Card 
+            title="🔍 근거자료 검색" 
+            className="cursor-pointer hover:shadow-lg transition-shadow duration-200"
+            onClick={() => setIsEvidenceSearchModalOpen(true)}
+          >
+            <p className="text-gray-600 mb-4">
+              토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
+            </p>
+            <div className="bg-green-50 p-3 rounded-lg">
+              <p className="text-sm text-green-800">
+                💡 클릭하여 AI 근거자료 검색 실행
+              </p>
+            </div>
+          </Card>
+        </div>
+
         <Card title="세션 운영 안내">
           <div className="space-y-4">
             <div className="border-b pb-4">
@@ -52,6 +92,18 @@ export default function CreateSessionPage() {
           </div>
         </Card>
       </div>
+
+      {/* 모달 컴포넌트들 */}
+      <DebateScenarioModal
+        isOpen={isDebateScenarioModalOpen}
+        onClose={() => setIsDebateScenarioModalOpen(false)}
+      />
+
+      <EvidenceSearchModalContainer
+        isOpen={isEvidenceSearchModalOpen}
+        onClose={() => setIsEvidenceSearchModalOpen(false)}
+        initialTopic=""
+      />
     </RequireAuth>
   )
 }

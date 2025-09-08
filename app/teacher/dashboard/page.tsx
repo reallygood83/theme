@@ -8,7 +8,8 @@ import RequireAuth from '@/components/auth/RequireAuth'
 import Card from '@/components/common/Card'
 import SessionList from '@/components/teacher/SessionList'
 import Button from '@/components/common/Button'
-import AdvancedDebateScenarioGenerator from '@/components/teacher/AdvancedDebateScenarioGenerator'
+import DebateScenarioModal from '@/components/teacher/DebateScenarioModal'
+import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
 import { Session } from '@/lib/utils'
 import { database } from '@/lib/firebase'
 import { ref, onValue, off } from 'firebase/database'
@@ -20,6 +21,8 @@ function TeacherDashboardContent() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isDebateScenarioModalOpen, setIsDebateScenarioModalOpen] = useState(false)
+  const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
   
   // 심사위원 모드 확인
   const viewAsUid = searchParams.get('viewAs')
@@ -209,7 +212,7 @@ function TeacherDashboardContent() {
               </Link>
 
               {/* AI 토론 시나리오 생성기 카드 */}
-              <div className="group cursor-pointer" onClick={() => document.getElementById('scenario-generator')?.scrollIntoView({behavior: 'smooth'})}>
+              <div className="group cursor-pointer" onClick={() => setIsDebateScenarioModalOpen(true)}>
                 <div className="bg-white border-2 border-secondary/20 rounded-xl p-6 hover:border-secondary hover:shadow-lg transition-all duration-200 group-hover:scale-105">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-secondary/10 rounded-full p-3">
@@ -229,15 +232,19 @@ function TeacherDashboardContent() {
               </div>
 
               {/* 근거자료 검색 카드 */}
-              <div className="group cursor-pointer opacity-75">
-                <div className="bg-white border-2 border-accent/20 rounded-xl p-6 hover:border-accent hover:shadow-lg transition-all duration-200">
+              <div className="group cursor-pointer" onClick={() => setIsEvidenceSearchModalOpen(true)}>
+                <div className="bg-white border-2 border-accent/20 rounded-xl p-6 hover:border-accent hover:shadow-lg transition-all duration-200 group-hover:scale-105">
                   <div className="flex items-center justify-between mb-4">
                     <div className="bg-accent/10 rounded-full p-3">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-accent" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
                       </svg>
                     </div>
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">준비중</span>
+                    <div className="text-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">근거자료 검색</h3>
                   <p className="text-sm text-gray-600">토론 주제에 맞는 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.</p>
@@ -353,12 +360,17 @@ function TeacherDashboardContent() {
           </Card>
         </div>
         
-        {/* AI 토론 시나리오 생성기 섹션 */}
-        {!isJudgeMode && (
-          <div className="mt-8" id="scenario-generator">
-            <AdvancedDebateScenarioGenerator />
-          </div>
-        )}
+        {/* AI 토론 시나리오 생성기 모달 */}
+        <DebateScenarioModal 
+          isOpen={isDebateScenarioModalOpen}
+          onClose={() => setIsDebateScenarioModalOpen(false)}
+        />
+
+        {/* 근거자료 검색 모달 */}
+        <EvidenceSearchModalContainer
+          isOpen={isEvidenceSearchModalOpen}
+          onClose={() => setIsEvidenceSearchModalOpen(false)}
+        />
       </div>
     </RequireAuth>
   )
