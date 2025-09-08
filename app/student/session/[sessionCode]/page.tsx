@@ -959,9 +959,9 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                     토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
                   </p>
                   <ul className="text-sm text-gray-600 text-left space-y-1">
-                    <li>• 뉴스 기사, 학술 자료, 통계 데이터</li>
+                    <li>• 뉴스 기사 (신뢰할 수 있는 언론사)</li>
                     <li>• 유튜브 교육 영상</li>
-                    <li>• 정부 자료 및 공식 문서</li>
+                    <li>• 토론에 도움이 되는 근거자료</li>
                   </ul>
                 </div>
                 <Button 

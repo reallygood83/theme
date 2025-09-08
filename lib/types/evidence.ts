@@ -36,6 +36,9 @@ export interface YouTubeVideoData {
   id: {
     videoId: string
   }
+  // 추가 필터링 정보
+  educationScore?: number
+  isEducational?: boolean
 }
 
 export interface EvidenceSearchParams {

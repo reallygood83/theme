@@ -36,20 +36,20 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
         messages: [
           {
             role: 'system',
-            content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 신뢰할 수 있는 근거 자료를 찾아주세요.
+            content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
 
 응답 형식:
 {
   "evidences": [
     {
-      "type": "뉴스 기사|학술 자료|통계 자료|기타",
-      "title": "자료 제목",
-      "content": "자료의 핵심 내용 요약 (2-3문장)",
-      "source": "출처 (신문사, 기관명 등)",
-      "url": "실제 URL (없으면 빈 문자열)",
+      "type": "뉴스 기사",
+      "title": "뉴스 기사 제목",
+      "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
+      "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
+      "url": "실제 뉴스 기사 URL (없으면 빈 문자열)",
       "reliability": 85,
       "publishedDate": "YYYY-MM-DD",
-      "author": "작성자명",
+      "author": "기자명",
       "summary": "한 줄 요약"
     }
   ]
@@ -126,20 +126,20 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
           messages: [
             {
               role: 'system',
-              content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 신뢰할 수 있는 근거 자료를 찾아주세요.
+              content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
 
 응답 형식:
 {
   "evidences": [
     {
-      "type": "뉴스 기사|학술 자료|통계 자료|기타",
-      "title": "자료 제목",
-      "content": "자료의 핵심 내용 요약 (2-3문장)",
-      "source": "출처 (신문사, 기관명 등)",
-      "url": "실제 URL (없으면 빈 문자열)",
+      "type": "뉴스 기사",
+      "title": "뉴스 기사 제목",
+      "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
+      "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
+      "url": "실제 뉴스 기사 URL (없으면 빈 문자열)",
       "reliability": 85,
       "publishedDate": "YYYY-MM-DD",
-      "author": "작성자명",
+      "author": "기자명",
       "summary": "한 줄 요약"
     }
   ]
@@ -200,20 +200,26 @@ export async function searchYouTubeVideos(
       console.error('❌ YouTube API 키가 없습니다!')
       return []
     }
-    console.log('✅ YouTube API 키 확인됨')
+    console.log('✅ YouTube API 키 확인됨:', process.env.YOUTUBE_API_KEY.substring(0, 10) + '...')
     
-    // 검색 쿼리 최적화
+    // 검색 쿼리 최적화 (참고 프로그램과 동일)
     let searchQuery = query
     if (stance) {
-      searchQuery += stance === 'positive' ? ' 찬성 이유 근거' : ' 반대 이유 근거'
+      if (stance === 'positive') {
+        searchQuery += ' 장점 효과 도움 필요성 긍정적'
+      } else {
+        searchQuery += ' 단점 문제점 위험성 부작용 우려'
+      }
     }
-    searchQuery += ' 토론 논쟁 의견 -광고 -홍보'
+    searchQuery += ' 교육 초등학교'
     console.log('🔍 YouTube 검색 쿼리:', searchQuery)
 
     const params = new URLSearchParams({
       part: 'snippet',
       q: searchQuery,
       type: 'video',
+      videoDuration: 'medium',
+      videoDefinition: 'high', 
       maxResults: maxResults.toString(),
       order: 'relevance',
       regionCode: 'KR',
@@ -241,29 +247,39 @@ export async function searchYouTubeVideos(
       return []
     }
     
-    // 영상 길이와 품질 필터링
-    const filteredVideos = data.items.filter((video: YouTubeVideoData) => {
+    // 영상 품질과 교육적 가치 필터링 (참고 프로그램과 동일)
+    const filteredVideos = data.items.map((video: YouTubeVideoData) => {
       const title = video.snippet.title.toLowerCase()
-      const description = video.snippet.description.toLowerCase()
+      const channelTitle = video.snippet.channelTitle.toLowerCase()
       
       console.log('🎬 영상 검토:', video.snippet.title.substring(0, 50))
       
-      // 관련성 높은 영상만 선택
-      const relevantKeywords = ['토론', '논쟁', '찬성', '반대', '의견', '근거', '이유', '분석']
-      const hasRelevantKeywords = relevantKeywords.some(keyword => 
-        title.includes(keyword) || description.includes(keyword)
-      )
+      // 교육적 채널 우선 (EBS, KBS, 교육부 등)
+      const isEducational = channelTitle.includes('ebs') || 
+                          channelTitle.includes('kbs') || 
+                          channelTitle.includes('교육') ||
+                          channelTitle.includes('학교') ||
+                          channelTitle.includes('edu')
       
-      // 광고성 콘텐츠 필터링
-      const spamKeywords = ['광고', '홍보', '판매', '구매', '할인']
-      const isSpam = spamKeywords.some(keyword => 
-        title.includes(keyword) || description.includes(keyword)
-      )
+      // 교육 관련 키워드 점수
+      const educationScore = (title.includes('교육') ? 2 : 0) + 
+                            (title.includes('초등') ? 2 : 0) +
+                            (title.includes('학교') ? 1 : 0) +
+                            (isEducational ? 3 : 0)
       
-      const isValid = hasRelevantKeywords && !isSpam
-      console.log(isValid ? '✅' : '❌', '영상 필터링 결과:', video.snippet.title.substring(0, 30))
-      
+      return {
+        ...video,
+        educationScore,
+        isEducational
+      }
+    }).filter(video => {
+      // 최소 교육 점수 1점 이상만 포함
+      const isValid = video.educationScore >= 1
+      console.log(isValid ? '✅' : '❌', `영상 점수: ${video.educationScore}점`, video.snippet.title.substring(0, 30))
       return isValid
+    }).sort((a, b) => {
+      // 교육 점수가 높은 순으로 정렬
+      return b.educationScore - a.educationScore
     })
 
     console.log('🎯 필터링 완료:', filteredVideos.length, '개 영상 선별')
@@ -283,33 +299,17 @@ function generateSearchInstructions(selectedTypes: string[], stanceText: string)
   const instructions: string[] = []
   let counter = 1
   
+  // 뉴스 기사만 검색하도록 수정
   if (selectedTypes.includes('뉴스 기사')) {
     instructions.push(`${counter}. 최신 뉴스 기사 (2020년 이후) - 네이버, 다음, 조선일보, 중앙일보, 동아일보, 한겨레, 경향신문, YTN, KBS, MBC, SBS 등 신뢰할 수 있는 언론사의 실제 접근 가능한 링크만 포함`)
     counter++
   }
   
-  if (selectedTypes.includes('학술 자료')) {
-    instructions.push(`${counter}. 학술 논문이나 연구 자료 - DOI 또는 접근 가능한 URL 포함`)
-    counter++
-  }
-  
-  if (selectedTypes.includes('통계 자료')) {
-    instructions.push(`${counter}. 정부 기관의 공식 통계 자료 - 공식 사이트 링크 포함`)
-    counter++
-  }
-  
-  if (selectedTypes.includes('기타')) {
-    instructions.push(`${counter}. 전문가 의견이나 인터뷰 - 원문 링크 포함`)
-    counter++
-  }
-  
-  if (selectedTypes.includes('유튜브 영상')) {
-    instructions.push(`${counter}. 교육적 YouTube 영상 - 실제 video ID 포함`)
-    counter++
-  }
+  // 유튜브 영상은 별도 API로 처리하므로 여기서는 제외
+  // 학술 자료와 통계 자료 검색 로직 완전 제거
   
   if (instructions.length === 0) {
-    return '다음을 중점적으로 찾아주세요:\n1. 요청하신 자료 유형에 맞는 신뢰할 수 있는 근거 자료'
+    return '다음을 중점적으로 찾아주세요:\n1. 신뢰할 수 있는 뉴스 기사만 검색합니다. 학술 자료나 통계 자료는 포함하지 않습니다.'
   }
   
   return `다음을 중점적으로 찾아주세요:\n${instructions.join('\n')}`
@@ -369,7 +369,7 @@ export function generateSearchPrompt(topic: string, stance: string, types: strin
 - 보조 검색 (30%): ${oppositeDirection} 입장 자료 (반박 준비용)
 - 교육적 적합성: 초등학생이 이해 가능한 수준의 자료
 
-📚 검색할 자료 유형: ${nonYoutubeTypes.join(', ')}
+📚 검색할 자료 유형: 뉴스 기사 (학술 자료, 통계 자료는 제외)
 
 🎯 검색 키워드 가이드:
 ${keywordSuggestions}
@@ -387,7 +387,7 @@ ${keywordSuggestions}
   "stanceDirection": "${stanceDirection}",
   "evidences": [
     {
-      "type": "뉴스 기사" | "학술 자료" | "통계 자료",
+      "type": "뉴스 기사",
       "title": "자료 제목",
       "summary": "자료 요약 (초등학생도 이해할 수 있게 100자 내외)",
       "source": "출처",
