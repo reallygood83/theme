@@ -396,19 +396,25 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     setEvidenceSearchModal(true)
     setEvidenceSearchStep(1)
     
+    let progressInterval: NodeJS.Timeout | null = null
+    
     try {
       console.log('🔍 근거자료 검색 시작:', { topic, stance, types })
       
-      // 진행 상황 시뮬레이션과 실제 API 호출 병렬 처리
-      const progressPromise = (async () => {
-        const steps = [1, 2, 3, 4, 5]
-        for (const step of steps) {
-          setEvidenceSearchStep(step)
-          await new Promise(resolve => setTimeout(resolve, 1000)) // 조금 더 느리게
-        }
-      })()
+      // 진행 상황을 동적으로 업데이트 (API 응답까지 기다림)
+      let currentStep = 1
+      setEvidenceSearchStep(currentStep)
       
-      const apiPromise = fetch('/api/evidence/search', {
+      progressInterval = setInterval(() => {
+        if (currentStep < 4) { // 마지막 단계는 API 완료 후 설정
+          currentStep++
+          setEvidenceSearchStep(currentStep)
+          console.log('📊 진행 상황 업데이트:', currentStep)
+        }
+      }, 18000) // 18초마다 단계 증가 (총 72초 + API 완료)
+      
+      // 실제 API 호출
+      const response = await fetch('/api/evidence/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -420,9 +426,15 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         }),
       })
       
-      // 진행 상황 시뮬레이션이 완료된 후 API 응답 대기
-      await progressPromise
-      const response = await apiPromise
+      // API 완료 후 진행 상황 정리
+      if (progressInterval) {
+        clearInterval(progressInterval)
+        progressInterval = null
+      }
+      
+      // 마지막 단계로 설정
+      setEvidenceSearchStep(5)
+      console.log('📊 검색 완료 - 마지막 단계')
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -432,26 +444,43 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       const result = await response.json()
       console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
       
-      setEvidenceResults(result.evidences || [])
+      if (!result.evidences || result.evidences.length === 0) {
+        alert('검색 결과가 없습니다. 다른 키워드로 다시 시도해보세요.')
+        setEvidenceSearchModal(false)
+        return
+      }
       
-      // 모달 자동 닫기는 EvidenceSearchModal에서 처리
-      // setEvidenceSearchModal(false)는 자동으로 처리됨
+      setEvidenceResults(result.evidences)
       
-      // 결과 섹션으로 스크롤
+      // 2초 후 모달 자동 닫기 및 결과 섹션으로 이동
       setTimeout(() => {
+        setEvidenceSearchModal(false) // 모달 닫기
+        setEvidenceSearchStep(0) // 단계 초기화
         setShowEvidenceSearch(false) // 결과를 보여주는 섹션으로 전환
-        const evidenceSection = document.getElementById('evidence-results')
-        if (evidenceSection) {
-          evidenceSection.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'start'
-          })
-        }
-      }, 2000) // 모달이 자동으로 닫힌 후 스크롤
+        
+        // 결과 섹션으로 스크롤
+        setTimeout(() => {
+          const evidenceSection = document.getElementById('evidence-results')
+          if (evidenceSection) {
+            evidenceSection.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start'
+            })
+          }
+        }, 100)
+      }, 2000)
       
     } catch (error) {
       console.error('❌ 근거자료 검색 오류:', error)
-      setEvidenceSearchModal(false) // 에러 시 모달 닫기
+      
+      // 에러 발생 시 진행 상황 정리
+      if (progressInterval) {
+        clearInterval(progressInterval)
+        progressInterval = null
+      }
+      
+      setEvidenceSearchModal(false)
+      setEvidenceSearchStep(0)
       
       if (error instanceof Error) {
         if (error.message.includes('API 키')) {
@@ -464,7 +493,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       }
     } finally {
       setIsSearchingEvidence(false)
-      // setEvidenceSearchStep(0) - 모달에서 자동으로 처리됨
+      
+      // 최종 정리 - 혹시 남아있는 interval 제거
+      if (progressInterval) {
+        clearInterval(progressInterval)
+      }
     }
   }
   
