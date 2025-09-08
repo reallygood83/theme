@@ -98,52 +98,82 @@ export default function AdvancedDebateScenarioGenerator() {
     }
 
     setLoading(true)
+    console.log('🚀 주제 추천 요청 시작:', { keyword: topicKeyword, purpose: selectedPurpose, grade: selectedGrade })
     
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30초 타임아웃
+
       const response = await fetch('/api/scenario/recommend', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          keyword: topicKeyword,
-          purpose: selectedPurpose,
-          grade: selectedGrade
-        })
+          keyword: topicKeyword.trim(),
+          purpose: selectedPurpose.trim(),
+          grade: selectedGrade.trim()
+        }),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`)
+      }
+
       const data = await response.json()
+      console.log('📥 API 응답 데이터:', data)
 
       if (data.success) {
-        // 응답 데이터 검증
+        // 응답 데이터 강화된 검증
         if (!data.topics || !Array.isArray(data.topics) || data.topics.length === 0) {
+          console.error('❌ 빈 주제 배열:', data.topics)
           throw new Error('서버에서 유효한 주제를 받지 못했습니다. 다시 시도해주세요.')
         }
         
-        // 각 주제의 필수 필드 검증
-        const validTopics = data.topics.filter((topic: any) => 
-          topic && 
-          typeof topic === 'object' && 
-          (topic.topic || topic.title) && 
-          topic.description
-        )
+        // 각 주제의 필수 필드 검증 및 정규화
+        const validTopics = data.topics.map((topic: any, index: number) => {
+          if (!topic || typeof topic !== 'object') {
+            console.warn(`⚠️ 잘못된 주제 형식 [${index}]:`, topic)
+            return null
+          }
+
+          return {
+            topic: topic.topic || topic.title || `토론 주제 ${index + 1}`,
+            description: topic.description || '토론 주제에 대한 설명입니다.',
+            pros: topic.pros || (topic.proView ? [topic.proView] : ['찬성 의견']),
+            cons: topic.cons || (topic.conView ? [topic.conView] : ['반대 의견']),
+            difficulty: topic.difficulty || '보통',
+            timeEstimate: topic.timeEstimate || 40
+          }
+        }).filter(Boolean)
         
         if (validTopics.length === 0) {
+          console.error('❌ 유효한 주제가 없음:', data.topics)
           throw new Error('받은 주제 데이터의 형식이 올바르지 않습니다. 다시 시도해주세요.')
         }
         
-        console.log(`✅ ${validTopics.length}개의 유효한 주제 수신:`, validTopics)
-        setRecommendedTopics(validTopics)
-        setIsOfflineMode(data.isOffline || false)
-        setCurrentStep(2)
+        console.log(`✅ ${validTopics.length}개의 유효한 주제 수신 및 정규화 완료:`, validTopics)
+        
+        // 상태 업데이트를 더 안정적으로 처리
+        setTimeout(() => {
+          setRecommendedTopics(validTopics)
+          setIsOfflineMode(data.isOffline || false)
+          setCurrentStep(2)
+          console.log('✅ UI 상태 업데이트 완료')
+        }, 100)
         
         // 오프라인 모드 알림
         if (data.isOffline) {
           console.log('📴 오프라인 모드로 동작 중:', data.fallbackReason || 'AI API 사용 불가')
+          alert('⚠️ 오프라인 모드로 동작합니다. 기본 템플릿을 사용하여 주제를 추천했습니다.')
         }
       } else {
         const errorMessage = data.error || '주제 추천에 실패했습니다.'
         const details = data.details ? ` (${data.details})` : ''
+        console.error('❌ API 실패 응답:', data)
         throw new Error(errorMessage + details)
       }
     } catch (error) {
@@ -151,7 +181,9 @@ export default function AdvancedDebateScenarioGenerator() {
       
       // 네트워크 오류 구분
       let errorMessage
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if ((error as any)?.name === 'AbortError') {
+        errorMessage = '요청 시간이 초과되었습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.'
       } else if (error instanceof Error) {
         errorMessage = error.message
@@ -164,10 +196,16 @@ export default function AdvancedDebateScenarioGenerator() {
         keyword: topicKeyword,
         purpose: selectedPurpose,
         grade: selectedGrade,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString()
       })
       
-      alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
+      alert(`❌ 오류 발생: ${errorMessage}
+
+🔧 해결 방법:
+1. 인터넷 연결 상태 확인
+2. 잠시 후 다시 시도
+3. 문제가 지속되면 페이지 새로고침`)
     } finally {
       setLoading(false)
     }
@@ -181,8 +219,17 @@ export default function AdvancedDebateScenarioGenerator() {
     }
 
     setLoading(true)
+    console.log('🎯 시나리오 생성 요청 시작:', { 
+      topic: selectedTopic, 
+      purpose: selectedPurpose, 
+      grade: selectedGrade, 
+      timeLimit: timeLimit 
+    })
     
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 45000) // 45초 타임아웃 (시나리오 생성은 더 오래 걸림)
+
       const response = await fetch('/api/scenario/generate', {
         method: 'POST',
         headers: {
@@ -194,18 +241,43 @@ export default function AdvancedDebateScenarioGenerator() {
           grade: selectedGrade,
           timeLimit: timeLimit,
           additionalInfo: additionalInfo
-        })
+        }),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`)
+      }
+
       const data = await response.json()
+      console.log('📥 시나리오 생성 API 응답:', data)
 
       if (data.success) {
-        setGeneratedScenario(data.scenario)
-        setIsOfflineMode(data.isOffline || false)
-        setCurrentStep(3)
+        if (!data.scenario) {
+          throw new Error('서버에서 유효한 시나리오를 받지 못했습니다.')
+        }
+
+        console.log('✅ 시나리오 생성 성공:', data.scenario.topic)
+        
+        // 상태 업데이트를 더 안정적으로 처리
+        setTimeout(() => {
+          setGeneratedScenario(data.scenario)
+          setIsOfflineMode(data.isOffline || false)
+          setCurrentStep(3)
+          console.log('✅ 시나리오 UI 상태 업데이트 완료')
+        }, 100)
+
+        // 오프라인 모드 알림
+        if (data.isOffline) {
+          console.log('📴 시나리오 오프라인 모드:', data.fallbackReason || 'AI API 사용 불가')
+          alert('⚠️ 오프라인 모드로 동작합니다. 기본 템플릿을 사용하여 시나리오를 생성했습니다.')
+        }
       } else {
         const errorMessage = data.error || '시나리오 생성에 실패했습니다.'
         const details = data.details ? ` (${data.details})` : ''
+        console.error('❌ 시나리오 생성 API 실패:', data)
         throw new Error(errorMessage + details)
       }
     } catch (error) {
@@ -213,7 +285,9 @@ export default function AdvancedDebateScenarioGenerator() {
       
       // 네트워크 오류 구분
       let errorMessage
-      if (error instanceof TypeError && error.message.includes('fetch')) {
+      if ((error as any)?.name === 'AbortError') {
+        errorMessage = '시나리오 생성 시간이 초과되었습니다. 인터넷 연결을 확인하고 다시 시도해주세요.'
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
         errorMessage = '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.'
       } else if (error instanceof Error) {
         errorMessage = error.message
@@ -222,15 +296,21 @@ export default function AdvancedDebateScenarioGenerator() {
       }
       
       // 디버깅을 위한 상세 로그
-      console.log('🔍 오류 발생 시점 상태:', {
+      console.log('🔍 시나리오 생성 오류 발생 시점 상태:', {
         topic: selectedTopic,
         purpose: selectedPurpose,
         grade: selectedGrade,
         timeLimit: timeLimit,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString()
       })
       
-      alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
+      alert(`❌ 시나리오 생성 오류: ${errorMessage}
+
+🔧 해결 방법:
+1. 인터넷 연결 상태 확인
+2. 잠시 후 다시 시도
+3. 문제가 지속되면 페이지 새로고침`)
     } finally {
       setLoading(false)
     }
@@ -392,7 +472,12 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
                 variant="primary"
                 disabled={loading || !topicKeyword.trim() || !selectedPurpose || !selectedGrade}
               >
-                {loading ? '주제 분석 중...' : '🔍 토론 주제 추천받기'}
+                {loading ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>AI 주제 분석 중... (최대 30초)</span>
+                  </div>
+                ) : '🔍 토론 주제 추천받기'}
               </Button>
             </div>
           </div>
