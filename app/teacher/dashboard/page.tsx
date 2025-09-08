@@ -8,6 +8,7 @@ import RequireAuth from '@/components/auth/RequireAuth'
 import Card from '@/components/common/Card'
 import SessionList from '@/components/teacher/SessionList'
 import Button from '@/components/common/Button'
+import AdvancedDebateScenarioGenerator from '@/components/teacher/AdvancedDebateScenarioGenerator'
 import { Session } from '@/lib/utils'
 import { database } from '@/lib/firebase'
 import { ref, onValue, off } from 'firebase/database'
@@ -303,6 +304,13 @@ function TeacherDashboardContent() {
             </div>
           </Card>
         </div>
+        
+        {/* AI 토론 시나리오 생성기 섹션 */}
+        {!isJudgeMode && (
+          <div className="mt-8">
+            <AdvancedDebateScenarioGenerator />
+          </div>
+        )}
       </div>
     </RequireAuth>
   )
