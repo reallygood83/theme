@@ -191,35 +191,35 @@ export default function AdvancedDebateScenarioGenerator() {
   // 시나리오를 텍스트 형태로 변환
   const generateScenarioText = (scenario: DebateScenario) => {
     return `
-🎯 **토론 시나리오: ${scenario.topic}**
+🎯 **토론 시나리오: ${scenario.topic || '제목 없음'}**
 
 **📚 개요**
-${scenario.overview}
+${scenario.overview || '개요 정보가 없습니다.'}
 
 **🎯 학습 목표**
-${scenario.objectives.map(obj => `• ${obj}`).join('\n')}
+${(scenario.objectives || []).map(obj => `• ${obj}`).join('\n')}
 
 **📋 준비사항**
-- 준비물: ${scenario.preparation.materials.join(', ')}
-- 교실 배치: ${scenario.preparation.setup}
-- 역할: ${scenario.preparation.roles.join(', ')}
+- 준비물: ${(scenario.preparation?.materials || []).join(', ')}
+- 교실 배치: ${scenario.preparation?.setup || '일반 교실 배치'}
+- 역할: ${(scenario.preparation?.roles || []).join(', ')}
 
 **⏰ 수업 진행 과정**
-${scenario.process.map(step => `
+${(scenario.process || []).map(step => `
 ${step.step}단계: ${step.name} (${step.duration}분)
 ${step.description}
-활동: ${step.activities.join(', ')}
+활동: ${(step.activities || []).join(', ')}
 `).join('')}
 
 **📊 평가**
-- 평가 기준: ${scenario.evaluation.criteria.join(', ')}
-- 평가 방법: ${scenario.evaluation.methods.join(', ')}
+- 평가 기준: ${(scenario.evaluation?.criteria || []).join(', ')}
+- 평가 방법: ${(scenario.evaluation?.methods || []).join(', ')}
 
 **🌟 심화 활동**
-${scenario.extensions.map(ext => `• ${ext}`).join('\n')}
+${(scenario.extensions || []).map(ext => `• ${ext}`).join('\n')}
 
 **📚 참고 자료**
-${scenario.references.map(ref => `• ${ref}`).join('\n')}
+${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
 `
   }
 

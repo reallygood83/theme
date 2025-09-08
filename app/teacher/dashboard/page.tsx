@@ -172,29 +172,77 @@ function TeacherDashboardContent() {
           </div>
         )}
         
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
+        <div className="mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
               {isJudgeMode ? '심사용 교사 대시보드' : '교사 대시보드'}
             </h1>
             <p className="text-gray-600">
               {isJudgeMode 
                 ? '이 교사가 생성한 토론 세션들을 확인할 수 있습니다.' 
-                : '토론 세션을 생성하고 관리할 수 있습니다.'
+                : '토론 교육을 위한 모든 기능을 한 곳에서 이용하세요.'
               }
             </p>
           </div>
-          
+
+          {/* 주요 기능 카드 섹션 */}
           {!isJudgeMode && (
-            <div className="mt-4 md:mt-0">
-              <Link href="/teacher/session/create">
-                <Button variant="primary">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                  </svg>
-                  새 토론 세션 만들기
-                </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* 새 토론 세션 만들기 카드 */}
+              <Link href="/teacher/session/create" className="group">
+                <div className="bg-white border-2 border-primary/20 rounded-xl p-6 hover:border-primary hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-primary/10 rounded-full p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-primary" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">새 토론 세션 만들기</h3>
+                  <p className="text-sm text-gray-600">학습 자료와 함께 토론 세션을 생성하고 학생들의 질문을 수집하세요.</p>
+                </div>
               </Link>
+
+              {/* AI 토론 시나리오 생성기 카드 */}
+              <div className="group cursor-pointer" onClick={() => document.getElementById('scenario-generator')?.scrollIntoView({behavior: 'smooth'})}>
+                <div className="bg-white border-2 border-secondary/20 rounded-xl p-6 hover:border-secondary hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-secondary/10 rounded-full p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-secondary" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="text-secondary opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">AI 토론 시나리오 생성</h3>
+                  <p className="text-sm text-gray-600">키워드를 입력하면 AI가 교육 목적에 맞는 토론 주제와 시나리오를 추천합니다.</p>
+                </div>
+              </div>
+
+              {/* 근거자료 검색 카드 */}
+              <div className="group cursor-pointer opacity-75">
+                <div className="bg-white border-2 border-accent/20 rounded-xl p-6 hover:border-accent hover:shadow-lg transition-all duration-200">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-accent/10 rounded-full p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-accent" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">준비중</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">근거자료 검색</h3>
+                  <p className="text-sm text-gray-600">토론 주제에 맞는 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.</p>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -307,7 +355,7 @@ function TeacherDashboardContent() {
         
         {/* AI 토론 시나리오 생성기 섹션 */}
         {!isJudgeMode && (
-          <div className="mt-8">
+          <div className="mt-8" id="scenario-generator">
             <AdvancedDebateScenarioGenerator />
           </div>
         )}
