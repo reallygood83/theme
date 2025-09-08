@@ -75,7 +75,7 @@ export default function EvidenceSearchModalContainer({
       const data = await response.json()
       console.log('근거자료 검색 결과:', data)
       
-      if (data.success && data.evidences) {
+      if (data.evidences && Array.isArray(data.evidences) && data.evidences.length > 0) {
         // API 완료 후 6단계로 설정하여 완료 상태 표시
         setCurrentStep(6)
         
@@ -85,8 +85,17 @@ export default function EvidenceSearchModalContainer({
         setResults(data.evidences)
         setSearchTime(new Date())
         setCurrentStep(0) // 결과 표시 모드로 전환
-      } else {
+      } else if (data.success === false) {
         throw new Error(data.error || '검색 결과를 가져올 수 없습니다.')
+      } else if (!data.evidences || data.evidences.length === 0) {
+        // 빈 결과도 성공으로 처리
+        setCurrentStep(6)
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        setResults([])
+        setSearchTime(new Date())
+        setCurrentStep(0)
+      } else {
+        throw new Error('예상하지 못한 응답 형식입니다.')
       }
     } catch (error) {
       console.error('근거자료 검색 오류:', error)

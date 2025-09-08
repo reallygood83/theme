@@ -114,8 +114,10 @@ export default function AdvancedDebateScenarioGenerator() {
     }
 
     setLoading(true)
+    console.log('🚀 주제 추천 로딩 상태 시작, showProgressModal 설정')
     setShowProgressModal(true)
     setProgressMessage('AI가 토론 주제를 추천하고 있습니다...')
+    console.log('📊 모달 상태:', { showProgressModal: true, loading: true })
     console.log('🚀 주제 추천 요청 시작:', { keyword: topicKeyword, purpose: selectedPurpose, grade: selectedGrade })
     
     try {
@@ -173,14 +175,13 @@ export default function AdvancedDebateScenarioGenerator() {
         
         console.log(`✅ ${validTopics.length}개의 유효한 주제 수신 및 정규화 완료:`, validTopics)
         
-        // 상태 업데이트를 더 안정적으로 처리
-        setTimeout(() => {
-          setRecommendedTopics(validTopics)
-          setIsOfflineMode(data.isOffline || false)
-          setCurrentStep(2)
-          setShowProgressModal(false)
-          console.log('✅ UI 상태 업데이트 완료')
-        }, 100)
+        console.log('✅ 상태 업데이트 시작, 모달 닫기')
+        setRecommendedTopics(validTopics)
+        setIsOfflineMode(data.isOffline || false)
+        setCurrentStep(2)
+        setShowProgressModal(false)
+        setLoading(false)
+        console.log('✅ UI 상태 업데이트 완료, 모달 닫힘')
         
         // 오프라인 모드 알림
         if (data.isOffline) {
@@ -224,6 +225,7 @@ export default function AdvancedDebateScenarioGenerator() {
 2. 잠시 후 다시 시도
 3. 문제가 지속되면 페이지 새로고침`)
     } finally {
+      console.log('🔄 주제 추천 finally 블록: 로딩 상태 및 모달 정리')
       setLoading(false)
       setShowProgressModal(false)
     }
@@ -246,10 +248,11 @@ export default function AdvancedDebateScenarioGenerator() {
       return
     }
 
-    console.log('✅ 주제 검증 통과, API 호출 시작')
+    console.log('✅ 주제 검증 통과, 로딩 상태 및 모달 설정')
     setLoading(true)
     setShowProgressModal(true)
     setProgressMessage('AI가 토론 시나리오를 생성하고 있습니다...')
+    console.log('📊 모달 상태 확인:', { showProgressModal: true, loading: true, progressMessage: 'AI가 토론 시나리오를 생성하고 있습니다...' })
     console.log('🎯 시나리오 생성 요청 시작:', { 
       topic: selectedTopic, 
       purpose: selectedPurpose, 
@@ -367,14 +370,13 @@ export default function AdvancedDebateScenarioGenerator() {
           expectedOutcomesCount: (scenario.expectedOutcomes || []).length
         })
         
-        // 상태 업데이트를 더 안정적으로 처리
-        setTimeout(() => {
-          setGeneratedScenario(scenario)
-          setIsOfflineMode(data.isOffline || false)
-          setCurrentStep(3)
-          setShowProgressModal(false)
-          console.log('✅ 시나리오 UI 상태 업데이트 완료')
-        }, 100)
+        console.log('✅ 시나리오 상태 업데이트 시작, 모달 닫기')
+        setGeneratedScenario(scenario)
+        setIsOfflineMode(data.isOffline || false)
+        setCurrentStep(3)
+        setShowProgressModal(false)
+        setLoading(false)
+        console.log('✅ 시나리오 UI 상태 업데이트 완룼, 모달 닫힘')
 
         // 오프라인 모드 알림
         if (data.isOffline) {
@@ -419,6 +421,7 @@ export default function AdvancedDebateScenarioGenerator() {
 2. 잠시 후 다시 시도
 3. 문제가 지속되면 페이지 새로고침`)
     } finally {
+      console.log('🔄 시나리오 finally 블록: 로딩 상태 및 모달 정리')
       setLoading(false)
       setShowProgressModal(false)
     }
