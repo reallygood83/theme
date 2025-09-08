@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
@@ -28,7 +28,7 @@ interface Opinion {
   teacherFeedback?: string;
 }
 
-export default function StudentDebatePage() {
+function StudentDebateContent() {
   const searchParams = useSearchParams();
   const sessionCode = searchParams.get('session');
   
@@ -426,4 +426,17 @@ export default function StudentDebatePage() {
   }
 
   return null;
+}
+
+export default function StudentDebatePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <LoadingSpinner />
+        <p className="ml-4 text-gray-600">페이지 로딩 중...</p>
+      </div>
+    }>
+      <StudentDebateContent />
+    </Suspense>
+  );
 }
