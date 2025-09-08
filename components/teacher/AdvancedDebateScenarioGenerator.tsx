@@ -63,6 +63,8 @@ interface TopicRecommendation {
 export default function AdvancedDebateScenarioGenerator() {
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [showProgressModal, setShowProgressModal] = useState(false)
+  const [progressMessage, setProgressMessage] = useState('')
   
   // 1단계: 주제 추천 관련 상태
   const [topicKeyword, setTopicKeyword] = useState('')
@@ -112,6 +114,8 @@ export default function AdvancedDebateScenarioGenerator() {
     }
 
     setLoading(true)
+    setShowProgressModal(true)
+    setProgressMessage('AI가 토론 주제를 추천하고 있습니다...')
     console.log('🚀 주제 추천 요청 시작:', { keyword: topicKeyword, purpose: selectedPurpose, grade: selectedGrade })
     
     try {
@@ -174,6 +178,7 @@ export default function AdvancedDebateScenarioGenerator() {
           setRecommendedTopics(validTopics)
           setIsOfflineMode(data.isOffline || false)
           setCurrentStep(2)
+          setShowProgressModal(false)
           console.log('✅ UI 상태 업데이트 완료')
         }, 100)
         
@@ -220,6 +225,7 @@ export default function AdvancedDebateScenarioGenerator() {
 3. 문제가 지속되면 페이지 새로고침`)
     } finally {
       setLoading(false)
+      setShowProgressModal(false)
     }
   }
 
@@ -242,6 +248,8 @@ export default function AdvancedDebateScenarioGenerator() {
 
     console.log('✅ 주제 검증 통과, API 호출 시작')
     setLoading(true)
+    setShowProgressModal(true)
+    setProgressMessage('AI가 토론 시나리오를 생성하고 있습니다...')
     console.log('🎯 시나리오 생성 요청 시작:', { 
       topic: selectedTopic, 
       purpose: selectedPurpose, 
@@ -364,6 +372,7 @@ export default function AdvancedDebateScenarioGenerator() {
           setGeneratedScenario(scenario)
           setIsOfflineMode(data.isOffline || false)
           setCurrentStep(3)
+          setShowProgressModal(false)
           console.log('✅ 시나리오 UI 상태 업데이트 완료')
         }, 100)
 
@@ -411,6 +420,7 @@ export default function AdvancedDebateScenarioGenerator() {
 3. 문제가 지속되면 페이지 새로고침`)
     } finally {
       setLoading(false)
+      setShowProgressModal(false)
     }
   }
 
@@ -486,8 +496,9 @@ ${(scenario.subject || []).join(', ')}
   }
 
   return (
-    <Card title="🎯 AI 토론 시나리오 생성기">
-      {isOfflineMode && (
+    <>
+      <Card title="🎯 AI 토론 시나리오 생성기">
+        {isOfflineMode && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
           <div className="flex items-center">
             <span className="text-yellow-600">⚠️</span>
@@ -898,6 +909,23 @@ ${(scenario.subject || []).join(', ')}
           </div>
         </div>
       )}
-    </Card>
+      </Card>
+
+      {/* AI 진행 모달 */}
+      {showProgressModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="text-center">
+              <div className="mb-4">
+                <div className="inline-block w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <h3 className="text-lg font-semibold mb-2">AI 처리 중</h3>
+              <p className="text-gray-600">{progressMessage}</p>
+              <p className="text-sm text-gray-500 mt-2">잠시만 기다려주세요...</p>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }

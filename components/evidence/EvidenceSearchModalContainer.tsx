@@ -41,14 +41,16 @@ export default function EvidenceSearchModalContainer({
     try {
       console.log('근거자료 검색 시작:', { topic, stance, types })
       
-      // 5단계 프로그레스 시뮬레이션
-      for (let step = 1; step <= 5; step++) {
-        setCurrentStep(step)
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      }
+      // 5단계 프로그레스 시뮬레이션과 API 호출을 병렬 처리
+      const progressPromise = (async () => {
+        for (let step = 1; step <= 5; step++) {
+          setCurrentStep(step)
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      })()
       
-      // API 호출
-      const response = await fetch('/api/evidence/search', {
+      // API 호출 시작
+      const apiPromise = fetch('/api/evidence/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -60,6 +62,12 @@ export default function EvidenceSearchModalContainer({
         })
       })
 
+      // 프로그레스 시뮬레이션 완료를 기다림
+      await progressPromise
+      
+      // API 응답을 기다림
+      const response = await apiPromise
+
       if (!response.ok) {
         throw new Error('검색 요청이 실패했습니다.')
       }
@@ -68,6 +76,12 @@ export default function EvidenceSearchModalContainer({
       console.log('근거자료 검색 결과:', data)
       
       if (data.success && data.evidences) {
+        // API 완료 후 6단계로 설정하여 완료 상태 표시
+        setCurrentStep(6)
+        
+        // 잠시 완료 메시지를 보여준 후 결과 표시
+        await new Promise(resolve => setTimeout(resolve, 1500))
+        
         setResults(data.evidences)
         setSearchTime(new Date())
         setCurrentStep(0) // 결과 표시 모드로 전환

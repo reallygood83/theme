@@ -28,9 +28,9 @@ export default function EvidenceSearchModal({
     }
   }, [isVisible, currentStep])
 
-  // 분석 완료 시 자동으로 모달 닫기
+  // 분석 완료 시 자동으로 모달 닫기 (6단계에서만)
   useEffect(() => {
-    if (displayStep === 5 && isVisible) {
+    if (displayStep === 6 && isVisible) {
       const autoCloseTimer = setTimeout(() => {
         setIsClosing(true)
         
@@ -39,7 +39,7 @@ export default function EvidenceSearchModal({
           setIsClosing(false)
           setDisplayStep(0)
         }, 500)
-      }, 1500)
+      }, 100) // 6단계는 즉시 닫기 (이미 API 완료 후 1.5초 대기했음)
 
       return () => clearTimeout(autoCloseTimer)
     }
@@ -57,7 +57,7 @@ export default function EvidenceSearchModal({
         isClosing ? 'scale-95 opacity-0 translate-y-4' : 'scale-100 opacity-100 translate-y-0'
       }`}>
         {/* 닫기 버튼 (완료 단계에서만 표시) */}
-        {displayStep === 5 && (
+        {(displayStep === 5 || displayStep === 6) && (
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
@@ -81,12 +81,12 @@ export default function EvidenceSearchModal({
         <div className="mb-6">
           <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span>진행률</span>
-            <span>{Math.round((displayStep / 5) * 100)}%</span>
+            <span>{displayStep >= 6 ? 100 : Math.round((displayStep / 5) * 100)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
               className="bg-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${(displayStep / 5) * 100}%` }}
+              style={{ width: `${displayStep >= 6 ? 100 : (displayStep / 5) * 100}%` }}
             ></div>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default function EvidenceSearchModal({
         <div className="space-y-3">
           {EVIDENCE_SEARCH_STEPS.map((step, index) => {
             const stepNumber = index + 1
-            const isCompleted = displayStep > stepNumber
+            const isCompleted = displayStep >= 6 || displayStep > stepNumber
             const isCurrent = displayStep === stepNumber
             const isPending = displayStep < stepNumber
 
@@ -135,12 +135,24 @@ export default function EvidenceSearchModal({
         {/* 완료 메시지 */}
         {displayStep === 5 && (
           <div className="mt-6 text-center">
+            <div className="text-blue-600 text-sm font-medium mb-2">
+              AI 분석 중입니다...
+            </div>
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <span className="text-sm text-gray-600">결과를 분석하고 있습니다...</span>
+            </div>
+          </div>
+        )}
+        
+        {displayStep === 6 && (
+          <div className="mt-6 text-center">
             <div className="text-green-600 text-sm font-medium mb-2">
               근거자료 검색이 완료되었습니다!
             </div>
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
-              <span className="text-sm text-gray-600">결과를 준비하고 있습니다...</span>
+              <div className="w-4 h-4 bg-green-600 rounded-full mr-2"></div>
+              <span className="text-sm text-gray-600">결과를 표시합니다.</span>
             </div>
           </div>
         )}
