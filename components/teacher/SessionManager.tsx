@@ -831,7 +831,7 @@ export default function SessionManager({
                   handleEvidenceSearch(topic, stance, types)
                 }}
                 isLoading={isSearchingEvidence}
-                initialTopic={session.title}
+                initialTopic={session?.title || ''}
               />
             </div>
           </div>
