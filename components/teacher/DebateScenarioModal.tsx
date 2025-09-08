@@ -107,8 +107,8 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
 
       const data = await response.json()
       
-      if (data.success && data.recommendations) {
-        setRecommendedTopics(data.recommendations)
+      if (data.success && data.topics) {
+        setRecommendedTopics(data.topics)
         setCurrentStep(2)
       } else {
         throw new Error(data.error || '토론 주제 추천에 실패했습니다.')
