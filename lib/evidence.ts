@@ -242,21 +242,24 @@ export async function searchYouTubeVideos(
       .replace(/[^가-힣a-zA-Z0-9\s]/g, ' ') // 특수문자 제거
       .replace(/\s+/g, ' ') // 연속 공백 정리
       .trim()
-      .substring(0, 50) // 쿼리 길이 제한
     
-    if (stance) {
+    // 기본 쿼리가 너무 짧으면 검색 결과가 없을 수 있으므로 최소 길이 확보
+    if (searchQuery.length < 2) {
+      searchQuery = query.trim() // 원본 쿼리 사용
+    }
+    
+    // stance 키워드는 선택적으로만 추가 (검색 결과를 너무 제한하지 않도록)
+    if (stance && searchQuery.length < 30) {
       if (stance === 'positive' || stance === 'supporting') {
-        searchQuery += ' 장점 효과 도움'
+        searchQuery += ' 장점'
       } else if (stance === 'negative' || stance === 'opposing') {
-        searchQuery += ' 단점 문제 위험'
+        searchQuery += ' 단점'
       }
     }
-    // 교육 키워드 추가 (간단하게)
-    searchQuery += ' 교육 초등 학교'
     
     // 최종 쿼리 길이 제한 (YouTube API 제한 고려)
-    if (searchQuery.length > 100) {
-      searchQuery = searchQuery.substring(0, 100).trim()
+    if (searchQuery.length > 80) {
+      searchQuery = searchQuery.substring(0, 80).trim()
     }
     
     console.log('🔍 YouTube 검색 쿼리 (안전 처리됨):', searchQuery)
@@ -265,8 +268,6 @@ export async function searchYouTubeVideos(
       part: 'snippet',
       q: searchQuery,
       type: 'video',
-      videoDuration: 'medium',
-      videoDefinition: 'high', 
       maxResults: maxResults.toString(),
       order: 'relevance',
       regionCode: 'KR',
