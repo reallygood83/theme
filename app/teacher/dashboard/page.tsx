@@ -113,9 +113,10 @@ function TeacherDashboardContent() {
         }))
         
         // 현재 로그인한 교사의 세션만 필터링 (심사위원 모드 시 특정 UID 필터링)
-        const mySessionsArray = sessionsArray.filter(session => 
-          session.teacherId === effectiveUserId || (!session.teacherId && !isJudgeMode)
-        )
+        const mySessionsArray = sessionsArray.filter(session => {
+          if (!session) return false
+          return session.teacherId === effectiveUserId || (!session.teacherId && !isJudgeMode)
+        })
         
         console.log('=== 세션 필터링 디버깅 ===')
         console.log('현재 User UID:', user.uid)
@@ -127,11 +128,15 @@ function TeacherDashboardContent() {
         })
         
         // 최신순으로 정렬
-        mySessionsArray.sort((a, b) => b.createdAt - a.createdAt)
+        mySessionsArray.sort((a, b) => {
+          const aTime = a?.createdAt || 0
+          const bTime = b?.createdAt || 0
+          return bTime - aTime
+        })
         
         console.log('전체 세션:', sessionsArray.length, '개')
         console.log('내 세션:', mySessionsArray.length, '개')
-        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s.sessionId))
+        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s?.sessionId || 'unknown'))
         
         setSessions(mySessionsArray)
         setError(null)
@@ -278,7 +283,7 @@ function TeacherDashboardContent() {
         <Card title={isJudgeMode ? "교사의 토론 세션" : "내 토론 세션"}>
           <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-gray-600">
-              총 {sessions.length}개의 세션
+              총 {sessions?.length || 0}개의 세션
             </div>
             <button
               onClick={fetchSessions}
@@ -349,7 +354,7 @@ function TeacherDashboardContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">총 세션 수</p>
-                  <p className="text-2xl font-bold">{loading ? "-" : sessions.length}</p>
+                  <p className="text-2xl font-bold">{loading ? "-" : sessions?.length || 0}</p>
                 </div>
               </div>
               
@@ -362,10 +367,11 @@ function TeacherDashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600">이번 주 생성된 세션</p>
                   <p className="text-2xl font-bold">
-                    {loading ? "-" : sessions.filter(session => {
+                    {loading ? "-" : (sessions?.filter(session => {
+                      if (!session || !session.createdAt) return false
                       const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
                       return session.createdAt > oneWeekAgo
-                    }).length}
+                    })?.length || 0)}
                   </p>
                 </div>
               </div>
@@ -380,7 +386,7 @@ function TeacherDashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600">AI 분석 완료 세션</p>
                   <p className="text-2xl font-bold">
-                    {loading ? "-" : sessions.filter(session => session.aiAnalysisResult).length}
+                    {loading ? "-" : (sessions?.filter(session => session?.aiAnalysisResult)?.length || 0)}
                   </p>
                 </div>
               </div>

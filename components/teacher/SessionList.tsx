@@ -26,13 +26,17 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
   // sessions prop 변화 감지 (디버깅용)
   useEffect(() => {
     console.log('SessionList: sessions prop 변경됨')
-    console.log('현재 세션 수:', sessions.length)
-    console.log('세션 ID 목록:', sessions.map((s: Session) => s.sessionId))
+    console.log('현재 세션 수:', sessions?.length || 0)
+    console.log('세션 ID 목록:', sessions?.map((s: Session) => s.sessionId) || [])
   }, [sessions])
   
   // 검색 및 정렬된 세션 목록 (useMemo로 최적화)
   const filteredAndSortedSessions = useMemo(() => {
-    console.log('filteredAndSortedSessions 재계산됨, 입력 세션 수:', sessions.length)
+    console.log('filteredAndSortedSessions 재계산됨, 입력 세션 수:', sessions?.length || 0)
+    if (!sessions || !Array.isArray(sessions)) {
+      console.warn('Sessions is not an array or undefined:', sessions)
+      return []
+    }
     return [...sessions]
     // 검색어로 필터링
     .filter(session => {
@@ -222,7 +226,7 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     )
   }
   
-  if (sessions.length === 0) {
+  if (!sessions || sessions.length === 0) {
     return (
       <div className="text-center py-10">
         <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -340,7 +344,7 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                       
                       <div className="mb-2">
                         {/* 다중 자료 지원 */}
-                        {session.materials && session.materials.length > 0 ? (
+                        {session.materials && Array.isArray(session.materials) && session.materials.length > 0 ? (
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-gray-600">자료 {session.materials.length}개:</span>
                             <div className="flex gap-1">
