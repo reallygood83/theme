@@ -227,11 +227,22 @@ export default function AdvancedDebateScenarioGenerator() {
 
   // 시나리오 생성 요청
   const handleScenarioGeneration = async () => {
+    console.log('🚨 handleScenarioGeneration 함수 호출됨!', {
+      selectedTopic,
+      selectedPurpose,
+      selectedGrade,
+      timeLimit,
+      loading,
+      timestamp: new Date().toISOString()
+    })
+
     if (!selectedTopic) {
+      console.error('❌ 주제가 선택되지 않음:', selectedTopic)
       alert('토론 주제를 선택해주세요.')
       return
     }
 
+    console.log('✅ 주제 검증 통과, API 호출 시작')
     setLoading(true)
     console.log('🎯 시나리오 생성 요청 시작:', { 
       topic: selectedTopic, 
@@ -632,7 +643,15 @@ ${(scenario.subject || []).join(', ')}
               이전으로
             </Button>
             <Button 
-              onClick={handleScenarioGeneration}
+              onClick={() => {
+                console.log('🔥 시나리오 생성 버튼 클릭됨!', {
+                  loading,
+                  selectedTopic,
+                  disabled: loading || !selectedTopic,
+                  timestamp: new Date().toISOString()
+                })
+                handleScenarioGeneration()
+              }}
               variant="primary"
               disabled={loading || !selectedTopic}
             >
