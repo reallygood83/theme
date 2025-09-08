@@ -60,18 +60,33 @@ npm install
 
 3. 환경 변수 설정
    
-`.env.local` 파일을 생성하고 다음 변수를 설정하세요:
+`.env.local.example` 파일을 `.env.local`로 복사하고 실제 값으로 설정하세요:
+
+```bash
+cp .env.local.example .env.local
+```
+
+필수 환경 변수:
 
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
-NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
-NEXT_PUBLIC_FIREBASE_DATABASE_URL=your-database-url
-NEXT_PUBLIC_GEMINI_API_KEY=your-gemini-api-key
+# AI API 설정 (둘 중 하나 이상 필요)
+OPENAI_API_KEY=your_openai_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Firebase 설정 (필수)
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 ```
+
+**중요**: 
+- OpenAI API 키가 우선적으로 사용되며, 없으면 Gemini API로 백업됩니다
+- 둘 다 없으면 오프라인 모드로 동작합니다
+- Firebase 설정은 [Firebase 콘솔](https://console.firebase.google.com)에서 확인할 수 있습니다
 
 4. 개발 서버 실행
 

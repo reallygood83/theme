@@ -7,9 +7,82 @@ const OPENAI_CONFIG = {
   maxTokens: 2500
 }
 
+// Gemini API 설정 (백업용)
+const GEMINI_CONFIG = {
+  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
+  model: 'gemini-pro',
+  temperature: 0.7
+}
+
+// AI API 호출 함수 (OpenAI 우선, Gemini 백업)
+async function callAI(prompt: string) {
+  console.log('🚀 AI 주제 추천 호출 시작...')
+  
+  // OpenAI API 시도
+  if (OPENAI_CONFIG.apiKey) {
+    try {
+      return await callOpenAI(prompt)
+    } catch (error) {
+      console.log('OpenAI 실패, Gemini로 전환:', error)
+    }
+  }
+  
+  // Gemini API 시도
+  if (GEMINI_CONFIG.apiKey) {
+    try {
+      return await callGemini(prompt)
+    } catch (error) {
+      console.log('Gemini도 실패:', error)
+    }
+  }
+  
+  throw new Error('사용 가능한 AI API가 없습니다')
+}
+
+// Gemini API 호출 함수
+async function callGemini(prompt: string) {
+  console.log('🚀 Gemini API 호출...')
+  
+  if (!GEMINI_CONFIG.apiKey) {
+    throw new Error('Gemini API 키가 설정되지 않았습니다')
+  }
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.model}:generateContent?key=${GEMINI_CONFIG.apiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: `당신은 초등학교 토론 교육 전문가입니다. 초등토론교육모형의 철학과 4단계 과정을 완벽히 이해하고 있으며, 학생들의 비판적 사고력과 의사소통 능력을 향상시키는 토론 시나리오를 만들어냅니다.\n\n${prompt}`
+          }]
+        }],
+        generationConfig: {
+          temperature: GEMINI_CONFIG.temperature,
+          maxOutputTokens: 2500
+        }
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`Gemini API 오류: ${response.status}`)
+    }
+
+    const data = await response.json()
+    console.log('✅ Gemini 주제 추천 응답 성공')
+    return data.candidates[0].content.parts[0].text
+    
+  } catch (error) {
+    console.error('❌ Gemini API 호출 실패:', error)
+    throw error
+  }
+}
+
 // OpenAI API 호출 함수
 async function callOpenAI(prompt: string) {
-  console.log('🚀 AI 주제 추천 호출 시작...')
+  console.log('🚀 OpenAI API 호출...')
   
   if (!OPENAI_CONFIG.apiKey) {
     throw new Error('OpenAI API 키가 설정되지 않았습니다')
@@ -100,7 +173,7 @@ function getPurposeSpecificTopicGuidelines(purpose: string) {
 function generateOfflineTopics(keyword: string) {
   console.log('📴 오프라인 모드: 내장 주제 생성')
   
-  const templates: Record<string, any[]> = {
+  const templates: Record<string, Array<{title: string, description: string, proView: string, conView: string}>> = {
     '환경보호': [
       { 
         title: '일회용품 사용을 완전히 금지해야 한다', 
@@ -267,7 +340,7 @@ JSON 형식으로 다음과 같이 응답해주세요:
 JSON 형식만 출력하세요. 바깥에 Markdown이나 설명 텍스트를 추가하지 마세요.`
 
     try {
-      const response = await callOpenAI(prompt)
+      const response = await callAI(prompt)
       const topics = parseTopicResponse(response, keyword)
       
       return NextResponse.json({
@@ -276,20 +349,24 @@ JSON 형식만 출력하세요. 바깥에 Markdown이나 설명 텍스트를 추
       })
       
     } catch (error) {
-      console.log('🔄 OpenAI 실패, 오프라인 모드 사용')
+      console.log('🔄 AI API 실패, 오프라인 모드 사용')
       const offlineTopics = generateOfflineTopics(keyword)
       
       return NextResponse.json({
         success: true,
         topics: offlineTopics,
-        offline: true
+        isOffline: true
       })
     }
 
   } catch (error) {
     console.error('주제 추천 API 오류:', error)
     return NextResponse.json(
-      { error: '주제 추천 중 오류가 발생했습니다.' },
+      { 
+        success: false,
+        error: '토론 주제 추천에 실패했습니다.',
+        details: error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.'
+      },
       { status: 500 }
     )
   }

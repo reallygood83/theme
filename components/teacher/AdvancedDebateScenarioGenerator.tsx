@@ -119,11 +119,14 @@ export default function AdvancedDebateScenarioGenerator() {
         setIsOfflineMode(data.isOffline || false)
         setCurrentStep(2)
       } else {
-        throw new Error(data.error || '주제 추천 실패')
+        const errorMessage = data.error || '주제 추천에 실패했습니다.'
+        const details = data.details ? ` (${data.details})` : ''
+        throw new Error(errorMessage + details)
       }
     } catch (error) {
-      console.error('주제 추천 오류:', error)
-      alert('주제 추천 중 오류가 발생했습니다. 다시 시도해주세요.')
+      console.error('토론 주제 추천 오류:', error)
+      const errorMessage = error instanceof Error ? error.message : '토론 주제 추천 중 알 수 없는 오류가 발생했습니다.'
+      alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
     } finally {
       setLoading(false)
     }
@@ -160,11 +163,14 @@ export default function AdvancedDebateScenarioGenerator() {
         setIsOfflineMode(data.isOffline || false)
         setCurrentStep(3)
       } else {
-        throw new Error(data.error || '시나리오 생성 실패')
+        const errorMessage = data.error || '시나리오 생성에 실패했습니다.'
+        const details = data.details ? ` (${data.details})` : ''
+        throw new Error(errorMessage + details)
       }
     } catch (error) {
-      console.error('시나리오 생성 오류:', error)
-      alert('시나리오 생성 중 오류가 발생했습니다. 다시 시도해주세요.')
+      console.error('토론 시나리오 생성 오류:', error)
+      const errorMessage = error instanceof Error ? error.message : '토론 시나리오 생성 중 알 수 없는 오류가 발생했습니다.'
+      alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
     } finally {
       setLoading(false)
     }
