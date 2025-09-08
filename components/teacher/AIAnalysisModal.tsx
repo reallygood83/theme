@@ -6,6 +6,7 @@ interface AIAnalysisModalProps {
   isVisible: boolean
   currentStep: number
   onClose: () => void
+  onAutoClose?: () => void  // 자동 닫기 콜백 추가
 }
 
 const ANALYSIS_STEPS = [
@@ -16,8 +17,9 @@ const ANALYSIS_STEPS = [
   { id: 5, title: '분석 완료!', description: 'AI 분석이 성공적으로 완료되었습니다.', icon: '✅' }
 ]
 
-export default function AIAnalysisModal({ isVisible, currentStep, onClose }: AIAnalysisModalProps) {
+export default function AIAnalysisModal({ isVisible, currentStep, onClose, onAutoClose }: AIAnalysisModalProps) {
   const [displayStep, setDisplayStep] = useState(0)
+  const [isClosing, setIsClosing] = useState(false)
 
   useEffect(() => {
     if (isVisible && currentStep > 0) {
@@ -29,13 +31,35 @@ export default function AIAnalysisModal({ isVisible, currentStep, onClose }: AIA
     }
   }, [isVisible, currentStep])
 
+  // 분석 완료 시 자동으로 모달 닫기
+  useEffect(() => {
+    if (displayStep === 5 && isVisible) {
+      const autoCloseTimer = setTimeout(() => {
+        setIsClosing(true)
+        
+        // 페이드아웃 애니메이션 후 실제 닫기
+        setTimeout(() => {
+          onAutoClose?.() || onClose()
+          setIsClosing(false)
+          setDisplayStep(0)
+        }, 500) // 페이드아웃 시간
+      }, 1500) // 완료 메시지를 1.5초 보여준 후 자동 닫기
+
+      return () => clearTimeout(autoCloseTimer)
+    }
+  }, [displayStep, isVisible, onClose, onAutoClose])
+
   if (!isVisible) return null
 
   const currentStepData = ANALYSIS_STEPS[displayStep - 1] || ANALYSIS_STEPS[0]
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 relative">
+    <div className={`fixed inset-0 bg-black flex items-center justify-center z-50 transition-all duration-500 ${
+      isClosing ? 'bg-opacity-0' : 'bg-opacity-50'
+    }`}>
+      <div className={`bg-white rounded-lg p-8 max-w-md w-full mx-4 relative transform transition-all duration-500 ${
+        isClosing ? 'scale-95 opacity-0 translate-y-4' : 'scale-100 opacity-100 translate-y-0'
+      }`}>
         {/* 닫기 버튼 (완료 단계에서만 표시) */}
         {displayStep === 5 && (
           <button
@@ -112,15 +136,16 @@ export default function AIAnalysisModal({ isVisible, currentStep, onClose }: AIA
           })}
         </div>
 
-        {/* 완료 버튼 */}
+        {/* 완료 메시지 (자동 닫기 안내) */}
         {displayStep === 5 && (
           <div className="mt-6 text-center">
-            <button
-              onClick={onClose}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
-            >
-              확인
-            </button>
+            <div className="text-green-600 text-sm font-medium mb-2">
+              잠시 후 결과를 보여드리겠습니다...
+            </div>
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600 mr-2"></div>
+              <span className="text-sm text-gray-600">결과 준비 중</span>
+            </div>
           </div>
         )}
 

@@ -183,8 +183,9 @@ export default function SessionManager({
         
         // 단계 5: 분석 완료
         setAnalysisStep(5)
-        await new Promise(resolve => setTimeout(resolve, 1000))
         
+        // 모달이 자동으로 닫히도록 상태 업데이트는 여기서 하지 않음
+        // AIAnalysisModal에서 자동으로 닫힌 후 onAutoClose에서 처리
         setAnalysisComplete(true)
         setIsAnalyzing(false)
       } else {
@@ -217,6 +218,23 @@ export default function SessionManager({
   const handleCloseAnalysisModal = () => {
     setShowAnalysisModal(false)
     setAnalysisStep(0)
+  }
+
+  // 자동 닫기 핸들러 (분석 완료 후)
+  const handleAutoCloseAnalysisModal = () => {
+    setShowAnalysisModal(false)
+    setAnalysisStep(0)
+    
+    // 분석 완료 후 결과 섹션으로 스크롤
+    setTimeout(() => {
+      const analysisSection = document.getElementById('analysis-results')
+      if (analysisSection) {
+        analysisSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
   }
   
   // 논제 편집 시작
@@ -476,7 +494,7 @@ export default function SessionManager({
       
       {analysisComplete && session.aiAnalysisResult && (
         <div className="space-y-6">
-          <h2 className="text-xl font-bold">AI 분석 결과</h2>
+          <h2 id="analysis-results" className="text-xl font-bold">AI 분석 결과</h2>
           
           {session.aiAnalysisResult.clusteredQuestions && (
             <Card title="질문 유형 분류">
@@ -661,6 +679,7 @@ export default function SessionManager({
         isVisible={showAnalysisModal}
         currentStep={analysisStep}
         onClose={handleCloseAnalysisModal}
+        onAutoClose={handleAutoCloseAnalysisModal}
       />
     </div>
   )
