@@ -247,6 +247,43 @@ export async function searchYouTubeVideos(
   }
 }
 
+// 선택된 유형에 따른 검색 지시문 생성
+function generateSearchInstructions(selectedTypes: string[], stanceText: string): string {
+  const instructions: string[] = []
+  let counter = 1
+  
+  if (selectedTypes.includes('뉴스 기사')) {
+    instructions.push(`${counter}. 최신 뉴스 기사 (2020년 이후) - 실제 접근 가능한 링크 포함`)
+    counter++
+  }
+  
+  if (selectedTypes.includes('학술 자료')) {
+    instructions.push(`${counter}. 학술 논문이나 연구 자료 - DOI 또는 접근 가능한 URL 포함`)
+    counter++
+  }
+  
+  if (selectedTypes.includes('통계 자료')) {
+    instructions.push(`${counter}. 정부 기관의 공식 통계 자료 - 공식 사이트 링크 포함`)
+    counter++
+  }
+  
+  if (selectedTypes.includes('기타')) {
+    instructions.push(`${counter}. 전문가 의견이나 인터뷰 - 원문 링크 포함`)
+    counter++
+  }
+  
+  if (selectedTypes.includes('유튜브 영상')) {
+    instructions.push(`${counter}. 교육적 YouTube 영상 - 실제 video ID 포함`)
+    counter++
+  }
+  
+  if (instructions.length === 0) {
+    return '다음을 중점적으로 찾아주세요:\n1. 요청하신 자료 유형에 맞는 신뢰할 수 있는 근거 자료'
+  }
+  
+  return `다음을 중점적으로 찾아주세요:\n${instructions.join('\n')}`
+}
+
 // 검색 프롬프트 생성 함수 (개선된 버전)
 export function generateSearchPrompt(topic: string, stance: string, selectedTypes: string[]): string {
   const stanceText = stance === 'positive' ? '찬성' : '반대'
@@ -265,12 +302,7 @@ YouTube 영상은 다음 조건으로 찾아주세요:
 - 신뢰할 수 있는 채널의 영상 (뉴스, 교육기관, 전문가)
 ` : ''}
 
-다음을 중점적으로 찾아주세요:
-1. 최신 뉴스 기사 (2020년 이후) - 실제 접근 가능한 링크 포함
-2. 학술 논문이나 연구 자료 - DOI 또는 접근 가능한 URL 포함  
-3. 정부 기관의 공식 통계 자료 - 공식 사이트 링크 포함
-4. 전문가 의견이나 인터뷰 - 원문 링크 포함
-${selectedTypes.includes('유튜브 영상') ? '5. 교육적 YouTube 영상 - 실제 video ID 포함' : ''}
+${generateSearchInstructions(selectedTypes, stanceText)}
 
 **중요**: 각 자료는 실제로 존재하고 접근 가능한 링크여야 합니다.
 가상의 링크나 존재하지 않는 자료는 포함하지 마세요.

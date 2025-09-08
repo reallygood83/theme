@@ -41,11 +41,12 @@ export default function EvidenceSearchModalContainer({
     try {
       console.log('근거자료 검색 시작:', { topic, stance, types })
       
-      // 5단계 프로그레스 시뮬레이션과 API 호출을 병렬 처리
+      // 5단계 프로그레스 시뮬레이션과 API 호출을 병렬 처리 (학생 페이지와 동일한 타이밍)
       const progressPromise = (async () => {
         for (let step = 1; step <= 5; step++) {
           setCurrentStep(step)
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          console.log('📊 교사 대시보드 진행 상황:', step)
+          await new Promise(resolve => setTimeout(resolve, step < 5 ? 18000 : 5000)) // 18초씩 진행, 마지막은 5초
         }
       })()
       

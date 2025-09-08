@@ -32,6 +32,11 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error('❌ YOUTUBE_API_KEY가 설정되지 않았습니다.')
+      console.log('💡 YouTube 검색 기능이 비활성화됩니다.')
+    }
+    
     // 검색 프롬프트 생성
     const prompt = generateSearchPrompt(topic, stance, selectedTypes || [])
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
