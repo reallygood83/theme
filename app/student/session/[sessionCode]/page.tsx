@@ -12,10 +12,14 @@ import AgendaValidator from '@/components/student/AgendaValidator'
 import AgendaRecommender from '@/components/student/AgendaRecommender'
 import AgendaDisplay from '@/components/student/AgendaDisplay'
 import TermDefinition from '@/components/student/TermDefinition'
+import EvidenceSearchForm from '@/components/evidence/EvidenceSearchForm'
+import EvidenceResultsDisplay from '@/components/evidence/EvidenceResultsDisplay'
+import EvidenceSearchModal from '@/components/evidence/EvidenceSearchModal'
 import { database, getFirebaseDatabase, isInitialized } from '@/lib/firebase'
 import { ref, get, onValue, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 import { Session, extractYoutubeVideoId } from '@/lib/utils'
+import type { EvidenceResult } from '@/lib/types/evidence'
 
 interface StudentSessionPageProps {
   params: {
@@ -42,6 +46,13 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [isGeneratingAgendas, setIsGeneratingAgendas] = useState(false)
   const [studentAgendas, setStudentAgendas] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<string[]>([])
+  
+  // 근거자료 검색 상태
+  const [showEvidenceSearch, setShowEvidenceSearch] = useState(false)
+  const [evidenceSearchModal, setEvidenceSearchModal] = useState(false)
+  const [evidenceSearchStep, setEvidenceSearchStep] = useState(0)
+  const [evidenceResults, setEvidenceResults] = useState<EvidenceResult[]>([])
+  const [isSearchingEvidence, setIsSearchingEvidence] = useState(false)
   
   // 디버깅 정보 추가 함수
   const addDebugInfo = (message: string) => {
@@ -377,6 +388,69 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     } finally {
       setIsGeneratingAgendas(false)
     }
+  }
+  
+  // 근거자료 검색 요청 처리
+  const handleEvidenceSearch = async (topic: string, stance: string, types: string[]) => {
+    setIsSearchingEvidence(true)
+    setEvidenceSearchModal(true)
+    setEvidenceSearchStep(1)
+    
+    try {
+      // 진행 상황 시뮬레이션
+      const steps = [1, 2, 3, 4, 5]
+      for (const step of steps) {
+        setEvidenceSearchStep(step)
+        await new Promise(resolve => setTimeout(resolve, 800))
+      }
+      
+      const response = await fetch('/api/evidence/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic,
+          stance,
+          selectedTypes: types
+        }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('근거자료 검색에 실패했습니다.')
+      }
+      
+      const result = await response.json()
+      setEvidenceResults(result.evidences || [])
+      setShowEvidenceSearch(false)
+      
+      // 결과 섹션으로 스크롤
+      setTimeout(() => {
+        const evidenceSection = document.getElementById('evidence-results')
+        if (evidenceSection) {
+          evidenceSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start'
+          })
+        }
+      }, 100)
+      
+    } catch (error) {
+      console.error('근거자료 검색 오류:', error)
+      alert('근거자료 검색 중 오류가 발생했습니다. 다시 시도해주세요.')
+    } finally {
+      setIsSearchingEvidence(false)
+      setEvidenceSearchStep(0)
+    }
+  }
+  
+  const handleCloseEvidenceSearchModal = () => {
+    setEvidenceSearchModal(false)
+    setEvidenceSearchStep(0)
+  }
+  
+  const handleAutoCloseEvidenceSearchModal = () => {
+    handleCloseEvidenceSearchModal()
   }
   
   if (loading) {
@@ -743,6 +817,9 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               <a href="#ai-agenda" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 AI 논제 추천
               </a>
+              <a href="#evidence-search" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                근거자료 검색
+              </a>
               <a href="#helper" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 질문 도우미
               </a>
@@ -805,6 +882,55 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           </div>
         </div>
         
+        {/* 근거자료 검색 섹션 */}
+        <div id="evidence-search" className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">근거자료 검색</h2>
+          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
+            {showEvidenceSearch ? (
+              <EvidenceSearchForm
+                onSearch={handleEvidenceSearch}
+                isLoading={isSearchingEvidence}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <div className="bg-blue-50 p-6 rounded-lg mb-4">
+                  <div className="text-4xl mb-3">🔍</div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    AI 근거자료 검색
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
+                  </p>
+                  <ul className="text-sm text-gray-600 text-left space-y-1">
+                    <li>• 뉴스 기사, 학술 자료, 통계 데이터</li>
+                    <li>• 유튜브 교육 영상</li>
+                    <li>• 정부 자료 및 공식 문서</li>
+                  </ul>
+                </div>
+                <Button 
+                  variant="primary"
+                  onClick={() => setShowEvidenceSearch(true)}
+                >
+                  🚀 근거자료 검색 시작하기
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* 근거자료 검색 결과 섹션 */}
+        {evidenceResults.length > 0 && (
+          <div id="evidence-results" className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">검색된 근거자료</h2>
+            <EvidenceResultsDisplay
+              results={evidenceResults}
+              topic="검색한 주제"
+              stance="선택한 입장"
+              searchTime={new Date()}
+            />
+          </div>
+        )}
+        
         {/* 질문 도우미 섹션 */}
         <div id="helper" className="mb-8">
           <h2 className="text-xl font-semibold mb-4">질문 도우미</h2>
@@ -862,6 +988,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               </svg>
               <span className="text-xs mt-1">논제 추천</span>
             </a>
+            <a href="#evidence-search" className="flex flex-col items-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span className="text-xs mt-1">근거자료</span>
+            </a>
             <a href="#helper" className="flex flex-col items-center text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
@@ -882,6 +1014,14 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         {/* 모바일 하단 탭 영역 패딩 */}
         <div className="h-16 lg:hidden"></div>
       </div>
+      
+      {/* 근거자료 검색 진행 모달 */}
+      <EvidenceSearchModal
+        isVisible={evidenceSearchModal}
+        currentStep={evidenceSearchStep}
+        onClose={handleCloseEvidenceSearchModal}
+        onAutoClose={handleAutoCloseEvidenceSearchModal}
+      />
     </>
   )
 }

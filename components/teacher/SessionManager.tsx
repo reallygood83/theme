@@ -7,7 +7,11 @@ import { initializeApp } from 'firebase/app'
 import Button from '../common/Button'
 import Card from '../common/Card'
 import AIAnalysisModal from './AIAnalysisModal'
+import EvidenceSearchForm from '../evidence/EvidenceSearchForm'
+import EvidenceSearchModal from '../evidence/EvidenceSearchModal'
+import EvidenceResultsDisplay from '../evidence/EvidenceResultsDisplay'
 import { Session, Question } from '@/lib/utils'
+import { EvidenceResult } from '@/lib/types/evidence'
 
 interface SessionManagerProps {
   sessionId: string
@@ -41,6 +45,13 @@ export default function SessionManager({
   const [isEditingTerms, setIsEditingTerms] = useState(false)
   const [editedTerms, setEditedTerms] = useState<any[]>([])
   const [isSavingTerms, setIsSavingTerms] = useState(false)
+  
+  // 근거자료 검색 상태
+  const [showEvidenceSearch, setShowEvidenceSearch] = useState(false)
+  const [evidenceSearchModal, setEvidenceSearchModal] = useState(false)
+  const [evidenceSearchStep, setEvidenceSearchStep] = useState(0)
+  const [evidenceResults, setEvidenceResults] = useState<EvidenceResult[]>([])
+  const [isSearchingEvidence, setIsSearchingEvidence] = useState(false)
   
   // 실시간 질문 업데이트 수신
   useEffect(() => {
@@ -315,6 +326,94 @@ export default function SessionManager({
     }
   }
   
+  // 근거자료 검색 시작
+  const handleEvidenceSearch = async (topic: string, stance: string, types: string[]) => {
+    setIsSearchingEvidence(true)
+    setEvidenceSearchModal(true)
+    setEvidenceSearchStep(1)
+    
+    try {
+      console.log('🔍 근거자료 검색 시작:', { topic, stance, types })
+      
+      // 단계별 진행 시뮬레이션
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      setEvidenceSearchStep(2)
+      
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      setEvidenceSearchStep(3)
+      
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setEvidenceSearchStep(4)
+      
+      // 실제 API 호출
+      const response = await fetch('/api/evidence/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          topic,
+          stance,
+          selectedTypes: types
+        })
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || '근거자료 검색에 실패했습니다.')
+      }
+      
+      setEvidenceSearchStep(5)
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      
+      // 검색 결과 저장
+      setEvidenceResults(result.evidences || [])
+      setIsSearchingEvidence(false)
+      
+      console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
+      
+    } catch (error) {
+      console.error('❌ 근거자료 검색 오류:', error)
+      setEvidenceSearchModal(false)
+      setEvidenceSearchStep(0)
+      setIsSearchingEvidence(false)
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API')) {
+          alert('⚠️ 근거자료 검색을 위한 API 키가 설정되지 않았습니다.\\n\\n관리자에게 문의하여 API 키를 설정해주세요.')
+        } else {
+          alert(`근거자료 검색 중 오류가 발생했습니다:\\n${error.message}\\n\\n다시 시도해주세요.`)
+        }
+      } else {
+        alert('근거자료 검색 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.')
+      }
+    }
+  }
+  
+  // 근거자료 검색 모달 닫기
+  const handleCloseEvidenceSearchModal = () => {
+    setEvidenceSearchModal(false)
+    setEvidenceSearchStep(0)
+  }
+  
+  // 근거자료 검색 모달 자동 닫기 (완료 후)
+  const handleAutoCloseEvidenceSearchModal = () => {
+    setEvidenceSearchModal(false)
+    setEvidenceSearchStep(0)
+    
+    // 검색 완료 후 결과 섹션으로 스크롤
+    setTimeout(() => {
+      const evidenceSection = document.getElementById('evidence-results')
+      if (evidenceSection) {
+        evidenceSection.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        })
+      }
+    }, 100)
+  }
+  
   return (
     <div className="space-y-8 relative">
       {showToast && (
@@ -349,14 +448,25 @@ export default function SessionManager({
           </div>
         </div>
         
-        <Button
-          variant={analysisComplete ? "secondary" : "primary"}
-          onClick={handleStartAnalysis}
-          isLoading={isAnalyzing}
-          disabled={isAnalyzing || questions.length < 3}
-        >
-          {isAnalyzing ? 'AI 분석 중...' : analysisComplete ? 'AI 재분석 시작' : 'AI 분석 시작'}
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <Button
+            variant={analysisComplete ? "secondary" : "primary"}
+            onClick={handleStartAnalysis}
+            isLoading={isAnalyzing}
+            disabled={isAnalyzing || questions.length < 3}
+          >
+            {isAnalyzing ? 'AI 분석 중...' : analysisComplete ? 'AI 재분석 시작' : 'AI 분석 시작'}
+          </Button>
+          
+          <button
+            type="button"
+            onClick={() => setShowEvidenceSearch(true)}
+            disabled={isSearchingEvidence}
+            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+          >
+            🔍 근거자료 검색
+          </button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -674,12 +784,74 @@ export default function SessionManager({
         </div>
       )}
       
+      {/* 근거자료 검색 결과 */}
+      {evidenceResults.length > 0 && (
+        <div className="space-y-6">
+          <h2 id="evidence-results" className="text-xl font-bold flex items-center">
+            🔍 근거자료 검색 결과
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              ({evidenceResults.length}개)
+            </span>
+          </h2>
+          
+          <Card>
+            <EvidenceResultsDisplay 
+              results={evidenceResults}
+              topic={session?.title || '검색한 주제'}
+              stance="positive"
+              searchTime={new Date()}
+            />
+          </Card>
+        </div>
+      )}
+      
+      {/* 근거자료 검색 모달 */}
+      {showEvidenceSearch && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold flex items-center">
+                🔍 근거자료 검색
+              </h3>
+              <button
+                onClick={() => setShowEvidenceSearch(false)}
+                className="text-gray-400 hover:text-gray-600"
+                disabled={isSearchingEvidence}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <EvidenceSearchForm 
+                onSearch={(topic, stance, types) => {
+                  setShowEvidenceSearch(false)
+                  handleEvidenceSearch(topic, stance, types)
+                }}
+                isLoading={isSearchingEvidence}
+                initialTopic={session.title}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* AI 분석 진행 상태 모달 */}
       <AIAnalysisModal
         isVisible={showAnalysisModal}
         currentStep={analysisStep}
         onClose={handleCloseAnalysisModal}
         onAutoClose={handleAutoCloseAnalysisModal}
+      />
+      
+      {/* 근거자료 검색 진행 상태 모달 */}
+      <EvidenceSearchModal
+        isVisible={evidenceSearchModal}
+        currentStep={evidenceSearchStep}
+        onClose={handleCloseEvidenceSearchModal}
+        onAutoClose={handleAutoCloseEvidenceSearchModal}
       />
     </div>
   )
