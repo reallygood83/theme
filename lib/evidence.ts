@@ -70,10 +70,39 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
       const content = data.choices[0]?.message?.content
       
       try {
-        return JSON.parse(content)
+        // JSON 응답에서 코드 블록 제거
+        let cleanContent = content
+        if (cleanContent.includes('```json')) {
+          cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
+        }
+        if (cleanContent.includes('```')) {
+          cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+        }
+        
+        const parsed = JSON.parse(cleanContent.trim())
+        console.log('✅ Perplexity JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
+        return parsed
       } catch (parseError) {
-        console.error('JSON 파싱 오류:', parseError)
-        return null
+        console.error('❌ JSON 파싱 오류:', parseError)
+        console.log('원본 응답:', content.substring(0, 500))
+        
+        // 간단한 구조로 대체 응답 생성
+        const fallbackResponse = {
+          evidences: [
+            {
+              type: "뉴스 기사",
+              title: "검색 결과를 찾을 수 없음",
+              content: "현재 해당 주제에 대한 구체적인 근거자료를 찾지 못했습니다. 다른 키워드로 다시 검색해보세요.",
+              source: "시스템",
+              url: "",
+              reliability: 50,
+              publishedDate: new Date().toISOString().split('T')[0],
+              author: "",
+              summary: "검색 결과 없음"
+            }
+          ]
+        }
+        return fallbackResponse
       }
     }
   } catch (error) {
@@ -131,9 +160,20 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
         const content = data.choices[0]?.message?.content
         
         try {
-          return JSON.parse(content)
+          // JSON 응답에서 코드 블록 제거
+          let cleanContent = content
+          if (cleanContent.includes('```json')) {
+            cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
+          }
+          if (cleanContent.includes('```')) {
+            cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+          }
+          
+          const parsed = JSON.parse(cleanContent.trim())
+          console.log('✅ 프록시를 통한 JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
+          return parsed
         } catch (parseError) {
-          console.error('JSON 파싱 오류:', parseError)
+          console.error('❌ 프록시 JSON 파싱 오류:', parseError)
           continue
         }
       }
@@ -207,7 +247,7 @@ export async function searchYouTubeVideos(
   }
 }
 
-// 검색 프롬프트 생성 함수 (원본 완전 복제)
+// 검색 프롬프트 생성 함수 (개선된 버전)
 export function generateSearchPrompt(topic: string, stance: string, selectedTypes: string[]): string {
   const stanceText = stance === 'positive' ? '찬성' : '반대'
   const typesText = selectedTypes.length > 0 ? selectedTypes.join(', ') : '모든 유형'
@@ -217,22 +257,37 @@ export function generateSearchPrompt(topic: string, stance: string, selectedType
 찾고자 하는 자료 유형: ${typesText}
 
 위 토론 주제에 대해 ${stanceText} 입장을 뒷받침할 수 있는 신뢰할 수 있는 근거 자료를 찾아주세요.
-특히 다음을 중점적으로 찾아주세요:
 
-1. 최신 뉴스 기사 (2020년 이후)
-2. 학술 논문이나 연구 자료
-3. 정부 기관의 공식 통계 자료
-4. 전문가 의견이나 인터뷰
+${selectedTypes.includes('유튜브 영상') ? `
+YouTube 영상은 다음 조건으로 찾아주세요:
+- 토론, 강의, 다큐멘터리 형태의 교육적 영상
+- 실제 접근 가능한 YouTube 링크 (https://www.youtube.com/watch?v=VIDEO_ID 형식)
+- 신뢰할 수 있는 채널의 영상 (뉴스, 교육기관, 전문가)
+` : ''}
 
-각 자료마다 다음 정보를 포함해주세요:
-- 자료 유형
-- 제목
-- 핵심 내용 (2-3문장 요약)
-- 출처 및 신뢰도
-- 발행일
-- 실제 URL (가능한 경우)
+다음을 중점적으로 찾아주세요:
+1. 최신 뉴스 기사 (2020년 이후) - 실제 접근 가능한 링크 포함
+2. 학술 논문이나 연구 자료 - DOI 또는 접근 가능한 URL 포함  
+3. 정부 기관의 공식 통계 자료 - 공식 사이트 링크 포함
+4. 전문가 의견이나 인터뷰 - 원문 링크 포함
+${selectedTypes.includes('유튜브 영상') ? '5. 교육적 YouTube 영상 - 실제 video ID 포함' : ''}
 
-총 8-12개의 다양한 근거 자료를 찾아주세요.`
+**중요**: 각 자료는 실제로 존재하고 접근 가능한 링크여야 합니다.
+가상의 링크나 존재하지 않는 자료는 포함하지 마세요.
+
+각 자료마다 다음 정보를 정확히 포함해주세요:
+- type: "뉴스 기사" | "학술 자료" | "통계 자료" | "유튜브 영상" | "기타"
+- title: 정확한 자료 제목
+- content: 핵심 내용 요약 (2-3문장, ${stanceText} 입장 근거 포함)
+- source: 출처 (신문사명, 기관명, 저자명 등)
+- url: **실제 접근 가능한 전체 URL** (http:// 또는 https:// 포함)
+- reliability: 신뢰도 점수 (60-100)
+- publishedDate: 발행일 (YYYY-MM-DD 형식)
+- author: 작성자명 (있는 경우)
+- summary: 한 줄 요약
+
+총 10-15개의 다양하고 신뢰할 수 있는 근거 자료를 찾아주세요.
+응답은 반드시 JSON 형식으로만 제공해주세요.`
 }
 
 // 검색 결과 처리 함수 (원본 로직 복제)

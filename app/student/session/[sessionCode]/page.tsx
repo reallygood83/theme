@@ -397,14 +397,18 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     setEvidenceSearchStep(1)
     
     try {
-      // 진행 상황 시뮬레이션
-      const steps = [1, 2, 3, 4, 5]
-      for (const step of steps) {
-        setEvidenceSearchStep(step)
-        await new Promise(resolve => setTimeout(resolve, 800))
-      }
+      console.log('🔍 근거자료 검색 시작:', { topic, stance, types })
       
-      const response = await fetch('/api/evidence/search', {
+      // 진행 상황 시뮬레이션과 실제 API 호출 병렬 처리
+      const progressPromise = (async () => {
+        const steps = [1, 2, 3, 4, 5]
+        for (const step of steps) {
+          setEvidenceSearchStep(step)
+          await new Promise(resolve => setTimeout(resolve, 1000)) // 조금 더 느리게
+        }
+      })()
+      
+      const apiPromise = fetch('/api/evidence/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -416,16 +420,26 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         }),
       })
       
+      // 진행 상황 시뮬레이션이 완료된 후 API 응답 대기
+      await progressPromise
+      const response = await apiPromise
+      
       if (!response.ok) {
-        throw new Error('근거자료 검색에 실패했습니다.')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || '근거자료 검색에 실패했습니다.')
       }
       
       const result = await response.json()
+      console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
+      
       setEvidenceResults(result.evidences || [])
-      setShowEvidenceSearch(false)
+      
+      // 모달 자동 닫기는 EvidenceSearchModal에서 처리
+      // setEvidenceSearchModal(false)는 자동으로 처리됨
       
       // 결과 섹션으로 스크롤
       setTimeout(() => {
+        setShowEvidenceSearch(false) // 결과를 보여주는 섹션으로 전환
         const evidenceSection = document.getElementById('evidence-results')
         if (evidenceSection) {
           evidenceSection.scrollIntoView({ 
@@ -433,14 +447,24 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             block: 'start'
           })
         }
-      }, 100)
+      }, 2000) // 모달이 자동으로 닫힌 후 스크롤
       
     } catch (error) {
-      console.error('근거자료 검색 오류:', error)
-      alert('근거자료 검색 중 오류가 발생했습니다. 다시 시도해주세요.')
+      console.error('❌ 근거자료 검색 오류:', error)
+      setEvidenceSearchModal(false) // 에러 시 모달 닫기
+      
+      if (error instanceof Error) {
+        if (error.message.includes('API 키')) {
+          alert('⚠️ 근거자료 검색을 위한 API 키가 설정되지 않았습니다.\n\n관리자에게 문의하여 API 키를 설정해주세요.')
+        } else {
+          alert(`근거자료 검색 중 오류가 발생했습니다:\n${error.message}\n\n다시 시도해주세요.`)
+        }
+      } else {
+        alert('근거자료 검색 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.')
+      }
     } finally {
       setIsSearchingEvidence(false)
-      setEvidenceSearchStep(0)
+      // setEvidenceSearchStep(0) - 모달에서 자동으로 처리됨
     }
   }
   
