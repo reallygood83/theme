@@ -38,22 +38,29 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
             role: 'system',
             content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
 
+**🚨 중요**: URL은 반드시 실제로 존재하는 뉴스 기사 링크만 제공하세요. 가짜 URL은 절대 금지입니다. URL이 확실하지 않으면 빈 문자열("")로 설정하세요.
+
 응답 형식:
 {
   "evidences": [
     {
       "type": "뉴스 기사",
-      "title": "뉴스 기사 제목",
+      "title": "실제 존재하는 뉴스 기사 제목",
       "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
       "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
-      "url": "실제 뉴스 기사 URL (없으면 빈 문자열)",
+      "url": "실제 접근 가능한 뉴스 기사 URL (확실하지 않으면 빈 문자열)",
       "reliability": 85,
-      "publishedDate": "YYYY-MM-DD",
-      "author": "기자명",
+      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 빈 문자열)",
+      "author": "실제 기자명 (모르면 빈 문자열)",
       "summary": "한 줄 요약"
     }
   ]
-}`
+}
+
+**URL 규칙**: 
+- 확실한 뉴스 URL만 제공
+- 추측이나 가짜 URL 절대 금지
+- 불확실하면 url: "" 로 설정`
           },
           {
             role: 'user',
@@ -128,22 +135,29 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
               role: 'system',
               content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
 
+**🚨 중요**: URL은 반드시 실제로 존재하는 뉴스 기사 링크만 제공하세요. 가짜 URL은 절대 금지입니다. URL이 확실하지 않으면 빈 문자열("")로 설정하세요.
+
 응답 형식:
 {
   "evidences": [
     {
       "type": "뉴스 기사",
-      "title": "뉴스 기사 제목",
+      "title": "실제 존재하는 뉴스 기사 제목",
       "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
       "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
-      "url": "실제 뉴스 기사 URL (없으면 빈 문자열)",
+      "url": "실제 접근 가능한 뉴스 기사 URL (확실하지 않으면 빈 문자열)",
       "reliability": 85,
-      "publishedDate": "YYYY-MM-DD",
-      "author": "기자명",
+      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 빈 문자열)",
+      "author": "실제 기자명 (모르면 빈 문자열)",
       "summary": "한 줄 요약"
     }
   ]
-}`
+}
+
+**URL 규칙**: 
+- 확실한 뉴스 URL만 제공
+- 추측이나 가짜 URL 절대 금지
+- 불확실하면 url: "" 로 설정`
             },
             {
               role: 'user',
@@ -205,9 +219,9 @@ export async function searchYouTubeVideos(
     // 검색 쿼리 최적화 (참고 프로그램과 동일)
     let searchQuery = query
     if (stance) {
-      if (stance === 'positive') {
+      if (stance === 'positive' || stance === 'supporting') {
         searchQuery += ' 장점 효과 도움 필요성 긍정적'
-      } else {
+      } else if (stance === 'negative' || stance === 'opposing') {
         searchQuery += ' 단점 문제점 위험성 부작용 우려'
       }
     }
@@ -261,10 +275,14 @@ export async function searchYouTubeVideos(
                           channelTitle.includes('학교') ||
                           channelTitle.includes('edu')
       
-      // 교육 관련 키워드 점수
+      // 교육 관련 키워드 점수 (더 관대하게 수정)
       const educationScore = (title.includes('교육') ? 2 : 0) + 
                             (title.includes('초등') ? 2 : 0) +
                             (title.includes('학교') ? 1 : 0) +
+                            (title.includes('토론') ? 2 : 0) +
+                            (title.includes('학습') ? 1 : 0) +
+                            (title.includes('아이') ? 1 : 0) +
+                            (title.includes('어린이') ? 1 : 0) +
                             (isEducational ? 3 : 0)
       
       return {
@@ -273,9 +291,9 @@ export async function searchYouTubeVideos(
         isEducational
       }
     }).filter(video => {
-      // 최소 교육 점수 1점 이상만 포함
-      const isValid = video.educationScore >= 1
-      console.log(isValid ? '✅' : '❌', `영상 점수: ${video.educationScore}점`, video.snippet.title.substring(0, 30))
+      // 모든 영상 포함 (점수 제한 제거)
+      const isValid = true // video.educationScore >= 0 으로 모든 영상 포함
+      console.log('✅', `영상 점수: ${video.educationScore}점`, video.snippet.title.substring(0, 30))
       return isValid
     }).sort((a, b) => {
       // 교육 점수가 높은 순으로 정렬
@@ -479,7 +497,9 @@ function isValidNewsUrl(url: string): boolean {
     'naver.com', 'daum.net', 'chosun.com', 'donga.com', 'joongang.co.kr',
     'hani.co.kr', 'khan.co.kr', 'mt.co.kr', 'mk.co.kr', 'ytn.co.kr',
     'kbs.co.kr', 'mbc.co.kr', 'sbs.co.kr', 'jtbc.co.kr', 'news1.kr',
-    'newsis.com', 'yonhapnews.co.kr', 'edaily.co.kr', 'seoul.co.kr'
+    'newsis.com', 'yonhapnews.co.kr', 'yna.co.kr', 'edaily.co.kr', 'seoul.co.kr',
+    'hankyung.com', 'hankookilbo.com', 'sisain.co.kr', 'ohmynews.com',
+    'pressian.com', 'moneytoday.co.kr', 'etnews.com', 'zdnet.co.kr'
   ]
   
   try {
@@ -515,11 +535,11 @@ export function validateEvidenceResults(results: EvidenceResult[]): EvidenceResu
       return false
     }
     
-    // URL 검증 (뉴스 기사의 경우 더 엄격하게)
+    // URL 검증 (더 관대하게 수정)
     if (result.type === '뉴스 기사') {
-      if (!isValidNewsUrl(result.url)) {
-        console.log('❌ 유효하지 않은 뉴스 URL:', result.url)
-        return false
+      if (result.url && !isValidNewsUrl(result.url)) {
+        console.log('❌ 유효하지 않은 뉴스 URL:', result.url, '→ URL 제거 후 포함')
+        result.url = '' // URL 제거하고 결과는 포함
       }
       console.log('✅ 유효한 뉴스 기사:', result.title)
     } else if (result.type === '유튜브 영상') {
@@ -529,10 +549,10 @@ export function validateEvidenceResults(results: EvidenceResult[]): EvidenceResu
       }
       console.log('✅ 유효한 YouTube 영상:', result.title)
     } else {
-      // 기타 유형은 기본 URL 검증
+      // 기타 유형은 URL 없어도 포함
       if (result.url && !isValidUrl(result.url)) {
-        console.log('❌ 유효하지 않은 URL:', result.url)
-        return false
+        console.log('❌ 유효하지 않은 URL:', result.url, '→ URL 제거 후 포함')
+        result.url = '' // URL 제거하고 결과는 포함
       }
     }
     
