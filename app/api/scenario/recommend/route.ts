@@ -268,28 +268,44 @@ function generateOfflineTopics(keyword: string) {
 
 // JSON 응답 파싱
 function parseTopicResponse(response: string, keyword: string) {
+  console.log('🔍 AI 응답 파싱 시작:', response.substring(0, 200) + '...')
+  
   try {
-    let jsonStr = response.trim()
-    
-    // 마크다운 코드 블록 제거
-    if (jsonStr.includes('```')) {
-      const match = jsonStr.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/)
-      if (match) {
-        jsonStr = match[1]
-      }
+    // 응답에서 JSON 부분만 추출 (마크다운 코드 블록 제거)
+    let cleanResponse = response.trim()
+    if (cleanResponse.includes('```json')) {
+      const jsonStart = cleanResponse.indexOf('```json') + 7
+      const jsonEnd = cleanResponse.indexOf('```', jsonStart)
+      cleanResponse = cleanResponse.substring(jsonStart, jsonEnd).trim()
+    } else if (cleanResponse.includes('```')) {
+      const jsonStart = cleanResponse.indexOf('```') + 3
+      const jsonEnd = cleanResponse.indexOf('```', jsonStart)
+      cleanResponse = cleanResponse.substring(jsonStart, jsonEnd).trim()
     }
     
-    const topics = JSON.parse(jsonStr)
+    console.log('🧹 정제된 응답:', cleanResponse.substring(0, 100) + '...')
     
-    if (Array.isArray(topics) && topics.length === 3) {
-      console.log('✅ JSON 파싱 성공:', topics)
+    // JSON 형태로 파싱 시도
+    const parsed = JSON.parse(cleanResponse)
+    console.log('✅ JSON 파싱 성공:', parsed)
+    
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      const topics = parsed.map((topic, index) => ({
+        title: topic.title || topic.topic || `${keyword} 관련 토론 주제 ${index + 1}`,
+        description: topic.description || '토론 주제에 대한 설명입니다.',
+        proView: topic.proView || '찬성 의견',
+        conView: topic.conView || '반대 의견'
+      }))
+      
+      console.log(`🎯 ${topics.length}개의 주제 파싱 완료`)
       return topics
     } else {
-      throw new Error('잘못된 JSON 형식')
+      console.warn('⚠️ 파싱된 데이터가 배열이 아니거나 비어있음:', parsed)
+      throw new Error('응답 데이터 형식이 올바르지 않습니다')
     }
   } catch (error) {
-    console.error('JSON 파싱 실패:', error)
-    console.log('원본 응답:', response)
+    console.error('❌ JSON 파싱 실패:', error)
+    console.log('🔄 오프라인 모드로 전환')
     
     // 파싱 실패 시 오프라인 주제 사용
     return generateOfflineTopics(keyword)
@@ -298,14 +314,43 @@ function parseTopicResponse(response: string, keyword: string) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, purpose } = await request.json()
+    const { keyword, purpose, grade } = await request.json()
 
+    // 입력 검증 강화
     if (!keyword?.trim()) {
       return NextResponse.json(
-        { error: '키워드를 입력해주세요.' },
+        { 
+          success: false,
+          error: '키워드를 입력해주세요.',
+          details: 'keyword 필드가 비어있거나 공백만 포함되어 있습니다.'
+        },
         { status: 400 }
       )
     }
+
+    if (!purpose?.trim()) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: '교육 목적을 선택해주세요.',
+          details: 'purpose 필드가 비어있거나 공백만 포함되어 있습니다.'
+        },
+        { status: 400 }
+      )
+    }
+
+    if (!grade?.trim()) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: '대상 학년을 선택해주세요.',
+          details: 'grade 필드가 비어있거나 공백만 포함되어 있습니다.'
+        },
+        { status: 400 }
+      )
+    }
+
+    console.log('📝 주제 추천 요청:', { keyword: keyword.trim(), purpose: purpose.trim(), grade: grade.trim() })
 
     // 목적별 특화 지침 생성
     let purposeInstruction = ''
@@ -340,23 +385,58 @@ JSON 형식으로 다음과 같이 응답해주세요:
 JSON 형식만 출력하세요. 바깥에 Markdown이나 설명 텍스트를 추가하지 마세요.`
 
     try {
+      console.log('🤖 AI API 호출 시작...')
       const response = await callAI(prompt)
-      const topics = parseTopicResponse(response, keyword)
+      console.log('📥 AI 응답 수신 완료')
       
+      const topics = parseTopicResponse(response, keyword.trim())
+      
+      // 응답 데이터 검증
+      if (!topics || !Array.isArray(topics) || topics.length === 0) {
+        console.warn('⚠️ AI가 유효한 주제를 생성하지 못함, 오프라인 모드로 전환')
+        throw new Error('AI 응답에서 유효한 주제를 찾을 수 없습니다')
+      }
+      
+      console.log(`✅ ${topics.length}개의 주제 생성 성공`)
       return NextResponse.json({
         success: true,
-        topics
+        topics,
+        isOffline: false,
+        metadata: {
+          keyword: keyword.trim(),
+          purpose: purpose.trim(),
+          grade: grade.trim(),
+          generatedAt: new Date().toISOString()
+        }
       })
       
     } catch (error) {
-      console.log('🔄 AI API 실패, 오프라인 모드 사용')
-      const offlineTopics = generateOfflineTopics(keyword)
+      console.log('🔄 AI API 실패, 오프라인 모드로 전환:', error instanceof Error ? error.message : error)
       
-      return NextResponse.json({
-        success: true,
-        topics: offlineTopics,
-        isOffline: true
-      })
+      try {
+        const offlineTopics = generateOfflineTopics(keyword.trim())
+        
+        if (!offlineTopics || offlineTopics.length === 0) {
+          throw new Error('오프라인 주제 생성도 실패했습니다')
+        }
+        
+        console.log(`📴 오프라인 모드: ${offlineTopics.length}개의 주제 제공`)
+        return NextResponse.json({
+          success: true,
+          topics: offlineTopics,
+          isOffline: true,
+          fallbackReason: error instanceof Error ? error.message : 'AI API 호출 실패',
+          metadata: {
+            keyword: keyword.trim(),
+            purpose: purpose.trim(),
+            grade: grade.trim(),
+            generatedAt: new Date().toISOString()
+          }
+        })
+      } catch (offlineError) {
+        console.error('❌ 오프라인 모드도 실패:', offlineError)
+        throw new Error('주제 생성에 완전히 실패했습니다')
+      }
     }
 
   } catch (error) {

@@ -115,17 +115,58 @@ export default function AdvancedDebateScenarioGenerator() {
       const data = await response.json()
 
       if (data.success) {
-        setRecommendedTopics(data.topics)
+        // 응답 데이터 검증
+        if (!data.topics || !Array.isArray(data.topics) || data.topics.length === 0) {
+          throw new Error('서버에서 유효한 주제를 받지 못했습니다. 다시 시도해주세요.')
+        }
+        
+        // 각 주제의 필수 필드 검증
+        const validTopics = data.topics.filter((topic: any) => 
+          topic && 
+          typeof topic === 'object' && 
+          (topic.topic || topic.title) && 
+          topic.description
+        )
+        
+        if (validTopics.length === 0) {
+          throw new Error('받은 주제 데이터의 형식이 올바르지 않습니다. 다시 시도해주세요.')
+        }
+        
+        console.log(`✅ ${validTopics.length}개의 유효한 주제 수신:`, validTopics)
+        setRecommendedTopics(validTopics)
         setIsOfflineMode(data.isOffline || false)
         setCurrentStep(2)
+        
+        // 오프라인 모드 알림
+        if (data.isOffline) {
+          console.log('📴 오프라인 모드로 동작 중:', data.fallbackReason || 'AI API 사용 불가')
+        }
       } else {
         const errorMessage = data.error || '주제 추천에 실패했습니다.'
         const details = data.details ? ` (${data.details})` : ''
         throw new Error(errorMessage + details)
       }
     } catch (error) {
-      console.error('토론 주제 추천 오류:', error)
-      const errorMessage = error instanceof Error ? error.message : '토론 주제 추천 중 알 수 없는 오류가 발생했습니다.'
+      console.error('❌ 토론 주제 추천 오류:', error)
+      
+      // 네트워크 오류 구분
+      let errorMessage
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      } else {
+        errorMessage = '토론 주제 추천 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
+      }
+      
+      // 디버깅을 위한 상세 로그
+      console.log('🔍 오류 발생 시점 상태:', {
+        keyword: topicKeyword,
+        purpose: selectedPurpose,
+        grade: selectedGrade,
+        timestamp: new Date().toISOString()
+      })
+      
       alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
     } finally {
       setLoading(false)
@@ -168,8 +209,27 @@ export default function AdvancedDebateScenarioGenerator() {
         throw new Error(errorMessage + details)
       }
     } catch (error) {
-      console.error('토론 시나리오 생성 오류:', error)
-      const errorMessage = error instanceof Error ? error.message : '토론 시나리오 생성 중 알 수 없는 오류가 발생했습니다.'
+      console.error('❌ 토론 시나리오 생성 오류:', error)
+      
+      // 네트워크 오류 구분
+      let errorMessage
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = '서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      } else {
+        errorMessage = '토론 시나리오 생성 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.'
+      }
+      
+      // 디버깅을 위한 상세 로그
+      console.log('🔍 오류 발생 시점 상태:', {
+        topic: selectedTopic,
+        purpose: selectedPurpose,
+        grade: selectedGrade,
+        timeLimit: timeLimit,
+        timestamp: new Date().toISOString()
+      })
+      
       alert(`오류: ${errorMessage}\n\n환경 변수 설정을 확인하거나 잠시 후 다시 시도해주세요.`)
     } finally {
       setLoading(false)
