@@ -37,8 +37,11 @@ export async function POST(request: NextRequest) {
       console.log('💡 YouTube 검색 기능이 비활성화됩니다.')
     }
     
-    // 검색 프롬프트 생성
-    const prompt = generateSearchPrompt(topic, stance, selectedTypes || [])
+    // 입장 정보 변환 (참고 프로그램과 동일)
+    const selectedStance = stance === 'positive' ? 'supporting' : 'opposing'
+    
+    // 검색 프롬프트 생성 (참고 프로그램과 동일하게 selectedStance 전달)
+    const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
     // 병렬 검색 실행 (원본과 동일)
@@ -49,7 +52,7 @@ export async function POST(request: NextRequest) {
         console.error('❌ Perplexity API 오류:', error)
         return null
       }),
-      searchYouTubeVideos(topic, 30, stance).catch(error => {
+      searchYouTubeVideos(topic, 30, selectedStance).catch(error => {
         console.error('❌ YouTube API 오류:', error)
         return []
       })

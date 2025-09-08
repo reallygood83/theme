@@ -315,44 +315,100 @@ function generateSearchInstructions(selectedTypes: string[], stanceText: string)
   return `다음을 중점적으로 찾아주세요:\n${instructions.join('\n')}`
 }
 
-// 검색 프롬프트 생성 함수 (개선된 버전)
-export function generateSearchPrompt(topic: string, stance: string, selectedTypes: string[]): string {
-  const stanceText = stance === 'positive' ? '찬성' : '반대'
-  const typesText = selectedTypes.length > 0 ? selectedTypes.join(', ') : '모든 유형'
+// 키워드 생성 함수 (원본 프로그램과 동일)
+function generateSearchKeywords(topic: string, selectedStance: string | null): string {
+  // 기본 키워드 추출
+  const keywords = topic.split(' ').filter(word => word.length > 1)
   
-  return `토론 주제: "${topic}"
-나의 입장: ${stanceText}
-찾고자 하는 자료 유형: ${typesText}
+  // 교육 관련 키워드
+  const educationKeywords = ['교육', '학습', '초등학교', '학생', '교사', '수업', '교실']
+  
+  // 신뢰성 키워드
+  const sourceKeywords = ['연구', '조사', '통계', '분석', '전문가', '기관', '정부']
+  
+  // 입장별 키워드 (의문문 토론 주제 감지)
+  let stanceKeywords: string[] = []
+  if (selectedStance && (topic.includes('?') || topic.includes('할까') || topic.includes('될까'))) {
+    if (selectedStance === 'supporting') {
+      stanceKeywords = ['장점', '효과', '도움', '필요성', '긍정적']
+    } else if (selectedStance === 'opposing') {
+      stanceKeywords = ['단점', '문제점', '위험성', '부작용', '우려']
+    }
+  }
+  
+  const allKeywords = [...keywords, ...stanceKeywords.slice(0, 2)]
+  const selectedKeywords = allKeywords.filter(keyword => keyword.length > 1).slice(0, 8)
+  
+  return `주요 검색어: ${selectedKeywords.join(', ')}
+- 교육 관련: ${educationKeywords.slice(0, 4).join(', ')}
+- 신뢰성 출처: ${sourceKeywords.slice(0, 4).join(', ')}`
+}
 
-위 토론 주제에 대해 ${stanceText} 입장을 뒷받침할 수 있는 신뢰할 수 있는 근거 자료를 찾아주세요.
+// Perplexity API 프롬프트 생성 (참고 프로그램과 완전 동일)
+export function generateSearchPrompt(topic: string, stance: string, types: string[], selectedStance: string | null = null): string {
+  // 유튜브 영상은 별도 API로 처리하므로 제외
+  const nonYoutubeTypes = types.filter(type => type !== '유튜브 영상')
+  
+  // 입장별 검색 전략 설정
+  const stanceDirection = selectedStance === 'supporting' ? '찬성' : '반대'
+  const oppositeDirection = selectedStance === 'supporting' ? '반대' : '찬성'
+  
+  // 키워드 추출 및 확장
+  const keywordSuggestions = generateSearchKeywords(topic, selectedStance)
+  
+  return `🎯 토론 근거자료 검색 (초등교육 특화)
 
-${selectedTypes.includes('유튜브 영상') ? `
-YouTube 영상은 다음 조건으로 찾아주세요:
-- 토론, 강의, 다큐멘터리 형태의 교육적 영상
-- 실제 접근 가능한 YouTube 링크 (https://www.youtube.com/watch?v=VIDEO_ID 형식)
-- 신뢰할 수 있는 채널의 영상 (뉴스, 교육기관, 전문가)
-` : ''}
+📋 검색 기본 정보:
+- 토론 주제: ${topic}
+- 사용자 입장: ${stance}
+- 입장 분류: ${stanceDirection} 입장
+- 대상: 초등학생 (8-12세)
 
-${generateSearchInstructions(selectedTypes, stanceText)}
+🔍 검색 전략:
+- 주요 검색 (70%): ${stanceDirection} 입장을 뒷받침하는 강력한 근거자료
+- 보조 검색 (30%): ${oppositeDirection} 입장 자료 (반박 준비용)
+- 교육적 적합성: 초등학생이 이해 가능한 수준의 자료
 
-**중요**: 각 자료는 실제로 존재하고 접근 가능한 링크여야 합니다.
-- 뉴스 기사: 반드시 신뢰할 수 있는 언론사의 실제 기사 링크만 제공 (naver.com, daum.net, chosun.com, joongang.co.kr, donga.com, hani.co.kr, khan.co.kr, ytn.co.kr, kbs.co.kr, mbc.co.kr, sbs.co.kr 등)
-- 유튜브 영상: youtube.com/watch?v= 형식의 실제 영상 링크만 제공
-- 가상의 링크나 존재하지 않는 자료는 절대 포함하지 마세요
+📚 검색할 자료 유형: ${nonYoutubeTypes.join(', ')}
 
-각 자료마다 다음 정보를 정확히 포함해주세요:
-- type: "뉴스 기사" | "학술 자료" | "통계 자료" | "유튜브 영상" | "기타"
-- title: 정확한 자료 제목
-- content: 핵심 내용 요약 (2-3문장, ${stanceText} 입장 근거 포함)
-- source: 출처 (신문사명, 기관명, 저자명 등)
-- url: **실제 접근 가능한 전체 URL** (http:// 또는 https:// 포함)
-- reliability: 신뢰도 점수 (60-100)
-- publishedDate: 발행일 (YYYY-MM-DD 형식)
-- author: 작성자명 (있는 경우)
-- summary: 한 줄 요약
+🎯 검색 키워드 가이드:
+${keywordSuggestions}
 
-총 10-15개의 다양하고 신뢰할 수 있는 근거 자료를 찾아주세요.
-응답은 반드시 JSON 형식으로만 제공해주세요.`
+📊 신뢰도 기준:
+- 1등급: 정부기관(교육부, 통계청), 국책연구원
+- 2등급: 대학 연구소, 교육단체, 주요 언론사  
+- 3등급: 전문지, 시민단체, 해외 신뢰기관
+
+다음 JSON 형식으로 응답해주세요:
+
+{
+  "topic": "${topic}",
+  "stance": "${stance}",
+  "stanceDirection": "${stanceDirection}",
+  "evidences": [
+    {
+      "type": "뉴스 기사" | "학술 자료" | "통계 자료",
+      "title": "자료 제목",
+      "summary": "자료 요약 (초등학생도 이해할 수 있게 100자 내외)",
+      "source": "출처",
+      "url": "URL (실제 존재하는 URL만)",
+      "relevance": "이 자료가 사용자 입장에 어떻게 도움이 되는지",
+      "keyPoints": ["핵심 논점 1", "핵심 논점 2", "핵심 논점 3"],
+      "stance_support": "${stanceDirection}" | "${oppositeDirection}",
+      "credibility_level": 1 | 2 | 3,
+      "education_relevance": "high" | "medium" | "low",
+      "debate_utility": "주장 강화" | "반박 준비" | "배경 이해"
+    }
+  ]
+}
+
+**🚨 중요 지침:**
+- ${stanceDirection} 입장 자료 3-4개, ${oppositeDirection} 입장 자료 1-2개 구성
+- 초등학생 눈높이에 맞는 쉬운 설명과 구체적 사례 포함
+- 교육과정과 연계 가능한 자료 우선 선택
+- 반드시 실제 존재하는 자료만 추천 (가상 URL 금지)
+- 각 신뢰도 등급별로 최소 1개씩 포함하여 다양성 확보
+- 복잡한 통계는 초등학생이 이해할 수 있는 해석 제공`
 }
 
 // 검색 결과 처리 함수 (원본 로직 복제)
