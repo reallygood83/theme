@@ -36,19 +36,23 @@ export async function POST(request: NextRequest) {
     const prompt = generateSearchPrompt(topic, stance, selectedTypes || [])
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
-    // Perplexity API만 호출 (YouTube API 키 문제로 비활성화)
-    console.log('🔄 Perplexity API 호출 시작...')
+    // 병렬 검색 실행 (원본과 동일)
+    console.log('🔄 Perplexity API 및 YouTube API 병렬 호출 시작...')
     
-    const perplexityData = await callPerplexityAPI(prompt).catch(error => {
-      console.error('❌ Perplexity API 오류:', error)
-      return null
-    })
+    const [perplexityData, youtubeVideos] = await Promise.all([
+      callPerplexityAPI(prompt).catch(error => {
+        console.error('❌ Perplexity API 오류:', error)
+        return null
+      }),
+      searchYouTubeVideos(topic, 30, stance).catch(error => {
+        console.error('❌ YouTube API 오류:', error)
+        return []
+      })
+    ])
     
     console.log('📊 검색 결과 수집 완료:')
     console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
-    
-    // YouTube API는 현재 비활성화됨 (API 키 서비스 블록됨)
-    const youtubeVideos: any[] = []
+    console.log('- YouTube 결과 수:', Array.isArray(youtubeVideos) ? youtubeVideos.length : 0)
     
     // 결과 처리 및 합성
     const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
