@@ -59,6 +59,16 @@ export async function POST(request: NextRequest) {
     console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
     console.log('- YouTube 결과 수:', Array.isArray(youtubeVideos) ? youtubeVideos.length : 0)
     
+    // YouTube 결과 상세 로깅
+    if (Array.isArray(youtubeVideos) && youtubeVideos.length > 0) {
+      console.log('🎬 YouTube 검색 성공! 영상 목록:')
+      youtubeVideos.forEach((video, index) => {
+        console.log(`  ${index + 1}. ${video.snippet.title}`)
+      })
+    } else {
+      console.log('❌ YouTube 검색 실패 또는 결과 없음')
+    }
+    
     // 결과 처리 및 합성
     const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
     console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')

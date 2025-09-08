@@ -193,12 +193,22 @@ export async function searchYouTubeVideos(
   stance?: string
 ): Promise<YouTubeVideoData[]> {
   try {
+    console.log('🎬 YouTube 검색 시작:', { query, maxResults, stance })
+    
+    // API 키 확인
+    if (!process.env.YOUTUBE_API_KEY) {
+      console.error('❌ YouTube API 키가 없습니다!')
+      return []
+    }
+    console.log('✅ YouTube API 키 확인됨')
+    
     // 검색 쿼리 최적화
     let searchQuery = query
     if (stance) {
       searchQuery += stance === 'positive' ? ' 찬성 이유 근거' : ' 반대 이유 근거'
     }
     searchQuery += ' 토론 논쟁 의견 -광고 -홍보'
+    console.log('🔍 YouTube 검색 쿼리:', searchQuery)
 
     const params = new URLSearchParams({
       part: 'snippet',
@@ -211,19 +221,32 @@ export async function searchYouTubeVideos(
       key: process.env.YOUTUBE_API_KEY || ''
     })
 
-    const response = await fetch(`${YOUTUBE_CONFIG.baseUrl}?${params}`)
+    const fullUrl = `${YOUTUBE_CONFIG.baseUrl}?${params}`
+    console.log('📡 YouTube API 호출 URL:', fullUrl.replace(process.env.YOUTUBE_API_KEY || '', '[API_KEY]'))
+    
+    const response = await fetch(fullUrl)
     
     if (!response.ok) {
-      console.error('YouTube API 오류:', response.status, response.statusText)
+      console.error('❌ YouTube API 오류:', response.status, response.statusText)
+      const errorText = await response.text()
+      console.error('❌ YouTube API 에러 응답:', errorText)
       return []
     }
 
     const data: YouTubeSearchResponse = await response.json()
+    console.log('📊 YouTube API 응답 수신:', data.items ? data.items.length : 0, '개 영상')
+    
+    if (!data.items || data.items.length === 0) {
+      console.log('❌ YouTube 검색 결과가 없습니다')
+      return []
+    }
     
     // 영상 길이와 품질 필터링
     const filteredVideos = data.items.filter((video: YouTubeVideoData) => {
       const title = video.snippet.title.toLowerCase()
       const description = video.snippet.description.toLowerCase()
+      
+      console.log('🎬 영상 검토:', video.snippet.title.substring(0, 50))
       
       // 관련성 높은 영상만 선택
       const relevantKeywords = ['토론', '논쟁', '찬성', '반대', '의견', '근거', '이유', '분석']
@@ -237,10 +260,18 @@ export async function searchYouTubeVideos(
         title.includes(keyword) || description.includes(keyword)
       )
       
-      return hasRelevantKeywords && !isSpam
+      const isValid = hasRelevantKeywords && !isSpam
+      console.log(isValid ? '✅' : '❌', '영상 필터링 결과:', video.snippet.title.substring(0, 30))
+      
+      return isValid
     })
 
-    return filteredVideos.slice(0, 15) // 최대 15개로 제한
+    console.log('🎯 필터링 완료:', filteredVideos.length, '개 영상 선별')
+    
+    const finalResults = filteredVideos.slice(0, 15) // 최대 15개로 제한
+    console.log('📤 YouTube 검색 결과 반환:', finalResults.length, '개 영상')
+    
+    return finalResults
   } catch (error) {
     console.error('YouTube 검색 오류:', error)
     return []
@@ -253,7 +284,7 @@ function generateSearchInstructions(selectedTypes: string[], stanceText: string)
   let counter = 1
   
   if (selectedTypes.includes('뉴스 기사')) {
-    instructions.push(`${counter}. 최신 뉴스 기사 (2020년 이후) - 실제 접근 가능한 링크 포함`)
+    instructions.push(`${counter}. 최신 뉴스 기사 (2020년 이후) - 네이버, 다음, 조선일보, 중앙일보, 동아일보, 한겨레, 경향신문, YTN, KBS, MBC, SBS 등 신뢰할 수 있는 언론사의 실제 접근 가능한 링크만 포함`)
     counter++
   }
   
@@ -305,7 +336,9 @@ YouTube 영상은 다음 조건으로 찾아주세요:
 ${generateSearchInstructions(selectedTypes, stanceText)}
 
 **중요**: 각 자료는 실제로 존재하고 접근 가능한 링크여야 합니다.
-가상의 링크나 존재하지 않는 자료는 포함하지 마세요.
+- 뉴스 기사: 반드시 신뢰할 수 있는 언론사의 실제 기사 링크만 제공 (naver.com, daum.net, chosun.com, joongang.co.kr, donga.com, hani.co.kr, khan.co.kr, ytn.co.kr, kbs.co.kr, mbc.co.kr, sbs.co.kr 등)
+- 유튜브 영상: youtube.com/watch?v= 형식의 실제 영상 링크만 제공
+- 가상의 링크나 존재하지 않는 자료는 절대 포함하지 마세요
 
 각 자료마다 다음 정보를 정확히 포함해주세요:
 - type: "뉴스 기사" | "학술 자료" | "통계 자료" | "유튜브 영상" | "기타"
@@ -370,24 +403,84 @@ export function processEvidenceResults(
   return results
 }
 
-// 검색 결과 검증 함수
+// URL 유효성 검증 함수
+function isValidUrl(url: string): boolean {
+  if (!url) return false
+  
+  try {
+    const urlObj = new URL(url)
+    return ['http:', 'https:'].includes(urlObj.protocol)
+  } catch {
+    return false
+  }
+}
+
+// 뉴스 기사 URL 검증 함수 (신뢰할 수 있는 뉴스 사이트만)
+function isValidNewsUrl(url: string): boolean {
+  if (!isValidUrl(url)) return false
+  
+  const trustedNewsDomains = [
+    'naver.com', 'daum.net', 'chosun.com', 'donga.com', 'joongang.co.kr',
+    'hani.co.kr', 'khan.co.kr', 'mt.co.kr', 'mk.co.kr', 'ytn.co.kr',
+    'kbs.co.kr', 'mbc.co.kr', 'sbs.co.kr', 'jtbc.co.kr', 'news1.kr',
+    'newsis.com', 'yonhapnews.co.kr', 'edaily.co.kr', 'seoul.co.kr'
+  ]
+  
+  try {
+    const urlObj = new URL(url)
+    return trustedNewsDomains.some(domain => 
+      urlObj.hostname.includes(domain) || urlObj.hostname.endsWith(domain)
+    )
+  } catch {
+    return false
+  }
+}
+
+// 검색 결과 검증 함수 (강화된 버전)
 export function validateEvidenceResults(results: EvidenceResult[]): EvidenceResult[] {
   return results.filter(result => {
+    console.log('🔍 검증 중:', result.type, result.title)
+    
     // 기본 필수 필드 검증
     if (!result.title || !result.content || !result.source) {
+      console.log('❌ 필수 필드 누락:', result.title)
       return false
     }
     
     // 제목 길이 검증
     if (result.title.length < 5) {
+      console.log('❌ 제목 너무 짧음:', result.title)
       return false
     }
     
     // 내용 길이 검증  
     if (result.content.length < 20) {
+      console.log('❌ 내용 너무 짧음:', result.title)
       return false
     }
     
+    // URL 검증 (뉴스 기사의 경우 더 엄격하게)
+    if (result.type === '뉴스 기사') {
+      if (!isValidNewsUrl(result.url)) {
+        console.log('❌ 유효하지 않은 뉴스 URL:', result.url)
+        return false
+      }
+      console.log('✅ 유효한 뉴스 기사:', result.title)
+    } else if (result.type === '유튜브 영상') {
+      if (!result.url || !result.url.includes('youtube.com/watch')) {
+        console.log('❌ 유효하지 않은 YouTube URL:', result.url)
+        return false
+      }
+      console.log('✅ 유효한 YouTube 영상:', result.title)
+    } else {
+      // 기타 유형은 기본 URL 검증
+      if (result.url && !isValidUrl(result.url)) {
+        console.log('❌ 유효하지 않은 URL:', result.url)
+        return false
+      }
+    }
+    
+    console.log('✅ 검증 통과:', result.title)
     return true
   })
 }
