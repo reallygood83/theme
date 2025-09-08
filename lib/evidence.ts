@@ -237,18 +237,29 @@ export async function searchYouTubeVideos(
     }
     console.log('✅ YouTube API 키 확인됨:', process.env.YOUTUBE_API_KEY.substring(0, 10) + '...')
     
-    // 검색 쿼리 최적화 (더 광범위하게 수정)
+    // 검색 쿼리 최적화 및 400 Bad Request 방지
     let searchQuery = query
+      .replace(/[^가-힣a-zA-Z0-9\s]/g, ' ') // 특수문자 제거
+      .replace(/\s+/g, ' ') // 연속 공백 정리
+      .trim()
+      .substring(0, 50) // 쿼리 길이 제한
+    
     if (stance) {
       if (stance === 'positive' || stance === 'supporting') {
-        searchQuery += ' (장점 OR 효과 OR 도움 OR 필요 OR 긍정)'
+        searchQuery += ' 장점 효과 도움'
       } else if (stance === 'negative' || stance === 'opposing') {
-        searchQuery += ' (단점 OR 문제 OR 위험 OR 부작용 OR 우려)'
+        searchQuery += ' 단점 문제 위험'
       }
     }
-    // 교육 키워드 더 다양하게 추가하고 부정어로 광고/엔터테인먼트 제외
-    searchQuery += ' (교육 OR 초등 OR 학교 OR 학생 OR 토론 OR 학습 OR 아이 OR 어린이 OR 수업 OR 교실) -광고 -드라마 -영화 -재미 -웃긴 -먹방'
-    console.log('🔍 YouTube 검색 쿼리 (개선됨):', searchQuery)
+    // 교육 키워드 추가 (간단하게)
+    searchQuery += ' 교육 초등 학교'
+    
+    // 최종 쿼리 길이 제한 (YouTube API 제한 고려)
+    if (searchQuery.length > 100) {
+      searchQuery = searchQuery.substring(0, 100).trim()
+    }
+    
+    console.log('🔍 YouTube 검색 쿼리 (안전 처리됨):', searchQuery)
 
     const params = new URLSearchParams({
       part: 'snippet',
@@ -419,7 +430,9 @@ export function generateSearchPrompt(topic: string, stance: string, types: strin
 - 주요 검색 (70%): ${stanceDirection} 입장을 뒷받침하는 강력한 근거자료
 - 보조 검색 (30%): ${oppositeDirection} 입장 자료 (반박 준비용)
 - 교육적 적합성: 초등학생이 이해 가능한 수준의 자료
-- **균형**: 뉴스 기사와 유튜브 영상을 50:50 비율로 제공 (각 2-3개씩)
+- **균형**: 뉴스 기사와 유튜브 영상을 50:50 비율로 제공 (각 최소 2개씩, 총 4-6개)
+- **YouTube API fallback**: YouTube API 오류 시 Perplexity에서 직접 YouTube 검색 결과 제공
+- **400 Bad Request 방지**: 검색 키워드를 단순화하고 특수문자 제거
 
 📚 검색할 자료 유형: ${typeDescriptions}
 
@@ -432,9 +445,10 @@ ${keywordSuggestions}
 - 3등급: 시민단체, 해외 교육 기관
 
 **🚨 URL 및 내용 규칙 (매우 중요)**:
-- 뉴스 기사: 실제 접근 가능한 전체 기사 URL만 제공. "원문 보기"나 요약 링크 금지. 기사 본문에서 핵심 2-3문단을 직접 인용하여 content에 포함.
-- 유튜브: https://www.youtube.com/watch?v=VIDEO_ID 형식의 직접 URL. 영상 설명이나 자막에서 초등학생 수준의 핵심 내용 100-150자 요약.
+- 뉴스 기사: 실제 접근 가능한 전체 기사 URL만 제공 (예: nytimes.com/full-article, chosun.com/article/123). "원문 보기"나 요약 링크 금지. 기사 본문에서 핵심 2-3문단을 직접 인용하여 content에 포함 (최소 150자 이상). 유효한 풀 URL을 2개 이상 확보.
+- 유튜브: https://www.youtube.com/watch?v=VIDEO_ID 형식의 직접 URL. 영상 설명이나 자막에서 초등학생 수준의 핵심 내용 100-150자 요약. 구체적 비디오 제목, URL, 타임스탬프 포함하여 2개 이상 제공.
 - 불확실한 URL은 절대 제공하지 말고 빈 문자열("")로 설정. 가짜/추측 URL 금지.
+- 주제 관련성: 검색 주제와 직접적으로 관련된 자료만 선별. 일반적이거나 간접적인 자료는 제외.
 
 다음 JSON 형식으로 응답해주세요:
 
@@ -446,7 +460,7 @@ ${keywordSuggestions}
     {
       "type": "뉴스 기사" | "유튜브 영상",
       "title": "자료 제목 (실제 제목 그대로)",
-      "content": "전체 기사/영상 핵심 내용 (본문 직접 인용 또는 요약, 150-200자)",
+      "content": "뉴스: 기사 본문 직접 인용 (최소 150자) | 유튜브: 핵심 내용 요약 (100-150자)",
       "source": "언론사명" | "채널명",
       "url": "실제 접근 가능한 직접 URL (확실하지 않으면 \"\" )",
       "summary": "한 줄 요약 (초등학생 이해 가능)",
@@ -456,7 +470,8 @@ ${keywordSuggestions}
       "credibility_level": 1 | 2 | 3,
       "education_relevance": "high" | "medium" | "low",
       "debate_utility": "주장 강화" | "반박 준비" | "배경 이해",
-      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 \"\" )"
+      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 \"\" )",
+      "timestamp": "유튜브 영상의 경우 핵심 내용 시작 시간 (예: 1:23, 선택사항)"
     }
   ]
 }
