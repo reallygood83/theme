@@ -252,9 +252,29 @@ export default function AdvancedDebateScenarioGenerator() {
     })
     
     try {
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 45000) // 45초 타임아웃 (시나리오 생성은 더 오래 걸림)
+      console.log('🚀 fetch 요청 시작 - 상세 정보:', {
+        url: '/api/scenario/generate',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: {
+          topic: selectedTopic,
+          purpose: selectedPurpose,
+          grade: selectedGrade,
+          timeLimit: timeLimit,
+          additionalInfo: additionalInfo
+        },
+        timestamp: new Date().toISOString()
+      })
 
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => {
+        console.log('⏰ 타임아웃 발생 (45초 초과)')
+        controller.abort()
+      }, 45000) // 45초 타임아웃 (시나리오 생성은 더 오래 걸림)
+
+      console.log('🌐 fetch 요청 전송 중...')
+      const startTime = Date.now()
+      
       const response = await fetch('/api/scenario/generate', {
         method: 'POST',
         headers: {
@@ -270,14 +290,37 @@ export default function AdvancedDebateScenarioGenerator() {
         signal: controller.signal
       })
 
+      const endTime = Date.now()
+      console.log(`✅ fetch 응답 수신 완료! 소요시간: ${(endTime - startTime) / 1000}초`)
+      
       clearTimeout(timeoutId)
 
+      console.log('📊 응답 상태:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries())
+      })
+
       if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ 서버 응답 오류 상세:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorBody: errorText
+        })
         throw new Error(`서버 응답 오류: ${response.status} ${response.statusText}`)
       }
 
+      console.log('🔄 JSON 파싱 시작...')
       const data = await response.json()
       console.log('📥 시나리오 생성 API 응답:', data)
+      console.log('📋 응답 데이터 타입 및 구조:', {
+        dataType: typeof data,
+        keys: Object.keys(data || {}),
+        success: data?.success,
+        hasScenario: !!data?.scenario
+      })
 
       if (data.success) {
         if (!data.scenario) {
