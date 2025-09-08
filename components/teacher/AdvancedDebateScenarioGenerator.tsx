@@ -278,7 +278,7 @@ export default function AdvancedDebateScenarioGenerator() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: selectedTopic,
-          keyword: keyword.trim(),
+          keyword: topicKeyword.trim(),
           purpose: selectedPurpose,
           grade: (selectedGrade?.trim() || '5')
         })
