@@ -2,7 +2,7 @@
 
 export interface EvidenceResult {
   id: string
-  type: '뉴스 기사' | '학술 자료' | '통계 자료' | '유튜브 영상' | '기타'
+  type: '뉴스 기사' | '유튜브 영상' | '기타'
   title: string
   content: string
   source: string
@@ -57,7 +57,7 @@ export interface EvidenceSearchRequest {
   selectedTypes: string[]
 }
 
-export type EvidenceType = '뉴스 기사' | '학술 자료' | '통계 자료' | '유튜브 영상' | '기타'
+export type EvidenceType = '뉴스 기사' | '유튜브 영상' | '기타'
 
 export interface EvidenceProgress {
   step: number
@@ -103,10 +103,53 @@ export const EVIDENCE_SEARCH_STEPS = [
   { text: '결과 정리 중...', icon: '📊' }
 ] as const
 
-// 원본과 동일한 자료 유형 필터
+// 근거자료 유형 필터 (뉴스와 유튜브만 지원)
 export const EVIDENCE_TYPES = [
   { value: '뉴스 기사', label: '📰 뉴스 기사', color: '#3b82f6' },
-  { value: '학술 자료', label: '📚 학술 자료', color: '#10b981' },
-  { value: '통계 자료', label: '📊 통계 자료', color: '#f59e0b' },
   { value: '유튜브 영상', label: '🎥 유튜브 영상', color: '#ef4444' }
 ] as const
+
+// 신뢰도 등급 계산 함수
+export function getReliabilityGrade(reliability: number): {
+  grade: string
+  color: string
+  backgroundColor: string
+  description: string
+} {
+  if (reliability >= 90) {
+    return {
+      grade: 'A+',
+      color: '#065f46',
+      backgroundColor: '#d1fae5',
+      description: '매우 신뢰할 수 있음'
+    }
+  } else if (reliability >= 80) {
+    return {
+      grade: 'A',
+      color: '#047857',
+      backgroundColor: '#dcfce7',
+      description: '신뢰할 수 있음'
+    }
+  } else if (reliability >= 70) {
+    return {
+      grade: 'B',
+      color: '#ca8a04',
+      backgroundColor: '#fef3c7',
+      description: '보통 신뢰도'
+    }
+  } else if (reliability >= 60) {
+    return {
+      grade: 'C',
+      color: '#c2410c',
+      backgroundColor: '#fed7aa',
+      description: '주의 깊게 검토 필요'
+    }
+  } else {
+    return {
+      grade: 'D',
+      color: '#dc2626',
+      backgroundColor: '#fecaca',
+      description: '추가 검증 필요'
+    }
+  }
+}

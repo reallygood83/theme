@@ -18,8 +18,6 @@ export default function EvidenceSearchForm({
   const [stance, setStance] = useState<'positive' | 'negative'>('positive')
   const [selectedTypes, setSelectedTypes] = useState<string[]>([
     '뉴스 기사', 
-    '학술 자료', 
-    '통계 자료', 
     '유튜브 영상'
   ])
 

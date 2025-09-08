@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { EvidenceResult, EVIDENCE_TYPES } from '@/lib/types/evidence'
+import { EvidenceResult, EVIDENCE_TYPES, getReliabilityGrade } from '@/lib/types/evidence'
 
 interface EvidenceResultsDisplayProps {
   results: EvidenceResult[]
@@ -227,11 +227,21 @@ export default function EvidenceResultsDisplay({
                       >
                         {getTypeBadge(result.type)}
                       </span>
-                      {result.reliability && (
-                        <span className="text-xs text-gray-500">
-                          신뢰도: {result.reliability}%
-                        </span>
-                      )}
+                      {result.reliability && (() => {
+                        const gradeInfo = getReliabilityGrade(result.reliability)
+                        return (
+                          <span 
+                            className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mr-2"
+                            style={{ 
+                              color: gradeInfo.color,
+                              backgroundColor: gradeInfo.backgroundColor 
+                            }}
+                            title={gradeInfo.description}
+                          >
+                            {gradeInfo.grade} 등급
+                          </span>
+                        )
+                      })()}
                     </div>
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">
                       {result.title}
