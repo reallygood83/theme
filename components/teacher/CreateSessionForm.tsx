@@ -2,7 +2,7 @@
 
 import { useState, FormEvent, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import Button from '../common/Button'
+import { Button } from '../common/Button'
 import { generateSessionCode } from '@/lib/utils'
 import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
 import { useAuth } from '@/contexts/AuthContext'

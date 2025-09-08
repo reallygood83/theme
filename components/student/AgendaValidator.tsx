@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Card from '../common/Card'
+import { Card } from '../common/Card'
 
 export default function AgendaValidator() {
   const [activeQuestion, setActiveQuestion] = useState<number | null>(null)

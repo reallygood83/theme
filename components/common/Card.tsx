@@ -9,7 +9,7 @@ interface CardProps {
   onClick?: () => void
 }
 
-export default function Card({ children, title, className = '', onClick }: CardProps) {
+function Card({ children, title, className = '', onClick }: CardProps) {
   return (
     <div 
       className={`bg-white rounded-lg shadow-md p-6 ${className}`}
@@ -26,3 +26,5 @@ export default function Card({ children, title, className = '', onClick }: CardP
     </div>
   )
 }
+
+export { Card }

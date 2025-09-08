@@ -218,7 +218,7 @@ export default function OpinionFeedbackModal({
             취소
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={() => handleSubmit(new Event('submit') as any)}
             disabled={submitting || !feedback.trim()}
           >
             {submitting ? (

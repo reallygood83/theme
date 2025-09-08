@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import { connectMongoDB } from '@/lib/mongodb'
 import { Opinion } from '@/models/Opinion'
 
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const period = searchParams.get('period') || '30d'
     
-    await connectToDatabase()
+    await connectMongoDB()
     
     // Calculate date range based on period
     const now = new Date()
@@ -143,7 +143,7 @@ export async function GET(request: NextRequest) {
     
     opinions.forEach(opinion => {
       const words = opinion.content.split(/\s+/)
-      words.forEach(word => {
+      words.forEach((word: string) => {
         const cleanWord = word.replace(/[^\w가-힣]/g, '').toLowerCase()
         if (cleanWord.length >= 2) {
           if (!keywords[cleanWord]) {

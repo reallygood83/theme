@@ -4,7 +4,7 @@ import { useState, FormEvent } from 'react'
 import { ref, push, set, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
-import Button from '../common/Button'
+import { Button } from '../common/Button'
 
 interface QuestionInputProps {
   sessionId: string

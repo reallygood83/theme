@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
-import Button from '@/components/common/Button'
+import { Button } from '@/components/common/Button'
 import { loginUser, loginWithGoogle } from '@/lib/auth'
 
 function LoginForm() {

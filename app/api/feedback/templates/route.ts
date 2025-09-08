@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import { connectMongoDB } from '@/lib/mongodb'
 import { FeedbackTemplate } from '@/models/FeedbackTemplate'
 import { validateTeacherFeedback, sanitizeInput } from '@/lib/validation'
 
@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    await connectToDatabase()
+    await connectMongoDB()
     
     const templates = await FeedbackTemplate.find({ teacherId })
       .sort({ createdAt: -1 })
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
     const sanitizedContent = sanitizeInput(content)
     const sanitizedCategory = sanitizeInput(category || 'custom')
 
-    await connectToDatabase()
+    await connectMongoDB()
     
     const template = new FeedbackTemplate({
       title: sanitizedTitle,

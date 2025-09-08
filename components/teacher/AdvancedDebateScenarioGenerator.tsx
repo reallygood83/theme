@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import Button from '@/components/common/Button'
-import Card from '@/components/common/Card'
+import { Button } from '@/components/common/Button'
+import { Card } from '@/components/common/Card'
 
 // 타입 정의 (참고 구현체 기반 고품질 JSON 구조)
 interface DebateScenario {

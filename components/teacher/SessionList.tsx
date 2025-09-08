@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Session } from '@/lib/utils'
-import Button from '../common/Button'
+import { Button } from '../common/Button'
 import EditSessionModal from './EditSessionModal'
 
 interface SessionListProps {

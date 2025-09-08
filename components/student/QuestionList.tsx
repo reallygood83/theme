@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { ref, onValue, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
-import Card from '../common/Card'
+import { Card } from '../common/Card'
 import { Question, formatTime } from '@/lib/utils'
 
 interface QuestionListProps {

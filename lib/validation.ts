@@ -108,5 +108,5 @@ export function sanitizeInput(input: string): string {
 
 // Firebase UID 검증
 export function validateFirebaseUid(uid: string): boolean {
-  return uid && uid.length > 0 && uid.length <= 128;
+  return Boolean(uid && uid.length > 0 && uid.length <= 128);
 }

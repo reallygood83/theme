@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import { connectMongoDB } from '@/lib/mongodb'
 import { Opinion } from '@/models/Opinion'
 import { validateOpinion, sanitizeInput } from '@/lib/validation'
 
@@ -9,7 +9,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await connectMongoDB()
     
     const opinion = await Opinion.findById(params.id)
     
@@ -56,7 +56,7 @@ export async function PUT(
     const sanitizedStudentName = sanitizeInput(studentName)
     const sanitizedStudentClass = sanitizeInput(studentClass)
 
-    await connectToDatabase()
+    await connectMongoDB()
     
     const opinion = await Opinion.findById(params.id)
     
@@ -113,7 +113,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await connectToDatabase()
+    await connectMongoDB()
     
     const opinion = await Opinion.findById(params.id)
     

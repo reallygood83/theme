@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/common/Header'
 import RequireAuth from '@/components/auth/RequireAuth'
-import Card from '@/components/common/Card'
+import { Card } from '@/components/common/Card'
 import CreateSessionForm from '@/components/teacher/CreateSessionForm'
 import DebateScenarioModal from '@/components/teacher/DebateScenarioModal'
 import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'

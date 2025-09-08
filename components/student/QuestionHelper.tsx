@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Card from '../common/Card'
+import { Card } from '../common/Card'
 
 export default function QuestionHelper() {
   const [activeTab, setActiveTab] = useState<'time' | 'space' | 'social' | 'ethics'>('time')

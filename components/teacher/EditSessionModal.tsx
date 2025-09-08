@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent, useRef } from 'react'
 import { Session } from '@/lib/utils'
-import Button from '../common/Button'
+import { Button } from '../common/Button'
 import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
 
 interface Material {

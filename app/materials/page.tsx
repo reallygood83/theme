@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import RequireAuth from '@/components/auth/RequireAuth';
-import Card from '@/components/common/Card';
-import Button from '@/components/common/Button';
+import { Card } from '@/components/common/Card';
+import { Button } from '@/components/common/Button';
 
 interface Worksheet {
   id: string;

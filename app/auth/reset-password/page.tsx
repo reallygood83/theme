@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/common/Header'
-import Button from '@/components/common/Button'
+import { Button } from '@/components/common/Button'
 import { resetPassword } from '@/lib/auth'
 
 export default function ResetPasswordPage() {

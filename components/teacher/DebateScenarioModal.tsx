@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import Button from '@/components/common/Button'
+import { Button } from '@/components/common/Button'
 
 // 타입 정의 (기존 타입 재사용)
 interface DebateScenario {

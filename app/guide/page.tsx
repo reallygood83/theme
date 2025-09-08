@@ -1,7 +1,7 @@
 'use client'
 
 import Header from '@/components/common/Header'
-import Card from '@/components/common/Card'
+import { Card } from '@/components/common/Card'
 
 export default function GuidePage() {
   return (

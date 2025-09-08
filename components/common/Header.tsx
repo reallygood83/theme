@@ -150,11 +150,12 @@ export default function Header() {
                         </div>
                         <span className="hidden lg:inline">{userProfile?.displayName || '사용자'}</span>
                       </button>
-                    <div 
-                      className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-150 z-10 ${
-                        isUserMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-                      }`}
-                    >
+                      
+                      <div 
+                        className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-150 z-10 ${
+                          isUserMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                        }`}
+                      >
                       <div className="py-1">
                         <Link 
                           href="/teacher/dashboard"
@@ -172,6 +173,7 @@ export default function Header() {
                         >
                           로그아웃
                         </button>
+                        </div>
                       </div>
                     </div>
                   </div>

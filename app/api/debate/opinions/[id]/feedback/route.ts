@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { connectToDatabase } from '@/lib/mongodb'
+import { connectMongoDB } from '@/lib/mongodb'
 import { Opinion } from '@/models/Opinion'
 import { validateTeacherFeedback, sanitizeInput } from '@/lib/validation'
 
@@ -22,7 +22,7 @@ export async function POST(
     // 입력 sanitization
     const sanitizedFeedback = sanitizeInput(teacherFeedback)
 
-    await connectToDatabase()
+    await connectMongoDB()
     
     const opinion = await Opinion.findById(params.id)
     

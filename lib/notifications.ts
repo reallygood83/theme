@@ -1,5 +1,5 @@
 import { Notification, NotificationData } from '@/models/Notification'
-import { connectToDatabase } from './mongodb'
+import { connectMongoDB } from './mongodb'
 
 export class NotificationService {
   // 알림 생성
@@ -12,7 +12,7 @@ export class NotificationService {
     relatedType?: 'opinion' | 'session' | 'feedback'
   }) {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const notification = new Notification({
         userId: data.userId,
@@ -44,7 +44,7 @@ export class NotificationService {
     } = {}
   ) {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const { limit = 20, offset = 0, unreadOnly = false } = options
       
@@ -81,7 +81,7 @@ export class NotificationService {
   // 알림 읽음 처리
   static async markAsRead(notificationId: string, userId: string) {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const notification = await Notification.findOneAndUpdate(
         { _id: notificationId, userId },
@@ -102,7 +102,7 @@ export class NotificationService {
   // 모든 알림 읽음 처리
   static async markAllAsRead(userId: string) {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const result = await Notification.updateMany(
         { userId, read: false },
@@ -122,7 +122,7 @@ export class NotificationService {
   // 알림 삭제
   static async deleteNotification(notificationId: string, userId: string) {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const result = await Notification.findOneAndDelete({
         _id: notificationId,
@@ -139,7 +139,7 @@ export class NotificationService {
   // 오래된 알림 정리 (30일 이상)
   static async cleanupOldNotifications() {
     try {
-      await connectToDatabase()
+      await connectMongoDB()
       
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
