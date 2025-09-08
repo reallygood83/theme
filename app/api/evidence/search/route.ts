@@ -33,8 +33,9 @@ export async function POST(request: NextRequest) {
     }
     
     if (!process.env.YOUTUBE_API_KEY) {
-      console.error('❌ YOUTUBE_API_KEY가 설정되지 않았습니다.')
-      console.log('💡 YouTube 검색 기능이 비활성화됩니다.')
+      console.error('❌ YOUTUBE_API_KEY가 설정되지 않았습니다. YouTube 검색이 불가능합니다.')
+      console.log('💡 .env 파일에 YOUTUBE_API_KEY를 추가해주세요. Google Cloud Console에서 YouTube Data API v3 키를 발급받으세요.')
+      console.log('🔗 발급 가이드: https://developers.google.com/youtube/v3/getting-started')
     }
     
     // 입장 정보 변환 (참고 프로그램과 동일)
@@ -52,8 +53,13 @@ export async function POST(request: NextRequest) {
         console.error('❌ Perplexity API 오류:', error)
         return null
       }),
-      searchYouTubeVideos(topic, 30, selectedStance).catch(error => {
+      searchYouTubeVideos(topic, 50, selectedStance).catch(error => { // maxResults 증가
         console.error('❌ YouTube API 오류:', error)
+        if (error instanceof Error && error.message.includes('quotaExceeded')) {
+          console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
+        } else if (error instanceof Error && error.message.includes('invalid key')) {
+          console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
+        }
         return []
       })
     ])
