@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutUser } from '@/lib/auth'
+import NotificationBell from '@/components/notifications/NotificationBell'
 
 export default function Header() {
   const pathname = usePathname()
@@ -90,6 +91,32 @@ export default function Header() {
                       >
                         세션 생성
                       </Link>
+                      <Link 
+                        href="/teacher/debate"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        토론 관리
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </li>
+              <li>
+                <div className="relative group">
+                  <Link 
+                    href="/student/debate"
+                    className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/student') ? 'font-medium text-primary' : ''}`}
+                  >
+                    학생용
+                  </Link>
+                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
+                    <div className="py-1">
+                      <Link 
+                        href="/student/debate"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        토론 의견 제출
+                      </Link>
                     </div>
                   </div>
                 </div>
@@ -108,17 +135,21 @@ export default function Header() {
             {!loading && (
               <>
                 {user ? (
-                  <div 
-                    className="relative"
-                    onMouseEnter={() => setIsUserMenuOpen(true)}
-                    onMouseLeave={() => setIsUserMenuOpen(false)}
-                  >
-                    <button className="flex items-center gap-2 text-gray-700 hover:text-primary">
-                      <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
-                        {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
-                      </div>
-                      <span className="hidden lg:inline">{userProfile?.displayName || '사용자'}</span>
-                    </button>
+                  <div className="flex items-center gap-4">
+                    {/* 알림 벨 */}
+                    <NotificationBell />
+                    
+                    <div 
+                      className="relative"
+                      onMouseEnter={() => setIsUserMenuOpen(true)}
+                      onMouseLeave={() => setIsUserMenuOpen(false)}
+                    >
+                      <button className="flex items-center gap-2 text-gray-700 hover:text-primary">
+                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                          {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
+                        </div>
+                        <span className="hidden lg:inline">{userProfile?.displayName || '사용자'}</span>
+                      </button>
                     <div 
                       className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-150 z-10 ${
                         isUserMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
@@ -197,6 +228,24 @@ export default function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     세션 생성
+                  </Link>
+                  <Link 
+                    href="/teacher/debate"
+                    className={`text-xl ${pathname === '/teacher/debate' ? 'font-medium text-primary' : 'text-gray-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    토론 관리
+                  </Link>
+                </div>
+              </li>
+              <li>
+                <div className="flex flex-col space-y-4">
+                  <Link 
+                    href="/student/debate"
+                    className={`text-xl ${pathname === '/student/debate' ? 'font-medium text-primary' : 'text-gray-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    토론 의견 제출
                   </Link>
                 </div>
               </li>

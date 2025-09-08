@@ -10,6 +10,7 @@ import SessionList from '@/components/teacher/SessionList'
 import Button from '@/components/common/Button'
 import DebateScenarioModal from '@/components/teacher/DebateScenarioModal'
 import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
+import DebateStatistics from '@/components/teacher/DebateStatistics'
 import { Session } from '@/lib/utils'
 import { database } from '@/lib/firebase'
 import { ref, onValue, off } from 'firebase/database'
@@ -250,6 +251,26 @@ function TeacherDashboardContent() {
                   <p className="text-sm text-gray-600">토론 주제에 맞는 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.</p>
                 </div>
               </div>
+
+              {/* 토론 의견 관리 카드 */}
+              <Link href="/teacher/debate" className="group">
+                <div className="bg-white border-2 border-indigo-200 rounded-xl p-6 hover:border-indigo-400 hover:shadow-lg transition-all duration-200 group-hover:scale-105">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="bg-indigo-100 rounded-full p-3">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="text-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">토론 의견 관리</h3>
+                  <p className="text-sm text-gray-600">학생들의 토론 의견을 확인하고 AI/교사 피드백을 제공하세요.</p>
+                </div>
+              </Link>
             </div>
           )}
         </div>
@@ -278,6 +299,13 @@ function TeacherDashboardContent() {
           />
         </Card>
         
+        {/* 통계 대시보드 */}
+        {!isJudgeMode && (
+          <div className="mt-8">
+            <DebateStatistics />
+          </div>
+        )}
+
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card title="퀵 가이드">
             <div className="space-y-4">
@@ -311,7 +339,7 @@ function TeacherDashboardContent() {
             </div>
           </Card>
           
-          <Card title="통계">
+          <Card title="기본 통계">
             <div className="space-y-5">
               <div className="flex items-center">
                 <div className="bg-primary/10 rounded-full p-3 mr-4">

@@ -78,7 +78,7 @@ export default function Home() {
         </p>
       </div>
       
-      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
+      <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl">
         <div className="card flex flex-col items-center justify-center text-center p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow">
           <div className="bg-primary/10 p-3 md:p-4 rounded-full mb-3 md:mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -161,6 +161,32 @@ export default function Home() {
             </svg>
             교육자료실 가기
           </Link>
+        </div>
+        
+        <div className="card flex flex-col items-center justify-center text-center p-4 md:p-8 shadow-md hover:shadow-lg transition-shadow">
+          <div className="bg-indigo-100 p-3 md:p-4 rounded-full mb-3 md:mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a3 3 0 01-3-3V6a3 3 0 013-3h6a3 3 0 013 3v2z" />
+            </svg>
+          </div>
+          <h2 className="text-xl md:text-2xl font-bold mb-2 md:mb-4">토론 시스템</h2>
+          <p className="mb-4 md:mb-6 text-gray-600 text-sm md:text-base">
+            AI 피드백과 함께하는 체계적인 토론 의견 관리
+          </p>
+          <div className="w-full space-y-2">
+            <Link href="/teacher/debate" className="btn-primary bg-indigo-600 hover:bg-indigo-700 w-full py-2 flex items-center justify-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              교사: 토론 관리
+            </Link>
+            <Link href="/student/debate" className="btn-secondary w-full py-2 flex items-center justify-center text-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              학생: 의견 제출
+            </Link>
+          </div>
         </div>
       </div>
       
