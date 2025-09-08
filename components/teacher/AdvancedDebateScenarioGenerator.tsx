@@ -270,14 +270,50 @@ export default function AdvancedDebateScenarioGenerator() {
 
       if (data.success) {
         if (!data.scenario) {
+          console.error('❌ 빈 시나리오 데이터:', data)
           throw new Error('서버에서 유효한 시나리오를 받지 못했습니다.')
         }
 
-        console.log('✅ 시나리오 생성 성공:', data.scenario.topic)
+        // 시나리오 데이터 품질 검증
+        const scenario = data.scenario
+        console.log('🔍 시나리오 데이터 검증:', {
+          title: scenario.title,
+          topic: scenario.topic,
+          proArguments: Array.isArray(scenario.proArguments) ? scenario.proArguments.length : 'undefined',
+          conArguments: Array.isArray(scenario.conArguments) ? scenario.conArguments.length : 'undefined',
+          keyQuestions: Array.isArray(scenario.keyQuestions) ? scenario.keyQuestions.length : 'undefined',
+          background: scenario.background ? 'exists' : 'missing'
+        })
+
+        // 필수 필드 검증
+        const requiredFields = ['title', 'topic', 'background']
+        const missingFields = requiredFields.filter(field => !scenario[field])
+        if (missingFields.length > 0) {
+          console.warn('⚠️ 누락된 필드:', missingFields)
+        }
+
+        // 논거 배열 검증
+        const proArgs = scenario.proArguments || scenario.pros || []
+        const conArgs = scenario.conArguments || scenario.cons || []
+        if (!Array.isArray(proArgs) || proArgs.length === 0) {
+          console.warn('⚠️ 찬성 논거가 비어있음:', proArgs)
+        }
+        if (!Array.isArray(conArgs) || conArgs.length === 0) {
+          console.warn('⚠️ 반대 논거가 비어있음:', conArgs)
+        }
+
+        console.log('✅ 시나리오 생성 성공:', scenario.title || scenario.topic)
+        console.log('📊 데이터 상세:', {
+          proArgumentsCount: proArgs.length,
+          conArgumentsCount: conArgs.length,
+          keyQuestionsCount: (scenario.keyQuestions || []).length,
+          materialsCount: (scenario.materials || []).length,
+          expectedOutcomesCount: (scenario.expectedOutcomes || []).length
+        })
         
         // 상태 업데이트를 더 안정적으로 처리
         setTimeout(() => {
-          setGeneratedScenario(data.scenario)
+          setGeneratedScenario(scenario)
           setIsOfflineMode(data.isOffline || false)
           setCurrentStep(3)
           console.log('✅ 시나리오 UI 상태 업데이트 완료')
@@ -636,76 +672,112 @@ ${(scenario.subject || []).join(', ')}
               <div className="bg-green-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-green-900 mb-2">⚖️ 찬성 논거</h3>
                 <ul className="space-y-2">
-                  {Array.isArray(generatedScenario.proArguments) 
-                    ? generatedScenario.proArguments.map((arg: string, index: number) => (
-                        <li key={index} className="text-green-800 flex items-start">
-                          <span className="font-semibold mr-2">{index + 1}.</span>
-                          <span>{arg}</span>
-                        </li>
-                      ))
-                    : generatedScenario.pros?.map((arg: string, index: number) => (
-                        <li key={index} className="text-green-800 flex items-start">
-                          <span className="font-semibold mr-2">{index + 1}.</span>
-                          <span>{arg}</span>
-                        </li>
-                      ))
-                  }
+                  {(() => {
+                    // 고품질 JSON 구조 우선, 레거시 fallback
+                    const proArgs = generatedScenario.proArguments || generatedScenario.pros || []
+                    
+                    if (!Array.isArray(proArgs) || proArgs.length === 0) {
+                      return (
+                        <li className="text-green-800 italic">찬성 논거를 불러오는 중입니다...</li>
+                      )
+                    }
+                    
+                    return proArgs.map((arg: string, index: number) => (
+                      <li key={index} className="text-green-800 flex items-start">
+                        <span className="font-semibold mr-2">{index + 1}.</span>
+                        <span>{typeof arg === 'string' ? arg : String(arg)}</span>
+                      </li>
+                    ))
+                  })()}
                 </ul>
               </div>
 
               <div className="bg-red-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-red-900 mb-2">❌ 반대 논거</h3>
                 <ul className="space-y-2">
-                  {Array.isArray(generatedScenario.conArguments) 
-                    ? generatedScenario.conArguments.map((arg: string, index: number) => (
-                        <li key={index} className="text-red-800 flex items-start">
-                          <span className="font-semibold mr-2">{index + 1}.</span>
-                          <span>{arg}</span>
-                        </li>
-                      ))
-                    : generatedScenario.cons?.map((arg: string, index: number) => (
-                        <li key={index} className="text-red-800 flex items-start">
-                          <span className="font-semibold mr-2">{index + 1}.</span>
-                          <span>{arg}</span>
-                        </li>
-                      ))
-                  }
+                  {(() => {
+                    // 고품질 JSON 구조 우선, 레거시 fallback
+                    const conArgs = generatedScenario.conArguments || generatedScenario.cons || []
+                    
+                    if (!Array.isArray(conArgs) || conArgs.length === 0) {
+                      return (
+                        <li className="text-red-800 italic">반대 논거를 불러오는 중입니다...</li>
+                      )
+                    }
+                    
+                    return conArgs.map((arg: string, index: number) => (
+                      <li key={index} className="text-red-800 flex items-start">
+                        <span className="font-semibold mr-2">{index + 1}.</span>
+                        <span>{typeof arg === 'string' ? arg : String(arg)}</span>
+                      </li>
+                    ))
+                  })()}
                 </ul>
               </div>
 
               <div className="bg-yellow-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-yellow-900 mb-2">❓ 핵심 질문</h3>
                 <ul className="space-y-1">
-                  {generatedScenario.keyQuestions?.map((question: string, index: number) => (
-                    <li key={index} className="text-yellow-800 flex items-start">
-                      <span className="font-semibold mr-2">Q{index + 1}.</span>
-                      <span>{question}</span>
-                    </li>
-                  ))}
+                  {(() => {
+                    const questions = generatedScenario.keyQuestions || []
+                    
+                    if (!Array.isArray(questions) || questions.length === 0) {
+                      return (
+                        <li className="text-yellow-800 italic">핵심 질문을 불러오는 중입니다...</li>
+                      )
+                    }
+                    
+                    return questions.map((question: string, index: number) => (
+                      <li key={index} className="text-yellow-800 flex items-start">
+                        <span className="font-semibold mr-2">Q{index + 1}.</span>
+                        <span>{typeof question === 'string' ? question : String(question)}</span>
+                      </li>
+                    ))
+                  })()}
                 </ul>
               </div>
 
               <div className="bg-indigo-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-indigo-900 mb-2">🎯 기대 효과</h3>
                 <ul className="space-y-1">
-                  {generatedScenario.expectedOutcomes?.map((outcome: string, index: number) => (
-                    <li key={index} className="text-indigo-800 flex items-start">
-                      <span className="font-semibold mr-2">•</span>
-                      <span>{outcome}</span>
-                    </li>
-                  ))}
+                  {(() => {
+                    const outcomes = generatedScenario.expectedOutcomes || []
+                    
+                    if (!Array.isArray(outcomes) || outcomes.length === 0) {
+                      return (
+                        <li className="text-indigo-800 italic">기대 효과를 불러오는 중입니다...</li>
+                      )
+                    }
+                    
+                    return outcomes.map((outcome: string, index: number) => (
+                      <li key={index} className="text-indigo-800 flex items-start">
+                        <span className="font-semibold mr-2">•</span>
+                        <span>{typeof outcome === 'string' ? outcome : String(outcome)}</span>
+                      </li>
+                    ))
+                  })()}
                 </ul>
               </div>
 
               <div className="bg-teal-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-teal-900 mb-2">📋 준비 자료</h3>
                 <ul className="space-y-1">
-                  {generatedScenario.materials?.map((material: string, index: number) => (
-                    <li key={index} className="text-teal-800 flex items-start">
-                      <span className="font-semibold mr-2">•</span>
-                      <span>{material}</span>
-                    </li>
-                  ))}
+                  {(() => {
+                    const materials = generatedScenario.materials || []
+                    
+                    if (!Array.isArray(materials) || materials.length === 0) {
+                      return (
+                        <li className="text-teal-800 italic">준비 자료를 불러오는 중입니다...</li>
+                      )
+                    }
+                    
+                    return materials.map((material: string, index: number) => (
+                      <li key={index} className="text-teal-800 flex items-start">
+                        <span className="font-semibold mr-2">•</span>
+                        <span>{typeof material === 'string' ? material : String(material)}</span>
+                      </li>
+                    ))
+                  })()}
                 </ul>
               </div>
 
@@ -719,16 +791,36 @@ ${(scenario.subject || []).join(', ')}
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">🏷️ 태그</h3>
                 <div className="flex flex-wrap gap-2">
-                  {generatedScenario.keywords?.map((keyword: string, index: number) => (
-                    <span key={index} className="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-sm">
-                      #{keyword}
-                    </span>
-                  ))}
-                  {generatedScenario.subject?.map((sub: string, index: number) => (
-                    <span key={index} className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-sm">
-                      {sub}
-                    </span>
-                  ))}
+                  {(() => {
+                    const keywords = generatedScenario.keywords || []
+                    const subjects = generatedScenario.subject || []
+                    
+                    const keywordElements = Array.isArray(keywords) 
+                      ? keywords.map((keyword: string, index: number) => (
+                          <span key={`kw-${index}`} className="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-sm">
+                            #{typeof keyword === 'string' ? keyword : String(keyword)}
+                          </span>
+                        ))
+                      : []
+                      
+                    const subjectElements = Array.isArray(subjects)
+                      ? subjects.map((sub: string, index: number) => (
+                          <span key={`sub-${index}`} className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-sm">
+                            {typeof sub === 'string' ? sub : String(sub)}
+                          </span>
+                        ))
+                      : []
+                      
+                    const allElements = [...keywordElements, ...subjectElements]
+                    
+                    if (allElements.length === 0) {
+                      return (
+                        <span className="text-gray-500 italic">태그를 불러오는 중입니다...</span>
+                      )
+                    }
+                    
+                    return allElements
+                  })()}
                 </div>
               </div>
             </div>
