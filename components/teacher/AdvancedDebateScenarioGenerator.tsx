@@ -4,27 +4,38 @@ import { useState } from 'react'
 import Button from '@/components/common/Button'
 import Card from '@/components/common/Card'
 
-// 타입 정의
+// 타입 정의 (참고 구현체 기반 고품질 JSON 구조)
 interface DebateScenario {
+  title: string
   topic: string
   purpose: string
   grade: string
   timeLimit: number
-  overview: string
-  objectives: string[]
-  preparation: {
+  background: string
+  proArguments: string[]
+  conArguments: string[]
+  keyQuestions: string[]
+  expectedOutcomes: string[]
+  materials: string[]
+  teacherTips: string
+  keywords: string[]
+  subject: string[]
+  // 레거시 지원을 위한 옵셔널 필드들 (기존 구조)
+  overview?: string
+  objectives?: string[]
+  preparation?: {
     materials: string[]
     setup: string
     roles: string[]
   }
-  process: {
+  process?: {
     step: number
     name: string
     duration: number
     description: string
     activities: string[]
   }[]
-  evaluation: {
+  evaluation?: {
     criteria: string[]
     methods: string[]
     rubric: {
@@ -33,8 +44,11 @@ interface DebateScenario {
       needs_improvement: string
     }
   }
-  extensions: string[]
-  references: string[]
+  extensions?: string[]
+  references?: string[]
+  // 추가 레거시 필드들 (recommend API 호환)
+  pros?: string[]
+  cons?: string[]
 }
 
 interface TopicRecommendation {
@@ -334,38 +348,42 @@ export default function AdvancedDebateScenarioGenerator() {
     window.location.href = '/teacher/session/create'
   }
 
-  // 시나리오를 텍스트 형태로 변환
+  // 시나리오를 텍스트 형태로 변환 (새로운 JSON 구조 대응)
   const generateScenarioText = (scenario: DebateScenario) => {
     return `
-🎯 **토론 시나리오: ${scenario.topic || '제목 없음'}**
+🎯 **토론 시나리오: ${scenario.title || scenario.topic || '제목 없음'}**
 
-**📚 개요**
-${scenario.overview || '개요 정보가 없습니다.'}
+**📖 토론 배경**
+${scenario.background || '배경 정보가 없습니다.'}
 
-**🎯 학습 목표**
-${(scenario.objectives || []).map(obj => `• ${obj}`).join('\n')}
+**⚖️ 찬성 논거**
+${(scenario.proArguments || scenario.pros || []).map((arg, i) => `${i + 1}. ${arg}`).join('\n')}
 
-**📋 준비사항**
-- 준비물: ${(scenario.preparation?.materials || []).join(', ')}
-- 교실 배치: ${scenario.preparation?.setup || '일반 교실 배치'}
-- 역할: ${(scenario.preparation?.roles || []).join(', ')}
+**❌ 반대 논거**
+${(scenario.conArguments || scenario.cons || []).map((arg, i) => `${i + 1}. ${arg}`).join('\n')}
 
-**⏰ 수업 진행 과정**
-${(scenario.process || []).map(step => `
-${step.step}단계: ${step.name} (${step.duration}분)
-${step.description}
-활동: ${(step.activities || []).join(', ')}
-`).join('')}
+**❓ 핵심 질문**
+${(scenario.keyQuestions || []).map((q, i) => `Q${i + 1}. ${q}`).join('\n')}
 
-**📊 평가**
-- 평가 기준: ${(scenario.evaluation?.criteria || []).join(', ')}
-- 평가 방법: ${(scenario.evaluation?.methods || []).join(', ')}
+**🎯 기대 효과**
+${(scenario.expectedOutcomes || []).map(outcome => `• ${outcome}`).join('\n')}
 
-**🌟 심화 활동**
-${(scenario.extensions || []).map(ext => `• ${ext}`).join('\n')}
+**📋 준비 자료**
+${(scenario.materials || []).map(material => `• ${material}`).join('\n')}
 
-**📚 참고 자료**
-${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
+**💡 지도 팁**
+${scenario.teacherTips || '지도 팁이 없습니다.'}
+
+**🏷️ 키워드**
+${(scenario.keywords || []).map(keyword => `#${keyword}`).join(' ')}
+
+**📚 교과 연결**
+${(scenario.subject || []).join(', ')}
+
+**📊 수업 정보**
+- 교육 목적: ${scenario.purpose}
+- 대상 학년: ${scenario.grade}학년
+- 수업 시간: ${scenario.timeLimit}분
 `
   }
 
@@ -598,98 +616,120 @@ ${(scenario.references || []).map(ref => `• ${ref}`).join('\n')}
 
           <div className="bg-blue-50 p-6 rounded-lg">
             <div className="mb-4">
-              <h4 className="text-xl font-bold text-blue-800 mb-2">{generatedScenario.topic}</h4>
+              <h4 className="text-xl font-bold text-blue-800 mb-2">{generatedScenario.title}</h4>
               <div className="flex flex-wrap gap-2 text-sm text-blue-700 mb-3">
                 <span>📚 {generatedScenario.purpose}</span>
                 <span>👥 {generatedScenario.grade}학년</span>
                 <span>⏰ {generatedScenario.timeLimit}분</span>
               </div>
-              <p className="text-blue-700">{generatedScenario.overview}</p>
+              <p className="text-blue-700">{generatedScenario.background}</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  🎯 <span className="ml-2">학습 목표</span>
-                </h5>
-                <ul className="space-y-1 text-sm">
-                  {(generatedScenario.objectives || []).map((obj, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      <span>{obj}</span>
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">📖 토론 배경</h3>
+                <div className="text-blue-800 whitespace-pre-line">
+                  {generatedScenario.background}
+                </div>
+              </div>
+
+              <div className="bg-green-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-green-900 mb-2">⚖️ 찬성 논거</h3>
+                <ul className="space-y-2">
+                  {Array.isArray(generatedScenario.proArguments) 
+                    ? generatedScenario.proArguments.map((arg: string, index: number) => (
+                        <li key={index} className="text-green-800 flex items-start">
+                          <span className="font-semibold mr-2">{index + 1}.</span>
+                          <span>{arg}</span>
+                        </li>
+                      ))
+                    : generatedScenario.pros?.map((arg: string, index: number) => (
+                        <li key={index} className="text-green-800 flex items-start">
+                          <span className="font-semibold mr-2">{index + 1}.</span>
+                          <span>{arg}</span>
+                        </li>
+                      ))
+                  }
+                </ul>
+              </div>
+
+              <div className="bg-red-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-red-900 mb-2">❌ 반대 논거</h3>
+                <ul className="space-y-2">
+                  {Array.isArray(generatedScenario.conArguments) 
+                    ? generatedScenario.conArguments.map((arg: string, index: number) => (
+                        <li key={index} className="text-red-800 flex items-start">
+                          <span className="font-semibold mr-2">{index + 1}.</span>
+                          <span>{arg}</span>
+                        </li>
+                      ))
+                    : generatedScenario.cons?.map((arg: string, index: number) => (
+                        <li key={index} className="text-red-800 flex items-start">
+                          <span className="font-semibold mr-2">{index + 1}.</span>
+                          <span>{arg}</span>
+                        </li>
+                      ))
+                  }
+                </ul>
+              </div>
+
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-yellow-900 mb-2">❓ 핵심 질문</h3>
+                <ul className="space-y-1">
+                  {generatedScenario.keyQuestions?.map((question: string, index: number) => (
+                    <li key={index} className="text-yellow-800 flex items-start">
+                      <span className="font-semibold mr-2">Q{index + 1}.</span>
+                      <span>{question}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  📋 <span className="ml-2">준비사항</span>
-                </h5>
-                <div className="text-sm space-y-2">
-                  <div>
-                    <span className="font-medium">준비물:</span>
-                    <div className="ml-2">{generatedScenario.preparation.materials.join(', ')}</div>
-                  </div>
-                  <div>
-                    <span className="font-medium">역할:</span>
-                    <div className="ml-2">{generatedScenario.preparation.roles.join(', ')}</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 bg-white p-4 rounded-lg">
-              <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                ⏰ <span className="ml-2">수업 진행 과정</span>
-              </h5>
-              <div className="space-y-3">
-                {(generatedScenario.process || []).map((step, index) => (
-                  <div key={index} className="flex">
-                    <div className="flex-shrink-0 w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
-                      {step.step}
-                    </div>
-                    <div className="flex-1">
-                      <h6 className="font-medium text-gray-800">{step.name} ({step.duration}분)</h6>
-                      <p className="text-sm text-gray-600 mb-1">{step.description}</p>
-                      <div className="text-xs text-gray-500">
-                        활동: {step.activities.join(', ')}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  📊 <span className="ml-2">평가</span>
-                </h5>
-                <div className="text-sm space-y-2">
-                  <div>
-                    <span className="font-medium">기준:</span>
-                    <div className="ml-2">{generatedScenario.evaluation.criteria.join(', ')}</div>
-                  </div>
-                  <div>
-                    <span className="font-medium">방법:</span>
-                    <div className="ml-2">{generatedScenario.evaluation.methods.join(', ')}</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  🌟 <span className="ml-2">심화 활동</span>
-                </h5>
-                <ul className="text-sm space-y-1">
-                  {(generatedScenario.extensions || []).map((ext, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      <span>{ext}</span>
+              <div className="bg-indigo-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-indigo-900 mb-2">🎯 기대 효과</h3>
+                <ul className="space-y-1">
+                  {generatedScenario.expectedOutcomes?.map((outcome: string, index: number) => (
+                    <li key={index} className="text-indigo-800 flex items-start">
+                      <span className="font-semibold mr-2">•</span>
+                      <span>{outcome}</span>
                     </li>
                   ))}
                 </ul>
+              </div>
+
+              <div className="bg-teal-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-teal-900 mb-2">📋 준비 자료</h3>
+                <ul className="space-y-1">
+                  {generatedScenario.materials?.map((material: string, index: number) => (
+                    <li key={index} className="text-teal-800 flex items-start">
+                      <span className="font-semibold mr-2">•</span>
+                      <span>{material}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-purple-900 mb-2">💡 지도 팁</h3>
+                <div className="text-purple-800 whitespace-pre-line">
+                  {generatedScenario.teacherTips}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">🏷️ 태그</h3>
+                <div className="flex flex-wrap gap-2">
+                  {generatedScenario.keywords?.map((keyword: string, index: number) => (
+                    <span key={index} className="px-2 py-1 bg-gray-200 text-gray-800 rounded-full text-sm">
+                      #{keyword}
+                    </span>
+                  ))}
+                  {generatedScenario.subject?.map((sub: string, index: number) => (
+                    <span key={index} className="px-2 py-1 bg-blue-200 text-blue-800 rounded-full text-sm">
+                      {sub}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
