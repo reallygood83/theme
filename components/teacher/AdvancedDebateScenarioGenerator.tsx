@@ -120,9 +120,7 @@ export default function AdvancedDebateScenarioGenerator() {
 
       const response = await fetch('/api/scenario/recommend', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keyword: topicKeyword.trim(),
           purpose: selectedPurpose.trim(),
@@ -277,17 +275,13 @@ export default function AdvancedDebateScenarioGenerator() {
       
       const response = await fetch('/api/scenario/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           topic: selectedTopic,
+          keyword: keyword.trim(),
           purpose: selectedPurpose,
-          grade: selectedGrade,
-          timeLimit: timeLimit,
-          additionalInfo: additionalInfo
-        }),
-        signal: controller.signal
+          grade: (selectedGrade?.trim() || '5')
+        })
       })
 
       const endTime = Date.now()

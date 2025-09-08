@@ -5,25 +5,37 @@ import Button from '@/components/common/Button'
 
 // 타입 정의 (기존 타입 재사용)
 interface DebateScenario {
+  // 신규 스키마 호환 필드 (백엔드 응답)
+  title?: string
   topic: string
   purpose: string
   grade: string
   timeLimit: number
-  overview: string
-  objectives: string[]
-  preparation: {
+  background?: string
+  proArguments?: string[]
+  conArguments?: string[]
+  keyQuestions?: string[]
+  expectedOutcomes?: string[]
+  materials?: string[]
+  teacherTips?: string
+  keywords?: string[]
+  subject?: string[]
+  // 레거시 스키마 호환 필드
+  overview?: string
+  objectives?: string[]
+  preparation?: {
     materials: string[]
     setup: string
     roles: string[]
   }
-  process: {
+  process?: {
     step: number
     name: string
     duration: number
     description: string
     activities: string[]
   }[]
-  evaluation: {
+  evaluation?: {
     criteria: string[]
     methods: string[]
     rubric: {
@@ -32,8 +44,8 @@ interface DebateScenario {
       needs_improvement: string
     }
   }
-  extensions: string[]
-  references: string[]
+  extensions?: string[]
+  references?: string[]
 }
 
 interface TopicRecommendation {
@@ -123,8 +135,19 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
 
   // 시나리오 생성 API 호출
   const handleScenarioGeneration = async (topic: string) => {
+    console.log('🚨 handleScenarioGeneration 호출됨!', {
+      topic,
+      purpose: selectedPurpose,
+      grade: selectedGrade,
+      timeLimit: selectedTimeLimit,
+      timestamp: new Date().toISOString()
+    })
+
     setLoading(true)
     try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 45000) // 45초 타임아웃
+
       const response = await fetch('/api/scenario/generate', {
         method: 'POST',
         headers: {
@@ -133,22 +156,94 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
         body: JSON.stringify({
           topic,
           purpose: selectedPurpose,
-          grade: selectedGrade,
+          grade: selectedGrade || '6',
           timeLimit: selectedTimeLimit
-        })
+        }),
+        signal: controller.signal
       })
 
+      clearTimeout(timeoutId)
+
+      console.log('📊 응답 상태:', {
+        status: response.status,
+        ok: response.ok
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('❌ 서버 응답 오류:', errorText)
+        throw new Error(`서버 오류: ${response.status}`)
+      }
+
+      console.log('🔄 JSON 파싱 시작...')
       const data = await response.json()
-      
+      console.log('📥 시나리오 생성 API 응답:', data)
+      console.log('📋 응답 데이터 구조:', {
+        dataType: typeof data,
+        keys: Object.keys(data || {}),
+        success: data?.success,
+        hasScenario: !!data?.scenario,
+        scenarioKeys: data?.scenario ? Object.keys(data.scenario) : 'no scenario'
+      })
+
       if (data.success && data.scenario) {
-        setGeneratedScenario(data.scenario)
+        const scenario = data.scenario
+        console.log('🔍 시나리오 데이터 검증:', {
+          title: scenario.title,
+          topic: scenario.topic,
+          proArguments: Array.isArray(scenario.proArguments) ? scenario.proArguments.length : 'undefined',
+          conArguments: Array.isArray(scenario.conArguments) ? scenario.conArguments.length : 'undefined',
+          background: scenario.background ? 'exists' : 'missing'
+        })
+
+        // 필수 필드 검증 및 fallback
+        if (!scenario.title && !scenario.topic) {
+          console.error('❌ 필수 필드(title/topic) 누락')
+          throw new Error('시나리오 데이터가 불완전합니다.')
+        }
+
+        // 배열 필드 정규화 (빈 배열 fallback)
+        const normalizeArray = (arr: any): string[] => {
+          if (Array.isArray(arr) && arr.length > 0) return arr.map((v: any) => String(v).trim()).filter(Boolean)
+          return []
+        }
+
+        const validatedScenario = {
+          ...scenario,
+          proArguments: normalizeArray(scenario.proArguments || scenario.pros || []),
+          conArguments: normalizeArray(scenario.conArguments || scenario.cons || []),
+          keyQuestions: normalizeArray(scenario.keyQuestions || []),
+          expectedOutcomes: normalizeArray(scenario.expectedOutcomes || scenario.objectives || []),
+          materials: normalizeArray(scenario.materials || []),
+          keywords: normalizeArray(scenario.keywords || []),
+          subject: normalizeArray(scenario.subject || [])
+        }
+
+        console.log('✅ 검증된 시나리오 데이터:', {
+          proArgumentsCount: validatedScenario.proArguments.length,
+          conArgumentsCount: validatedScenario.conArguments.length,
+          hasBackground: !!validatedScenario.background
+        })
+
+        setGeneratedScenario(validatedScenario)
         setCurrentStep(3)
+        console.log('🎉 상태 업데이트 완료')
       } else {
-        throw new Error(data.error || '시나리오 생성에 실패했습니다.')
+        const errorMessage = data.error || '시나리오 생성에 실패했습니다.'
+        console.error('❌ API 실패 응답:', data)
+        throw new Error(errorMessage)
       }
     } catch (error) {
-      console.error('시나리오 생성 오류:', error)
-      alert('시나리오 생성 중 오류가 발생했습니다.')
+      console.error('❌ 토론 시나리오 생성 오류:', error)
+      
+      let errorMessage = '시나리오 생성 중 오류가 발생했습니다.'
+      if ((error as any)?.name === 'AbortError') {
+        errorMessage = '요청 시간이 초과되었습니다. 다시 시도해주세요.'
+      } else if (error instanceof Error) {
+        errorMessage = error.message
+      }
+      
+      alert(`❌ ${errorMessage}\n\n🔧 해결: 인터넷 연결 확인 후 재시도`)
     } finally {
       setLoading(false)
     }
@@ -368,51 +463,114 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
               </div>
 
               <div className="bg-blue-50 p-6 rounded-lg">
-                <h4 className="text-xl font-bold text-blue-800 mb-2">{generatedScenario.topic}</h4>
-                <p className="text-blue-700 mb-4">{generatedScenario.overview}</p>
+                <h4 className="text-xl font-bold text-blue-800 mb-2">{generatedScenario.title || generatedScenario.topic}</h4>
+                <p className="text-blue-700 mb-4">{generatedScenario.background || generatedScenario.overview || ''}</p>
                 
-                {/* 학습 목표 */}
+                {/* 학습 목표 (신규 expectedOutcomes 우선, 레거시 objectives 대체) */}
+                {((generatedScenario.expectedOutcomes && generatedScenario.expectedOutcomes.length > 0) || (generatedScenario.objectives && generatedScenario.objectives.length > 0)) && (
+                  <div className="mb-6">
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      🎯 <span className="ml-2">학습 목표</span>
+                    </h5>
+                    <ul className="space-y-1 text-sm">
+                      {(generatedScenario.expectedOutcomes?.length ? generatedScenario.expectedOutcomes : (generatedScenario.objectives || [])).map((obj, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-secondary mr-2">•</span>
+                          <span>{obj}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 찬성 / 반대 논거 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <h5 className="font-semibold text-green-800 mb-2">⚖️ 찬성 논거</h5>
+                    <ul className="space-y-1 text-sm">
+                      {(() => {
+                        const proArgs = generatedScenario.proArguments || (generatedScenario as any).pros || []
+                        if (!Array.isArray(proArgs) || proArgs.length === 0) {
+                          return <li className="text-green-800 italic">찬성 논거가 준비되었습니다. (로딩 중)</li>
+                        }
+                        return proArgs.map((arg: string, index: number) => (
+                          <li key={index} className="text-green-800 flex items-start">
+                            <span className="mr-2">{index + 1}.</span>
+                            <span>{typeof arg === 'string' ? arg : String(arg)}</span>
+                          </li>
+                        ))
+                      })()}
+                    </ul>
+                  </div>
+                  <div className="bg-red-50 p-4 rounded-lg">
+                    <h5 className="font-semibold text-red-800 mb-2">❌ 반대 논거</h5>
+                    <ul className="space-y-1 text-sm">
+                      {(() => {
+                        const conArgs = generatedScenario.conArguments || (generatedScenario as any).cons || []
+                        if (!Array.isArray(conArgs) || conArgs.length === 0) {
+                          return <li className="text-red-800 italic">반대 논거가 준비되었습니다. (로딩 중)</li>
+                        }
+                        return conArgs.map((arg: string, index: number) => (
+                          <li key={index} className="text-red-800 flex items-start">
+                            <span className="mr-2">{index + 1}.</span>
+                            <span>{typeof arg === 'string' ? arg : String(arg)}</span>
+                          </li>
+                        ))
+                      })()}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* 핵심 질문 */}
                 <div className="mb-6">
                   <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                    🎯 <span className="ml-2">학습 목표</span>
+                    ❓ <span className="ml-2">핵심 질문</span>
                   </h5>
                   <ul className="space-y-1 text-sm">
-                    {(generatedScenario.objectives || []).map((obj, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-secondary mr-2">•</span>
-                        <span>{obj}</span>
-                      </li>
-                    ))}
+                    {(() => {
+                      const questions = generatedScenario.keyQuestions || []
+                      if (!Array.isArray(questions) || questions.length === 0) {
+                        return <li className="text-gray-600 italic">핵심 질문을 준비 중입니다...</li>
+                      }
+                      return questions.map((q: string, index: number) => (
+                        <li key={index} className="flex items-start">
+                          <span className="text-secondary mr-2">Q{index + 1}.</span>
+                          <span>{typeof q === 'string' ? q : String(q)}</span>
+                        </li>
+                      ))
+                    })()}
                   </ul>
                 </div>
 
-                {/* 수업 진행 과정 */}
-                <div className="mb-6">
-                  <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
-                    ⏰ <span className="ml-2">수업 진행 과정</span>
-                  </h5>
-                  <div className="space-y-3">
-                    {(generatedScenario.process || []).map((step, index) => (
-                      <div key={index} className="flex">
-                        <div className="flex-shrink-0 w-8 h-8 bg-secondary text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
-                          {step.step}
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-1">
-                            <h6 className="font-medium text-gray-800">{step.name}</h6>
-                            <span className="text-xs text-gray-500">{step.duration}분</span>
+                {/* 수업 진행 과정 (레거시) */}
+                {generatedScenario.process && generatedScenario.process.length > 0 && (
+                  <div className="mb-6">
+                    <h5 className="font-semibold text-gray-800 mb-3 flex items-center">
+                      ⏰ <span className="ml-2">수업 진행 과정</span>
+                    </h5>
+                    <div className="space-y-3">
+                      {(generatedScenario.process || []).map((step, index) => (
+                        <div key={index} className="flex">
+                          <div className="flex-shrink-0 w-8 h-8 bg-secondary text-white rounded-full flex items-center justify-center text-sm font-bold mr-3 mt-1">
+                            {step.step}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">{step.description}</p>
-                          {step.activities && step.activities.length > 0 && (
-                            <div className="text-xs text-gray-500">
-                              활동: {(step.activities || []).join(', ')}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-1">
+                              <h6 className="font-medium text-gray-800">{step.name}</h6>
+                              <span className="text-xs text-gray-500">{step.duration}분</span>
                             </div>
-                          )}
+                            <p className="text-sm text-gray-600 mb-2">{step.description}</p>
+                            {step.activities && step.activities.length > 0 && (
+                              <div className="text-xs text-gray-500">
+                                활동: {(step.activities || []).join(', ')}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* 심화 활동 */}
                 {generatedScenario.extensions && generatedScenario.extensions.length > 0 && (

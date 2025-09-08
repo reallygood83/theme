@@ -332,15 +332,47 @@ function parseScenarioResponse(response: string, topic: string, purpose: string,
       return getOfflineScenarioTemplate(topic, purpose, grade, timeLimit);
     }
 
-    // 배열 필드 검증 및 기본값 설정
+    // 배열 필드 정규화: 문자열/객체로 온 경우에도 안전하게 string[]으로 변환
     const arrayFields = ['proArguments', 'conArguments', 'keyQuestions', 'expectedOutcomes', 'materials', 'keywords', 'subject'];
-    arrayFields.forEach(field => {
-      if (!Array.isArray(jsonData[field])) {
-        jsonData[field] = [];
+
+    const normalizeToArray = (value: any): string[] => {
+      try {
+        // 이미 배열이면 문자열로 캐스팅 후 트림
+        if (Array.isArray(value)) {
+          return value.map((v) => String(v).trim()).filter(Boolean);
+        }
+        // 문자열인 경우 JSON 배열 문자열일 수 있으니 우선 파싱 시도
+        if (typeof value === 'string') {
+          const trimmed = value.trim();
+          if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) {
+              return parsed.map((v: any) => String(v).trim()).filter(Boolean);
+            }
+          }
+          // 불릿/쉼표/세미콜론/줄바꿈 기반 스플릿
+          return trimmed
+            .split(/\r?\n|\u2022|•|^- |- |\d+\.\s|,\s|,|;|\|/gm)
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+        // 객체인 경우 값 모아 배열화
+        if (value && typeof value === 'object') {
+          return Object.values(value)
+            .map((v) => String(v).trim())
+            .filter(Boolean);
+        }
+      } catch (e) {
+        console.warn('배열 필드 정규화 중 예외:', e);
       }
+      return [];
+    };
+
+    arrayFields.forEach((field) => {
+      jsonData[field] = normalizeToArray(jsonData[field]);
     });
 
-    // 찬성/반대 논거가 3개씩 있는지 확인
+    // 찬성/반대 논거가 3개씩 있는지 확인 (경고 로그만)
     if (jsonData.proArguments.length < 3) {
       console.warn('찬성 논거가 3개 미만입니다');
     }
