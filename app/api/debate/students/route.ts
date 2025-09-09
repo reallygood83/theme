@@ -8,7 +8,10 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const sessionCode = searchParams.get('sessionCode')
     
+    console.log('🔍 세션 조회 시작 - 코드:', sessionCode)
+    
     if (!sessionCode) {
+      console.log('❌ 세션 코드 없음')
       return NextResponse.json(
         { success: false, error: '세션 코드가 필요합니다.' },
         { status: 400 }
@@ -17,17 +20,21 @@ export async function GET(request: NextRequest) {
 
     const database = getFirebaseDatabase()
     if (!database) {
+      console.log('❌ Firebase 데이터베이스 연결 실패')
       return NextResponse.json(
         { success: false, error: 'Firebase 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
 
+    console.log('✅ Firebase 연결 성공')
+
     // 세션 코드로 세션 찾기
     const sessionsRef = ref(database, 'sessions')
     const sessionsSnapshot = await get(sessionsRef)
     
     if (!sessionsSnapshot.exists()) {
+      console.log('❌ 세션 데이터 없음')
       return NextResponse.json(
         { success: false, error: '세션을 찾을 수 없습니다.' },
         { status: 404 }
@@ -35,24 +42,34 @@ export async function GET(request: NextRequest) {
     }
 
     const sessions = sessionsSnapshot.val()
+    console.log(`📊 총 ${Object.keys(sessions).length}개 세션 발견`)
+    
     let targetSession = null
     let sessionId = null
 
-    // sessionCode로 세션 찾기
+    // sessionCode로 세션 찾기 (디버깅 로그 추가)
+    console.log(`🔍 ${sessionCode} 코드로 세션 검색 중...`)
     for (const [id, session] of Object.entries(sessions)) {
-      if ((session as any).sessionCode === sessionCode) {
+      const currentSessionCode = (session as any).sessionCode
+      console.log(`세션 ${id}: 코드 ${currentSessionCode || 'undefined'}`)
+      
+      if (currentSessionCode === sessionCode) {
         targetSession = session
         sessionId = id
+        console.log(`✅ 매칭된 세션 발견: ${id}`)
         break
       }
     }
 
     if (!targetSession) {
+      console.log(`❌ ${sessionCode} 코드에 해당하는 세션 없음`)
       return NextResponse.json(
         { success: false, error: '잘못된 세션 코드입니다.' },
         { status: 404 }
       )
     }
+
+    console.log(`✅ 세션 찾기 성공: ${sessionId}`)
 
     // 해당 세션의 참여 학생 목록 반환
     const participantsRef = ref(database, `session_participants/${sessionId}`)
