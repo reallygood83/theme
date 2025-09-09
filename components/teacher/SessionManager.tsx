@@ -332,18 +332,22 @@ export default function SessionManager({
     setEvidenceSearchModal(true)
     setEvidenceSearchStep(1)
     
+    let progressInterval: NodeJS.Timeout | null = null
+    
     try {
       console.log('🔍 근거자료 검색 시작:', { topic, stance, types })
       
-      // 단계별 진행 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setEvidenceSearchStep(2)
+      // 진행 상황을 동적으로 업데이트 (API 응답까지 기다림)
+      let currentStep = 1
+      setEvidenceSearchStep(currentStep)
       
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setEvidenceSearchStep(3)
-      
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setEvidenceSearchStep(4)
+      progressInterval = setInterval(() => {
+        if (currentStep < 4) { // 마지막 단계는 API 완료 후 설정
+          currentStep++
+          setEvidenceSearchStep(currentStep)
+          console.log('📊 진행 상황 업데이트:', currentStep)
+        }
+      }, 18000) // 18초마다 단계 증가 (총 72초 + API 완료)
       
       // 실제 API 호출
       const response = await fetch('/api/evidence/search', {
@@ -355,26 +359,64 @@ export default function SessionManager({
           topic,
           stance,
           selectedTypes: types
-        })
+        }),
       })
       
-      const result = await response.json()
-      
-      if (!response.ok) {
-        throw new Error(result.error || '근거자료 검색에 실패했습니다.')
+      // API 완료 후 진행 상황 정리
+      if (progressInterval) {
+        clearInterval(progressInterval)
+        progressInterval = null
       }
       
+      // 마지막 단계로 설정
       setEvidenceSearchStep(5)
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('📊 검색 완료 - 마지막 단계')
       
-      // 검색 결과 저장
-      setEvidenceResults(result.evidences || [])
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || '근거자료 검색에 실패했습니다.')
+      }
+      
+      const result = await response.json()
+      console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
+      
+      if (!result.evidences || result.evidences.length === 0) {
+        alert('검색 결과가 없습니다. 다른 키워드로 다시 시도해보세요.')
+        setEvidenceSearchModal(false)
+        setEvidenceSearchStep(0)
+        setIsSearchingEvidence(false)
+        return
+      }
+      
+      setEvidenceResults(result.evidences)
       setIsSearchingEvidence(false)
       
-      console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
+      // 2초 후 모달 자동 닫기 및 결과 섹션으로 이동
+      setTimeout(() => {
+        setEvidenceSearchModal(false) // 모달 닫기
+        setEvidenceSearchStep(0) // 단계 초기화
+        
+        // 결과 섹션으로 스크롤
+        setTimeout(() => {
+          const evidenceSection = document.getElementById('evidence-results')
+          if (evidenceSection) {
+            evidenceSection.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'start'
+            })
+          }
+        }, 100)
+      }, 2000)
       
     } catch (error) {
       console.error('❌ 근거자료 검색 오류:', error)
+      
+      // 진행률 인터벌 정리
+      if (progressInterval) {
+        clearInterval(progressInterval)
+        progressInterval = null
+      }
+      
       setEvidenceSearchModal(false)
       setEvidenceSearchStep(0)
       setIsSearchingEvidence(false)
