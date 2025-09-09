@@ -108,18 +108,21 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             const sessionData = childSnapshot.val()
             console.log('세션 확인:', {
               sessionId: childSnapshot.key,
+              sessionCode: sessionData.sessionCode,
               accessCode: sessionData.accessCode,
               title: sessionData.title,
-              매치여부: sessionData.accessCode === sessionCode
+              sessionCode매치: sessionData.sessionCode === sessionCode,
+              accessCode매치: sessionData.accessCode === sessionCode
             });
             
-            if (sessionData.accessCode === sessionCode) {
+            // sessionCode 또는 accessCode 중 하나라도 일치하면 찾은 것으로 간주 (API와 동일한 로직)
+            if (sessionData.sessionCode === sessionCode || sessionData.accessCode === sessionCode) {
               foundSessionId = childSnapshot.key
               foundSession = {
                 sessionId: childSnapshot.key,
                 ...sessionData
               }
-              console.log('🎉 세션 발견!', foundSessionId);
+              console.log('🎉 세션 발견!', foundSessionId, `(sessionCode: ${sessionData.sessionCode}, accessCode: ${sessionData.accessCode})`);
               return true // forEach 순회 중단
             }
             return false
