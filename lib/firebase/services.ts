@@ -402,8 +402,10 @@ export class FeedbackTemplateService extends BaseFirebaseService<FirebaseFeedbac
     }
 
     return this.update(id, {
-      'usage.count': template.usage.count + 1,
-      'usage.lastUsed': Timestamp.now()
+      usage: {
+        count: template.usage.count + 1,
+        lastUsed: Timestamp.now()
+      }
     });
   }
 }
