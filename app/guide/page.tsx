@@ -794,13 +794,13 @@ export default function GuidePage() {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <a 
-                href="/teacher" 
+                href="/teacher/dashboard" 
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
               >
                 👨‍🏫 교사용 시작하기
               </a>
               <a 
-                href="/student" 
+                href="/" 
                 className="bg-purple-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors shadow-lg hover:shadow-xl"
               >
                 👨‍🎓 학생용 시작하기
