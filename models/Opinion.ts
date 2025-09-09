@@ -101,8 +101,6 @@ OpinionSchema.index({ classId: 1 });
 OpinionSchema.index({ teacherId: 1 });
 OpinionSchema.index({ studentId: 1 });
 OpinionSchema.index({ status: 1 });
-OpinionSchema.index({ referenceCode: 1 });
-OpinionSchema.index({ sessionCode: 1 });
 OpinionSchema.index({ submittedAt: -1 }); // 최신순 정렬용
 
 const Opinion = mongoose.models.Opinion || mongoose.model<IOpinion>('Opinion', OpinionSchema);
