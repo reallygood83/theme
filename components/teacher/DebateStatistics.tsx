@@ -65,21 +65,30 @@ export default function DebateStatistics({ teacherId, classId, dateRange }: Deba
     setError(null)
 
     try {
-      const params = new URLSearchParams()
-      if (teacherId) params.append('teacherId', teacherId)
-      if (classId) params.append('classId', classId)
-      params.append('period', selectedPeriod)
-      if (dateRange?.start) params.append('startDate', dateRange.start)
-      if (dateRange?.end) params.append('endDate', dateRange.end)
+      // API가 마이그레이션되어 임시로 비활성화
+      // const params = new URLSearchParams()
+      // if (teacherId) params.append('teacherId', teacherId)
+      // if (classId) params.append('classId', classId)
+      // params.append('period', selectedPeriod)
+      // if (dateRange?.start) params.append('startDate', dateRange.start)
+      // if (dateRange?.end) params.append('endDate', dateRange.end)
 
-      const response = await fetch(`/api/debate/statistics?${params.toString()}`)
-      const data = await response.json()
+      // const response = await fetch(`/api/debate/statistics?${params.toString()}`)
+      // const data = await response.json()
 
-      if (data.success) {
-        setStatistics(data.data)
-      } else {
-        setError(data.error || '통계를 불러오는 중 오류가 발생했습니다.')
-      }
+      // 임시로 빈 통계 데이터 설정
+      setStatistics({
+        totalOpinions: 0,
+        pendingOpinions: 0,
+        feedbackGiven: 0,
+        reviewedOpinions: 0,
+        averageResponseTime: 0,
+        topStudents: [],
+        topicDistribution: [],
+        dailyStats: [],
+        monthlyTrends: [],
+        wordCloudData: []
+      })
     } catch (error) {
       console.error('Error fetching statistics:', error)
       setError('통계를 불러오는 중 오류가 발생했습니다.')

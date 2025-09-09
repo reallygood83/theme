@@ -44,15 +44,12 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
 
     setLoading(true)
     try {
-      const response = await fetch(`/api/notifications?userId=${user.uid}&limit=10`)
+      // API가 마이그레이션되어 임시로 비활성화
+      // const response = await fetch(`/api/notifications?userId=${user.uid}&limit=10`)
       
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setNotifications(data.data.notifications)
-          setUnreadCount(data.data.unreadCount)
-        }
-      }
+      // 임시로 빈 알림 목록 설정
+      setNotifications([])
+      setUnreadCount(0)
     } catch (error) {
       console.error('Error fetching notifications:', error)
     } finally {

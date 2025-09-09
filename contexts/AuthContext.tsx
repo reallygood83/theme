@@ -119,13 +119,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             if (response.ok) {
               const data = await response.json();
+              console.log('Teacher API response:', data); // 디버그용 로그
               if (data.success) {
-                setTeacher(data.data);
+                // API에서 teacher를 반환하므로 data.teacher 사용
+                setTeacher(data.teacher || data.data);
               } else {
                 console.warn('Teacher API success but no data:', data);
               }
             } else {
-              console.warn('Teacher API returned non-OK status:', response.status, response.statusText);
+              const errorText = await response.text();
+              console.error('Teacher API returned non-OK status:', response.status, response.statusText, errorText);
               // Don't crash; continue with basic user auth
             }
           } else {

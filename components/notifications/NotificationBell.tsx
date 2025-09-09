@@ -22,14 +22,11 @@ export default function NotificationBell() {
     if (!user?.uid) return
 
     try {
-      const response = await fetch(`/api/notifications?userId=${user.uid}&unreadOnly=true&limit=0`)
+      // API가 마이그레이션되어 임시로 비활성화
+      // const response = await fetch(`/api/notifications?userId=${user.uid}&unreadOnly=true&limit=0`)
       
-      if (response.ok) {
-        const data = await response.json()
-        if (data.success) {
-          setUnreadCount(data.data.unreadCount)
-        }
-      }
+      // 임시로 알림 개수를 0으로 설정
+      setUnreadCount(0)
     } catch (error) {
       console.error('Error fetching unread count:', error)
     }
