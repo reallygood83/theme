@@ -22,12 +22,16 @@ interface Opinion {
 interface OpinionManagerProps {
   studentName: string
   studentClass: string
+  studentId: string
+  sessionCode?: string
   onOpinionSubmitted: () => void
 }
 
 export default function OpinionManager({ 
   studentName, 
-  studentClass, 
+  studentClass,
+  studentId,
+  sessionCode,
   onOpinionSubmitted 
 }: OpinionManagerProps) {
   const [opinions, setOpinions] = useState<Opinion[]>([])
@@ -45,24 +49,18 @@ export default function OpinionManager({
 
   // 컴포넌트 마운트 시 기존 의견들 불러오기
   useEffect(() => {
-    fetchMyOpinions()
-  }, [studentName, studentClass])
+    if (studentId) {
+      fetchMyOpinions()
+    }
+  }, [studentId])
 
   const fetchMyOpinions = async () => {
     try {
-      const response = await fetch('/api/debate/opinions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'get_by_student',
-          studentName, 
-          studentClass 
-        })
-      })
+      const response = await fetch(`/api/debate/opinions?studentId=${studentId}`)
       
       const data = await response.json()
       if (data.success) {
-        setOpinions(data.data || [])
+        setOpinions(data.data?.opinions || [])
       }
     } catch (error) {
       console.error('Error fetching opinions:', error)
@@ -100,7 +98,9 @@ export default function OpinionManager({
           topic: formData.topic,
           content: formData.content,
           studentName,
-          studentClass
+          studentId,
+          classId: studentClass,
+          sessionCode: sessionCode || undefined
         })
       })
 

@@ -281,6 +281,8 @@ function StudentDebateContent() {
           <OpinionManager
             studentName={student?.name || ''}
             studentClass={student?.classId || ''}
+            studentId={student?._id || ''}
+            sessionCode={sessionCode || undefined}
             onOpinionSubmitted={() => {
               // 의견 제출 후 목록 새로고침
               if (student) {
