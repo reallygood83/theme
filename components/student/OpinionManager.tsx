@@ -56,7 +56,11 @@ export default function OpinionManager({
 
   const fetchMyOpinions = async () => {
     try {
-      const response = await fetch(`/api/debate/opinions?studentId=${studentId}`)
+      const url = sessionCode 
+        ? `/api/debate/opinions?studentId=${studentId}&sessionCode=${sessionCode}`
+        : `/api/debate/opinions?studentId=${studentId}`
+      
+      const response = await fetch(url)
       
       const data = await response.json()
       if (data.success) {

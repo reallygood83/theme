@@ -23,6 +23,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const studentId = searchParams.get('studentId')
+    const sessionCode = searchParams.get('sessionCode')
+
+    console.log('의견 조회 요청:', { studentId, sessionCode })
 
     if (!studentId) {
       return NextResponse.json(
@@ -32,23 +35,48 @@ export async function GET(request: NextRequest) {
     }
 
     const db = getDatabase()
-    const opinionsRef = ref(db, 'debate-opinions')
-    const studentOpinionsQuery = query(opinionsRef, orderByChild('studentId'), equalTo(studentId))
-    
-    const snapshot = await get(studentOpinionsQuery)
     const opinions: any[] = []
 
-    if (snapshot.exists()) {
-      snapshot.forEach((childSnapshot) => {
-        opinions.push({
-          _id: childSnapshot.key,
-          ...childSnapshot.val()
+    try {
+      // 세션별 의견 조회 시도
+      if (sessionCode) {
+        const sessionOpinionsRef = ref(db, `session-opinions/${sessionCode}`)
+        const sessionQuery = query(sessionOpinionsRef, orderByChild('studentId'), equalTo(studentId))
+        const sessionSnapshot = await get(sessionQuery)
+        
+        if (sessionSnapshot.exists()) {
+          sessionSnapshot.forEach((childSnapshot) => {
+            opinions.push({
+              _id: childSnapshot.key,
+              ...childSnapshot.val()
+            })
+          })
+        }
+      }
+
+      // 기본 경로에서도 조회
+      const opinionsRef = ref(db, 'debate-opinions')
+      const studentOpinionsQuery = query(opinionsRef, orderByChild('studentId'), equalTo(studentId))
+      const snapshot = await get(studentOpinionsQuery)
+
+      if (snapshot.exists()) {
+        snapshot.forEach((childSnapshot) => {
+          opinions.push({
+            _id: childSnapshot.key,
+            ...childSnapshot.val()
+          })
         })
-      })
+      }
+
+    } catch (queryError) {
+      console.log('쿼리 실행 중 오류 (권한 문제일 수 있음):', queryError)
+      // 권한 문제가 있을 경우 빈 배열 반환
     }
 
     // 최신순으로 정렬
     opinions.sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+
+    console.log(`조회된 의견 수: ${opinions.length}`)
 
     return NextResponse.json({
       success: true,
@@ -70,8 +98,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { topic, content, studentName, studentId, classId, sessionCode } = body
 
+    console.log('토론 의견 제출 요청:', { topic, content, studentName, studentId, classId, sessionCode })
+
     // 필수 필드 검증
     if (!topic || !content || !studentName || !studentId) {
+      console.log('필수 필드 누락:', { topic: !!topic, content: !!content, studentName: !!studentName, studentId: !!studentId })
       return NextResponse.json(
         { success: false, error: '필수 정보가 누락되었습니다.' },
         { status: 400 }
@@ -79,7 +110,16 @@ export async function POST(request: NextRequest) {
     }
 
     const db = getDatabase()
-    const opinionsRef = ref(db, 'debate-opinions')
+    
+    // 기존 session_participants와 동일한 패턴 사용
+    let targetPath = 'session_opinions' // 기본 경로
+    
+    if (classId) {
+      // 세션ID(classId)별로 의견 저장 - session_participants와 동일한 구조
+      targetPath = `session_opinions/${classId}`
+    }
+    
+    const opinionsRef = ref(db, targetPath)
     const newOpinionRef = push(opinionsRef)
 
     const opinionData = {
@@ -94,7 +134,11 @@ export async function POST(request: NextRequest) {
       referenceCode: `DEBATE_${Date.now()}_${studentId.slice(-4)}`
     }
 
+    console.log('의견 저장 시도:', { path: targetPath, data: opinionData })
+
     await set(newOpinionRef, opinionData)
+
+    console.log('✅ 의견 저장 성공')
 
     return NextResponse.json({
       success: true,
