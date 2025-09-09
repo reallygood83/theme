@@ -148,9 +148,9 @@ async function copySampleData(TeacherModel: any, ClassModel: any, StudentModel: 
       .limit(3); // 최신 3개 클래스만 복사
 
     const copiedData = {
-      classes: [],
-      students: [],
-      opinions: []
+      classes: [] as any[],
+      students: [] as any[],
+      opinions: [] as any[]
     };
 
     for (const sourceClass of sourceClasses) {
@@ -271,7 +271,7 @@ async function queryCurrentData(TeacherModel: any, ClassModel: any, StudentModel
 
     // 전체 통계
     const totalStudents = await StudentModel.countDocuments({ 
-      classId: { $in: classes.map(c => c._id) }
+      classId: { $in: classes.map((c: any) => c._id) }
     });
     const totalOpinions = await Opinion.countDocuments({ teacherId: teacher._id });
 
