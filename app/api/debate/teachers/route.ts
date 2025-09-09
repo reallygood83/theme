@@ -85,39 +85,18 @@ export async function POST(request: NextRequest) {
   });
 }
 
-// GET: 교사 정보 조회 (Firebase UID 또는 JWT에서)
+// GET: 교사 정보 조회 (Firebase UID로)
 export async function GET(request: NextRequest) {
   return withMongoDB(async () => {
     const { searchParams } = new URL(request.url);
     const firebaseUid = searchParams.get('firebaseUid');
     
-    // JWT 토큰에서 교사 ID 추출
-    const authHeader = request.headers.get('authorization');
-    let teacherIdFromJWT = null;
-    
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      try {
-        const jwt = require('jsonwebtoken');
-        const token = authHeader.substring(7);
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-        teacherIdFromJWT = decoded.teacherId;
-      } catch (error) {
-        console.warn('Invalid JWT token:', error.message);
-      }
-    }
-
-    if (!firebaseUid && !teacherIdFromJWT) {
-      return createErrorResponse('Firebase UID 또는 인증 토큰이 필요합니다.');
+    if (!firebaseUid) {
+      return createErrorResponse('Firebase UID가 필요합니다.');
     }
 
     const Teacher = getTeacherModel();
-    let teacher;
-
-    if (firebaseUid) {
-      teacher = await Teacher.findOne({ firebaseUid, isActive: true });
-    } else if (teacherIdFromJWT) {
-      teacher = await Teacher.findById(teacherIdFromJWT);
-    }
+    const teacher = await Teacher.findOne({ firebaseUid, isActive: true });
 
     if (!teacher) {
       return createErrorResponse('교사 정보를 찾을 수 없습니다.', 404);

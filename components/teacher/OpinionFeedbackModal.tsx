@@ -25,13 +25,15 @@ interface OpinionFeedbackModalProps {
   isOpen: boolean
   onClose: () => void
   onFeedbackSubmitted: () => void
+  teacherId: string
 }
 
 export default function OpinionFeedbackModal({ 
   opinion, 
   isOpen, 
   onClose, 
-  onFeedbackSubmitted 
+  onFeedbackSubmitted,
+  teacherId 
 }: OpinionFeedbackModalProps) {
   const [feedback, setFeedback] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -154,7 +156,7 @@ export default function OpinionFeedbackModal({
 
             {showTemplates && (
               <div className="mb-6">
-                <FeedbackTemplates onTemplateSelect={handleTemplateSelect} />
+                <FeedbackTemplates teacherId={teacherId} onTemplateSelect={handleTemplateSelect} />
               </div>
             )}
           </div>

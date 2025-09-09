@@ -89,6 +89,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Firebase 인증 상태 감지
   useEffect(() => {
+    if (!auth) {
+      console.error('Firebase Auth가 초기화되지 않았습니다.');
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
@@ -154,6 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Firebase Google 로그인
   const signInWithGoogle = async () => {
+    if (!auth) {
+      throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+    }
+    
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
@@ -165,6 +174,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Firebase 로그아웃
   const signOutFirebase = async () => {
+    if (!auth) {
+      throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+    }
+    
     try {
       await signOut(auth);
       setTeacher(null);
