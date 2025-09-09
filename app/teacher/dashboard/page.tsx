@@ -351,7 +351,7 @@ function TeacherDashboardContent() {
         {/* 통계 대시보드 */}
         {!isJudgeMode && (
           <div className="mt-8">
-            <DebateStatistics />
+            <DebateStatsCard />
           </div>
         )}
 
