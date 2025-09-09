@@ -16,6 +16,7 @@
     "dotenv": "^17.2.2",
     "firebase": "^10.6.0",
     "firebase-admin": "^13.5.0",
+    "mermaid": "^11.11.0",
     "mongodb": "^6.19.0",
     "mongoose": "^8.18.1",
     "next": "^14.0.0",

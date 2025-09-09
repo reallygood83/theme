@@ -2,6 +2,7 @@
 
 import Header from '@/components/common/Header'
 import { Card } from '@/components/common/Card'
+import MermaidDiagram from '@/components/common/MermaidDiagram'
 
 export default function GuidePage() {
   return (
@@ -31,9 +32,9 @@ export default function GuidePage() {
             {/* 플랫폼 구조 다이어그램 */}
             <div className="bg-white border-2 border-gray-200 rounded-lg p-6">
               <h4 className="text-lg font-semibold mb-4 text-center">📊 플랫폼 구조</h4>
-              <div className="mermaid-container bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-{`graph TD
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <MermaidDiagram 
+                  chart={`graph TD
     A[👨‍🏫 교사] --> B[세션 생성]
     B --> C[학습자료 제공]
     C --> D[👥 학생 초대]
@@ -54,7 +55,8 @@ export default function GuidePage() {
     style J fill:#f3e5f5
     style F fill:#fff3e0
     style G fill:#e8f5e8`}
-                </pre>
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -92,9 +94,9 @@ export default function GuidePage() {
             {/* AI 기능 플로우 */}
             <div className="bg-white border-2 border-orange-200 rounded-lg p-6">
               <h4 className="text-lg font-semibold mb-4 text-center text-orange-800">🔄 AI 분석 프로세스</h4>
-              <div className="mermaid-container bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-{`graph TD
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <MermaidDiagram 
+                  chart={`graph TD
     A[📝 학생 질문 수집] --> B[🔍 질문 내용 분석]
     B --> C[📊 주제별 분류]
     C --> D[🎯 토론 주제 생성]
@@ -113,7 +115,8 @@ export default function GuidePage() {
     style A fill:#e3f2fd
     style I fill:#fff3e0
     style H fill:#e8f5e8`}
-                </pre>
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -244,6 +247,32 @@ export default function GuidePage() {
                     <p className="text-sm text-teal-700">🎯 세션 단계별 진행 상황</p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* 실시간 협업 시스템 */}
+            <div className="bg-white border-2 border-green-200 rounded-lg p-6">
+              <h4 className="text-lg font-semibold mb-4 text-center text-green-800">🔄 실시간 협업 시스템</h4>
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <MermaidDiagram 
+                  chart={`graph TD
+    A[👥 참여자들] --> B[💬 실시간 채팅]
+    A --> C[📝 동시 편집]
+    A --> D[🔔 즉시 알림]
+    
+    B --> E[🤖 AI 모더레이션]
+    C --> F[📊 변경사항 추적]
+    D --> G[📱 다중 디바이스 동기화]
+    
+    E --> H[💡 토론 가이드]
+    F --> I[📈 참여도 분석]
+    G --> J[🔄 실시간 업데이트]
+    
+    style A fill:#e8f5e8
+    style E fill:#fff3e0
+    style H fill:#e3f2fd`}
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -462,9 +491,9 @@ export default function GuidePage() {
             {/* 교사 워크플로우 */}
             <div className="bg-white border-2 border-blue-200 rounded-lg p-6">
               <h4 className="text-lg font-semibold mb-4 text-center text-blue-800">📋 교사 워크플로우</h4>
-              <div className="mermaid-container bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-{`flowchart LR
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <MermaidDiagram 
+                  chart={`flowchart LR
     A[📚 학습자료 준비] --> B[🔗 세션 생성]
     B --> C[👥 학생 초대]
     C --> D[📝 질문 수집 모니터링]
@@ -477,7 +506,8 @@ export default function GuidePage() {
     style E fill:#fff3e0
     style G fill:#e8f5e8
     style H fill:#fce4ec`}
-                </pre>
+                  className="w-full"
+                />
               </div>
             </div>
 
@@ -580,9 +610,9 @@ export default function GuidePage() {
             {/* 학생 워크플로우 */}
             <div className="bg-white border-2 border-purple-200 rounded-lg p-6">
               <h4 className="text-lg font-semibold mb-4 text-center text-purple-800">🎯 학생 학습 여정</h4>
-              <div className="mermaid-container bg-gray-50 p-4 rounded-lg">
-                <pre className="text-sm text-gray-700 whitespace-pre-wrap font-mono">
-{`flowchart LR
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <MermaidDiagram 
+                  chart={`flowchart LR
     A[🔗 세션 참여] --> B[📖 자료 학습]
     B --> C[❓ 질문 작성]
     C --> D[👀 다른 질문 확인]
@@ -596,7 +626,8 @@ export default function GuidePage() {
     style C fill:#fff3e0
     style F fill:#e8f5e8
     style I fill:#e3f2fd`}
-                </pre>
+                  className="w-full"
+                />
               </div>
             </div>
 
