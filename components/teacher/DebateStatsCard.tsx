@@ -24,27 +24,29 @@ interface Session {
 }
 
 export default function DebateStatsCard() {
-  const { user } = useAuth()
+  const { user, getCurrentUserId } = useAuth()
   const [stats, setStats] = useState<DebateStats | null>(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (user?.uid && database) {
+    const userId = getCurrentUserId()
+    if (userId && database) {
       fetchStatisticsFromFirebase()
     }
-  }, [user?.uid])
+  }, [user?.uid, getCurrentUserId])
 
   const fetchStatisticsFromFirebase = async () => {
     setLoading(true)
     try {
-      if (!database || !user?.uid) {
+      const userId = getCurrentUserId()
+      if (!database || !userId) {
         console.warn('Database나 사용자 정보가 없습니다')
         return
       }
 
-      // 현재 사용자의 세션들만 조회
+      // 현재 사용자의 세션들만 조회 (관리자 계정 매핑 포함)
       const sessionsRef = ref(database, 'sessions')
-      const userSessionsQuery = query(sessionsRef, orderByChild('teacherId'), equalTo(user.uid))
+      const userSessionsQuery = query(sessionsRef, orderByChild('teacherId'), equalTo(userId))
       const sessionsSnapshot = await get(userSessionsQuery)
       
       if (sessionsSnapshot.exists()) {

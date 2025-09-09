@@ -50,6 +50,7 @@ interface AuthContextType {
   // 공통 메서드
   getCurrentUserId: () => string | null;
   hasPermission: (permission: keyof Teacher['permissions']) => boolean;
+  isAdminAccount: () => boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -63,7 +64,8 @@ const AuthContext = createContext<AuthContextType>({
   signInWithCredentials: async () => {},
   signOutJWT: () => {},
   getCurrentUserId: () => null,
-  hasPermission: () => false
+  hasPermission: () => false,
+  isAdminAccount: () => false
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -213,9 +215,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthMethod(null);
   };
 
-  // 현재 사용자 ID 반환
+  // 현재 사용자 ID 반환 (관리자 계정 매핑 포함)
   const getCurrentUserId = (): string | null => {
     if (authMethod === 'firebase' && user) {
+      // judge@questiontalk.demo 계정을 기존 teacherId로 매핑
+      if (user.email === 'judge@questiontalk.demo') {
+        return 'MSMk1a3iHBfbLzLwwnwpFnwJjS63';
+      }
       return user.uid;
     }
     return null;
@@ -225,6 +231,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = (permission: keyof Teacher['permissions']): boolean => {
     if (!teacher) return false;
     return teacher.permissions[permission] === true;
+  };
+
+  // 관리자 계정 확인
+  const isAdminAccount = (): boolean => {
+    return user?.email === 'judge@questiontalk.demo';
   };
 
   const value: AuthContextType = {
@@ -238,7 +249,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signInWithCredentials,
     signOutJWT,
     getCurrentUserId,
-    hasPermission
+    hasPermission,
+    isAdminAccount
   };
 
   return (

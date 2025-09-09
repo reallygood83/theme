@@ -19,7 +19,7 @@ import { ref, onValue, off } from 'firebase/database'
 import { useAuth } from '@/contexts/AuthContext'
 
 function TeacherDashboardContent() {
-  const { user, loading: authLoading } = useAuth()
+  const { user, loading: authLoading, getCurrentUserId, isAdminAccount } = useAuth()
   const searchParams = useSearchParams()
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
@@ -27,10 +27,11 @@ function TeacherDashboardContent() {
   const [isDebateScenarioModalOpen, setIsDebateScenarioModalOpen] = useState(false)
   const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
   
-  // 심사위원 모드 확인
+  // 관리자 모드 확인 (기존 심사위원 모드와 새로운 관리자 계정 모드 모두 지원)
   const viewAsUid = searchParams.get('viewAs')
   const isJudgeMode = !!viewAsUid
-  const effectiveUserId = viewAsUid || user?.uid
+  const isAdmin = isAdminAccount()
+  const effectiveUserId = viewAsUid || getCurrentUserId()
 
   const fetchSessions = async () => {
     try {
@@ -195,16 +196,21 @@ function TeacherDashboardContent() {
         />
 
         <div className="space-y-8">
-        {isJudgeMode && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        {(isJudgeMode || isAdmin) && (
+          <div className={`${isAdmin ? 'bg-purple-50 border-purple-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4 mb-6`}>
             <div className="flex items-center">
-              <svg className="w-6 h-6 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className={`w-6 h-6 ${isAdmin ? 'text-purple-600' : 'text-blue-600'} mr-3`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isAdmin ? "M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"} />
               </svg>
               <div>
-                <h3 className="font-semibold text-blue-800">심사위원 모드</h3>
-                <p className="text-sm text-blue-700">
-                  공모전 심사를 위해 특정 교사 계정의 대시보드를 열람하고 있습니다. (UID: {viewAsUid})
+                <h3 className={`font-semibold ${isAdmin ? 'text-purple-800' : 'text-blue-800'}`}>
+                  {isAdmin ? '🔒 관리자 모드' : '심사위원 모드'}
+                </h3>
+                <p className={`text-sm ${isAdmin ? 'text-purple-700' : 'text-blue-700'}`}>
+                  {isAdmin 
+                    ? '관리자 계정으로 로그인하여 기존 교사 계정의 데이터에 접근하고 있습니다.'
+                    : `공모전 심사를 위해 특정 교사 계정의 대시보드를 열람하고 있습니다. (UID: ${viewAsUid})`
+                  }
                 </p>
               </div>
             </div>
@@ -219,18 +225,20 @@ function TeacherDashboardContent() {
               </svg>
             </div>
             <h1 className="gradient-card text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
-              {isJudgeMode ? '🏆 심사용 교사 대시보드' : '👩‍🏫 교사 대시보드'}
+              {isAdmin ? '🔒 관리자 대시보드' : isJudgeMode ? '🏆 심사용 교사 대시보드' : '👩‍🏫 교사 대시보드'}
             </h1>
             <p className="gradient-card text-lg text-gray-700 max-w-2xl mx-auto">
-              {isJudgeMode 
-                ? '🔍 이 교사가 생성한 토론 세션들을 확인할 수 있습니다.' 
-                : '✨ 재미있고 의미 있는 토론 교육을 위한 모든 기능을 한 곳에서 이용하세요!'
+              {isAdmin
+                ? '🔒 관리자 권한으로 기존 교사 계정의 토론 세션들을 관리할 수 있습니다.'
+                : isJudgeMode 
+                  ? '🔍 이 교사가 생성한 토론 세션들을 확인할 수 있습니다.' 
+                  : '✨ 재미있고 의미 있는 토론 교육을 위한 모든 기능을 한 곳에서 이용하세요!'
               }
             </p>
           </div>
 
           {/* 주요 기능 카드 섹션 */}
-          {!isJudgeMode && (
+          {!isJudgeMode && !isAdmin && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {/* 새 토론 세션 만들기 카드 */}
               <Link href="/teacher/session/create" className="group block">
@@ -310,7 +318,7 @@ function TeacherDashboardContent() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-2xl text-gray-900">
-                  📋 {isJudgeMode ? "교사의 토론 세션" : "내 토론 세션"}
+                  📋 {isAdmin ? "관리 중인 토론 세션" : isJudgeMode ? "교사의 토론 세션" : "내 토론 세션"}
                 </CardTitle>
                 <CardDescription className="text-gray-600">
                   총 {sessions?.length || 0}개의 세션이 있어요
@@ -349,7 +357,7 @@ function TeacherDashboardContent() {
         </Card>
         
         {/* 통계 대시보드 */}
-        {!isJudgeMode && (
+        {!isJudgeMode && !isAdmin && (
           <div className="mt-8">
             <DebateStatsCard />
           </div>
