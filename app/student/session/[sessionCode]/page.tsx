@@ -1090,6 +1090,72 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       </div>
       </div>
       
+      {/* 플로팅 버튼 - AI 근거자료 검색 (데스크톱용) */}
+      <div className="hidden lg:block fixed bottom-6 right-6 z-40">
+        <Button
+          onClick={handleOpenEvidenceSearch}
+          className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl hover:shadow-purple-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+          aria-label="AI 근거자료 검색"
+        >
+          {/* 아이콘 */}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-6 w-6"
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+            />
+          </svg>
+          
+          {/* 툴팁 */}
+          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+            AI 근거자료 검색
+          </span>
+          
+          {/* 펄스 애니메이션 */}
+          <span className="absolute top-0 left-0 -ml-1 -mt-1 flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+          </span>
+        </Button>
+      </div>
+      
+      {/* 플로팅 버튼 - AI 근거자료 검색 (모바일용 - 하단 탭바 위) */}
+      <div className="lg:hidden fixed bottom-20 right-4 z-40">
+        <Button
+          onClick={handleOpenEvidenceSearch}
+          className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl rounded-full p-3 transition-all duration-300"
+          aria-label="AI 근거자료 검색"
+        >
+          {/* 아이콘 */}
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            className="h-5 w-5"
+            fill="none" 
+            viewBox="0 0 24 24" 
+            stroke="currentColor"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
+            />
+          </svg>
+          
+          {/* 작은 배지 - 모바일용 */}
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+            AI
+          </span>
+        </Button>
+      </div>
+      
       {/* 근거자료 검색 모달 (공통 컴포넌트 사용) */}
       <EvidenceSearchModalContainer
         isOpen={isEvidenceSearchModalOpen}
