@@ -333,7 +333,7 @@ export default function CreateSessionForm() {
               
               {material.type === 'text' && (
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
                   placeholder="학생들이 질문을 생성할 텍스트 자료를 입력하세요..."
                   value={material.content || ''}
                   onChange={(e) => updateMaterial(material.id, { content: e.target.value })}
@@ -345,7 +345,7 @@ export default function CreateSessionForm() {
               {material.type === 'youtube' && (
                 <input
                   type="url"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   placeholder="https://www.youtube.com/watch?v=..."
                   value={material.url || ''}
                   onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
@@ -361,7 +361,7 @@ export default function CreateSessionForm() {
                     </label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="예: '환경보호와 경제발전' 관련 기사"
                       value={material.linkTitle || ''}
                       onChange={(e) => updateMaterial(material.id, { linkTitle: e.target.value })}
@@ -374,15 +374,17 @@ export default function CreateSessionForm() {
                     </label>
                     <input
                       type="url"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="https://example.com/article"
                       value={material.url || ''}
                       onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
                       required
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      신문 기사, 블로그, 웹 페이지 등의 링크를 입력하세요.
-                    </p>
+                    <div className="mt-1 p-2 bg-green-50 rounded-lg">
+                      <p className="text-xs text-green-700">
+                        🌐 신문 기사, 블로그, 웹 페이지 등의 링크를 입력하세요.
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -433,9 +435,11 @@ export default function CreateSessionForm() {
                           </>
                         )}
                       </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        지원 형식: PDF, DOC, DOCX, TXT, HWP (최대 10MB)
-                      </p>
+                      <div className="mt-2 p-2 bg-orange-50 rounded-lg">
+                        <p className="text-xs text-orange-700">
+                          📄 지원 형식: PDF, DOC, DOCX, TXT, HWP (최대 10MB)
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>

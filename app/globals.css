@@ -5,6 +5,39 @@
 :root {
   --foreground-rgb: 31, 41, 55;
   --background-rgb: 243, 244, 246;
+  
+  /* 초등학생 친화적 색상 팔레트 */
+  --primary: 263 91% 58%;        /* 밝은 보라색 */
+  --secondary: 199 89% 48%;      /* 하늘색 */
+  --accent: 43 96% 56%;          /* 따뜻한 노랑 */
+  --success: 142 71% 45%;        /* 성공 그린 */
+  --warning: 38 92% 50%;         /* 주의 오렌지 */
+  --info: 199 89% 48%;           /* 정보 블루 */
+  
+  /* 파스텔 배경색 */
+  --bg-pastel-purple: 280 100% 96%;
+  --bg-pastel-green: 120 60% 95%;
+  --bg-pastel-yellow: 48 100% 96%;
+  --bg-pastel-blue: 210 100% 96%;
+  --bg-pastel-pink: 340 100% 96%;
+  
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 222.2 84% 4.9%;
+  --primary-foreground: 0 0% 100%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --accent-foreground: 222.2 47.4% 11.2%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 263 91% 58%;
+  --radius: 0.75rem;
 }
 
 body {
@@ -50,6 +83,113 @@ body {
     
     input, textarea, select, button {
       @apply text-base;
+    }
+    
+    /* 모바일에서 버튼 최소 터치 영역 확보 */
+    button, .btn, [role="button"] {
+      min-height: 44px;
+    }
+    
+    /* 모바일 카드 패딩 최적화 */
+    .card {
+      @apply p-4;
+    }
+  }
+  
+  /* 태블릿 최적화 */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .card {
+      @apply p-5;
+    }
+    
+    /* 태블릿에서 텍스트 크기 조정 */
+    h1 {
+      @apply text-2xl md:text-3xl;
+    }
+    
+    h2 {
+      @apply text-xl md:text-2xl;
+    }
+    
+    h3 {
+      @apply text-lg md:text-xl;
+    }
+  }
+  
+  /* 데스크톱 최적화 */
+  @media (min-width: 1025px) {
+    .card {
+      @apply p-6;
+    }
+    
+    /* 최대 컨테이너 너비 제한 */
+    .max-container {
+      max-width: 1200px;
+    }
+  }
+  
+  /* 브레드크럼 반응형 최적화 */
+  .breadcrumb-mobile {
+    @apply hidden sm:flex;
+  }
+  
+  @media (max-width: 640px) {
+    .breadcrumb-mobile {
+      @apply flex;
+    }
+    
+    .breadcrumb-mobile .breadcrumb-item {
+      @apply text-xs;
+    }
+    
+    .breadcrumb-mobile .breadcrumb-separator {
+      @apply mx-1;
+    }
+  }
+  
+  /* 네비게이션 버튼 반응형 */
+  .nav-button-responsive {
+    @apply text-sm px-3 py-2 sm:text-base sm:px-4 sm:py-2;
+  }
+  
+  /* 그라디언트 카드 반응형 텍스트 */
+  .gradient-card h1 {
+    @apply text-xl sm:text-2xl md:text-3xl;
+  }
+  
+  .gradient-card p {
+    @apply text-sm sm:text-base;
+  }
+  
+  /* 모달 반응형 */
+  .modal-responsive {
+    @apply w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-4;
+  }
+  
+  /* 입력 필드 반응형 */
+  .input-responsive {
+    @apply text-base sm:text-sm;
+  }
+  
+  /* 스크롤 최적화 */
+  .smooth-scroll {
+    scroll-behavior: smooth;
+  }
+  
+  /* 애니메이션 최적화 - 모바일에서는 애니메이션 줄이기 */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+  
+  /* 고해상도 디스플레이 최적화 */
+  @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .high-dpi-optimized {
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
     }
   }
 }

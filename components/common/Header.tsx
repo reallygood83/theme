@@ -6,6 +6,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutUser } from '@/lib/auth'
 import NotificationBell from '@/components/notifications/NotificationBell'
+import { Button } from '@/components/ui/button'
 
 export default function Header() {
   const pathname = usePathname()
@@ -28,30 +29,32 @@ export default function Header() {
   }
   
   return (
-    <header className="bg-white shadow-sm mb-8 sticky top-0 z-10">
+    <header className="bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 shadow-lg mb-8 sticky top-0 z-10 backdrop-blur-sm border-b border-purple-100">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="z-20">
-          <h1 className="text-xl md:text-2xl font-bold text-primary flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-            </svg>
-            <span className="hidden sm:inline">질문톡톡! 논제샘솟!</span>
-            <span className="sm:hidden">질문톡톡!</span>
+        <Link href="/" className="z-20 hover:scale-105 transition-transform duration-200">
+          <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-2 rounded-full shadow-lg">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+            </div>
+            <span className="hidden sm:inline bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">질문톡톡! 논제샘솟!</span>
+            <span className="sm:hidden bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">질문톡톡!</span>
           </h1>
         </Link>
         
         {/* 모바일 햄버거 메뉴 버튼 */}
         <button 
-          className="md:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100 z-20"
+          className="md:hidden bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg z-20 hover:scale-105 transition-all duration-200 border border-purple-100"
           onClick={toggleMenu}
           aria-label="메뉴 열기/닫기"
         >
           {isMenuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           )}
@@ -59,89 +62,105 @@ export default function Header() {
         
         {/* 데스크탑 네비게이션 */}
         <nav className="hidden md:block">
-          <div className="flex items-center gap-6">
-            <ul className="flex gap-6">
-              <li>
-                <Link 
-                  href="/"
-                  className={`text-gray-600 hover:text-primary ${pathname === '/' ? 'font-medium text-primary' : ''}`}
-                >
-                  홈
+          <div className="flex items-center gap-3">
+            <div className="flex gap-2">
+              <Button
+                asChild
+                variant={pathname === '/' ? 'default' : 'ghost'}
+                size="sm"
+                className="text-sm font-medium"
+              >
+                <Link href="/">
+                  🏠 홈
                 </Link>
-              </li>
-              <li>
-                <div className="relative group">
-                  <Link 
-                    href="/teacher/dashboard"
-                    className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/teacher') ? 'font-medium text-primary' : ''}`}
-                  >
-                    교사용
-                  </Link>
-                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
-                    <div className="py-1">
-                      <Link 
-                        href="/teacher/dashboard"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        대시보드
-                      </Link>
-                      <Link 
-                        href="/teacher/session/create"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        세션 생성
-                      </Link>
-                      <Link 
-                        href="/teacher/debate"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        토론 관리
-                      </Link>
-                    </div>
+              </Button>
+              
+              <div className="relative group">
+                <Button
+                  variant={pathname?.startsWith('/teacher') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  👩‍🏫 교사용
+                </Button>
+                <div className="absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 z-10 border border-purple-100">
+                  <div className="p-2">
+                    <Link 
+                      href="/teacher/dashboard"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      📊 대시보드
+                    </Link>
+                    <Link 
+                      href="/teacher/session/create"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      ➕ 세션 생성
+                    </Link>
+                    <Link 
+                      href="/teacher/debate"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      💬 토론 관리
+                    </Link>
                   </div>
                 </div>
-              </li>
-              <li>
-                <div className="relative group">
-                  <Link 
-                    href="/"
-                    className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/student') ? 'font-medium text-primary' : ''}`}
-                  >
-                    학생용
-                  </Link>
-                  <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
-                    <div className="py-1">
-                      <Link 
-                        href="/"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        토론 세션 참여
-                      </Link>
-                      <Link 
-                        href="/student/debate"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        토론 의견 제출
-                      </Link>
-                    </div>
+              </div>
+              
+              <div className="relative group">
+                <Button
+                  variant={pathname?.startsWith('/student') ? 'default' : 'ghost'}
+                  size="sm"
+                  className="text-sm font-medium"
+                >
+                  🙋‍♂️ 학생용
+                </Button>
+                <div className="absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-blue-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 z-10 border border-blue-100">
+                  <div className="p-2">
+                    <Link 
+                      href="/"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      🎯 토론 세션 참여
+                    </Link>
+                    <Link 
+                      href="/student/debate"
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      ✍️ 토론 의견 제출
+                    </Link>
                   </div>
                 </div>
-              </li>
-              <li>
-                <Link 
-                  href="/guide"
-                  className={`text-gray-600 hover:text-primary ${pathname === '/guide' ? 'font-medium text-primary' : ''}`}
-                >
-                  이용 가이드
+              </div>
+
+              <Button
+                asChild
+                variant={pathname === '/materials' ? 'secondary' : 'ghost'}
+                size="sm"
+                className="text-sm font-medium"
+              >
+                <Link href="/materials">
+                  📚 교육자료실
                 </Link>
-              </li>
-            </ul>
+              </Button>
+              
+              <Button
+                asChild
+                variant={pathname === '/guide' ? 'fun' : 'ghost'}
+                size="sm"
+                className="text-sm font-medium"
+              >
+                <Link href="/guide">
+                  📖 가이드
+                </Link>
+              </Button>
+            </div>
             
             {/* 인증 관련 버튼 */}
             {!loading && (
               <>
                 {user ? (
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3">
                     {/* 알림 벨 */}
                     <NotificationBell />
                     
@@ -150,53 +169,65 @@ export default function Header() {
                       onMouseEnter={() => setIsUserMenuOpen(true)}
                       onMouseLeave={() => setIsUserMenuOpen(false)}
                     >
-                      <button className="flex items-center gap-2 text-gray-700 hover:text-primary">
-                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center text-primary">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-2 bg-white/70 backdrop-blur-sm border-purple-200 hover:border-purple-300"
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                           {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
                         </div>
-                        <span className="hidden lg:inline">{userProfile?.displayName || '사용자'}</span>
-                      </button>
+                        <span className="hidden lg:inline text-gray-700">{userProfile?.displayName || '사용자'}</span>
+                      </Button>
                       
                       <div 
-                        className={`absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 transition-all duration-150 z-10 ${
+                        className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 transition-all duration-150 z-10 border border-purple-100 ${
                           isUserMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
                         }`}
                       >
-                      <div className="py-1">
+                      <div className="p-2">
                         <Link 
                           href="/teacher/dashboard"
-                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
-                          내 대시보드
+                          📊 내 대시보드
                         </Link>
                         <button 
                           onClick={() => {
                             handleLogout();
                             setIsUserMenuOpen(false);
                           }}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          className="flex items-center gap-2 w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-red-50 rounded-lg transition-colors"
                         >
-                          로그아웃
+                          🚪 로그아웃
                         </button>
                         </div>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="flex gap-3">
-                    <Link 
-                      href="/auth/login"
-                      className="text-gray-600 hover:text-primary"
+                  <div className="flex gap-2">
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="text-sm font-medium"
                     >
-                      로그인
-                    </Link>
-                    <Link 
-                      href="/auth/register"
-                      className="bg-primary/10 text-primary px-3 py-1 rounded-md hover:bg-primary/20"
+                      <Link href="/auth/login">
+                        🔑 로그인
+                      </Link>
+                    </Button>
+                    <Button
+                      asChild
+                      variant="default"
+                      size="sm"
+                      className="text-sm font-medium"
                     >
-                      회원가입
-                    </Link>
+                      <Link href="/auth/register">
+                        ✨ 회원가입
+                      </Link>
+                    </Button>
                   </div>
                 )}
               </>
@@ -206,116 +237,153 @@ export default function Header() {
         
         {/* 모바일 네비게이션 오버레이 */}
         <div 
-          className={`fixed inset-0 bg-white z-10 transition-transform duration-300 md:hidden ${
+          className={`fixed inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 z-10 transition-transform duration-300 md:hidden ${
             isMenuOpen ? 'translate-x-0' : 'translate-x-full'
           }`}
         >
-          <div className="flex flex-col items-center justify-center h-full">
-            <ul className="flex flex-col gap-8 text-center">
-              <li>
-                <Link 
-                  href="/"
-                  className={`text-xl ${pathname === '/' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  홈
+          <div className="flex flex-col items-center justify-center h-full p-8">
+            <div className="flex flex-col gap-6 w-full max-w-sm">
+              <Button
+                asChild
+                variant={pathname === '/' ? 'default' : 'ghost'}
+                size="lg"
+                className="justify-start text-lg font-medium w-full"
+              >
+                <Link href="/" onClick={() => setIsMenuOpen(false)}>
+                  🏠 홈
                 </Link>
-              </li>
-              <li>
-                <div className="flex flex-col space-y-4">
-                  <Link 
-                    href="/teacher/dashboard"
-                    className={`text-xl ${pathname === '/teacher/dashboard' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    교사 대시보드
-                  </Link>
-                  <Link 
-                    href="/teacher/session/create"
-                    className={`text-xl ${pathname === '/teacher/session/create' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    세션 생성
-                  </Link>
-                  <Link 
-                    href="/teacher/debate"
-                    className={`text-xl ${pathname === '/teacher/debate' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    토론 관리
-                  </Link>
-                </div>
-              </li>
-              <li>
-                <div className="flex flex-col space-y-4">
-                  <Link 
-                    href="/"
-                    className={`text-xl ${pathname === '/' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    토론 세션 참여
-                  </Link>
-                  <Link 
-                    href="/student/debate"
-                    className={`text-xl ${pathname === '/student/debate' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    토론 의견 제출
-                  </Link>
-                </div>
-              </li>
-              <li>
-                <Link 
-                  href="/guide"
-                  className={`text-xl ${pathname === '/guide' ? 'font-medium text-primary' : 'text-gray-600'}`}
-                  onClick={() => setIsMenuOpen(false)}
+              </Button>
+              
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-600 px-4">👩‍🏫 교사 메뉴</div>
+                <Button
+                  asChild
+                  variant={pathname === '/teacher/dashboard' ? 'default' : 'ghost'}
+                  size="lg"
+                  className="justify-start text-lg font-medium w-full"
                 >
-                  이용 가이드
+                  <Link href="/teacher/dashboard" onClick={() => setIsMenuOpen(false)}>
+                    📊 교사 대시보드
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant={pathname === '/teacher/session/create' ? 'default' : 'ghost'}
+                  size="lg"
+                  className="justify-start text-lg font-medium w-full"
+                >
+                  <Link href="/teacher/session/create" onClick={() => setIsMenuOpen(false)}>
+                    ➕ 세션 생성
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant={pathname === '/teacher/debate' ? 'default' : 'ghost'}
+                  size="lg"
+                  className="justify-start text-lg font-medium w-full"
+                >
+                  <Link href="/teacher/debate" onClick={() => setIsMenuOpen(false)}>
+                    💬 토론 관리
+                  </Link>
+                </Button>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-gray-600 px-4">🙋‍♂️ 학생 메뉴</div>
+                <Button
+                  asChild
+                  variant="secondary"
+                  size="lg"
+                  className="justify-start text-lg font-medium w-full"
+                >
+                  <Link href="/" onClick={() => setIsMenuOpen(false)}>
+                    🎯 토론 세션 참여
+                  </Link>
+                </Button>
+                <Button
+                  asChild
+                  variant={pathname === '/student/debate' ? 'secondary' : 'ghost'}
+                  size="lg"
+                  className="justify-start text-lg font-medium w-full"
+                >
+                  <Link href="/student/debate" onClick={() => setIsMenuOpen(false)}>
+                    ✍️ 토론 의견 제출
+                  </Link>
+                </Button>
+              </div>
+
+              <Button
+                asChild
+                variant={pathname === '/materials' ? 'secondary' : 'ghost'}
+                size="lg"
+                className="justify-start text-lg font-medium w-full"
+              >
+                <Link href="/materials" onClick={() => setIsMenuOpen(false)}>
+                  📚 교육자료실
                 </Link>
-              </li>
+              </Button>
+              
+              <Button
+                asChild
+                variant={pathname === '/guide' ? 'fun' : 'ghost'}
+                size="lg"
+                className="justify-start text-lg font-medium w-full"
+              >
+                <Link href="/guide" onClick={() => setIsMenuOpen(false)}>
+                  📖 이용 가이드
+                </Link>
+              </Button>
               
               {/* 모바일 인증 메뉴 */}
               {!loading && (
-                <li className="border-t border-gray-100 pt-6 mt-4 w-full">
+                <div className="border-t border-purple-200 pt-6 mt-4 w-full space-y-4">
                   {user ? (
-                    <div className="flex flex-col space-y-4">
-                      <div className="flex items-center justify-center gap-2 text-primary">
-                        <div className="w-8 h-8 bg-primary/20 rounded-full flex items-center justify-center">
+                    <>
+                      <div className="flex items-center justify-center gap-3 p-4 bg-white/70 rounded-xl border border-purple-100">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
                           {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
                         </div>
-                        <span>{userProfile?.displayName || '사용자'}</span>
+                        <span className="text-lg font-medium text-gray-700">{userProfile?.displayName || '사용자'}</span>
                       </div>
-                      <button 
+                      <Button
+                        variant="outline"
+                        size="lg"
+                        className="w-full justify-center text-lg font-medium border-red-200 text-red-600 hover:bg-red-50"
                         onClick={() => {
                           handleLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="text-gray-600 hover:text-primary"
                       >
-                        로그아웃
-                      </button>
-                    </div>
+                        🚪 로그아웃
+                      </Button>
+                    </>
                   ) : (
-                    <div className="flex flex-col space-y-4">
-                      <Link 
-                        href="/auth/login"
-                        className="text-xl text-gray-600"
-                        onClick={() => setIsMenuOpen(false)}
+                    <>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="lg"
+                        className="w-full justify-center text-lg font-medium"
                       >
-                        로그인
-                      </Link>
-                      <Link 
-                        href="/auth/register"
-                        className="text-xl text-primary"
-                        onClick={() => setIsMenuOpen(false)}
+                        <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                          🔑 로그인
+                        </Link>
+                      </Button>
+                      <Button
+                        asChild
+                        variant="default"
+                        size="lg"
+                        className="w-full justify-center text-lg font-medium"
                       >
-                        회원가입
-                      </Link>
-                    </div>
+                        <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                          ✨ 회원가입
+                        </Link>
+                      </Button>
+                    </>
                   )}
-                </li>
+                </div>
               )}
-            </ul>
+            </div>
           </div>
         </div>
       </div>

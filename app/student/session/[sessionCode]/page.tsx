@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/common/Header'
-import { Card } from '@/components/common/Card'
-import { Button } from '@/components/common/Button'
+import Breadcrumb from '@/components/common/Breadcrumb'
+import NavigationActions from '@/components/common/NavigationActions'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import QuestionInput from '@/components/student/QuestionInput'
 import QuestionList from '@/components/student/QuestionList'
 import QuestionHelper from '@/components/student/QuestionHelper'
@@ -496,48 +498,61 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       <>
         <Header />
         <div className="max-w-md mx-auto px-4 md:px-0">
-          <Card title="토론 세션 참여하기">
-            <form onSubmit={handleJoinSession} className="space-y-4">
-              <div>
-                <label htmlFor="studentName" className="block text-sm font-medium text-gray-700 mb-1">
-                  이름
-                </label>
-                <input
-                  id="studentName"
-                  type="text"
-                  className="input-field"
-                  placeholder="이름을 입력하세요"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  required
-                  autoComplete="name"
-                  autoCapitalize="words"
-                />
-              </div>
-              
-              <div>
-                <label htmlFor="studentGroup" className="block text-sm font-medium text-gray-700 mb-1">
-                  모둠명
-                </label>
-                <input
-                  id="studentGroup"
-                  type="text"
-                  className="input-field"
-                  placeholder="모둠명을 입력하세요"
-                  value={studentGroup}
-                  onChange={(e) => setStudentGroup(e.target.value)}
-                  required
-                  autoComplete="off"
-                />
-              </div>
-              
-              <Button type="submit" variant="primary" fullWidth>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-xl">
+            <CardHeader className="text-center pb-4">
+              <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-4 rounded-full w-20 h-20 mx-auto mb-4 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
-                참여하기
-              </Button>
-            </form>
+              </div>
+              <CardTitle className="text-2xl text-blue-800">🎯 토론 세션 참여하기</CardTitle>
+              <CardDescription className="text-blue-700 text-base mt-2">
+                이름과 모둠명을 입력하고 토론에 참여해보세요!
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleJoinSession} className="space-y-6">
+                <div>
+                  <label htmlFor="studentName" className="block text-sm font-bold text-blue-800 mb-2 flex items-center">
+                    👤 이름
+                  </label>
+                  <input
+                    id="studentName"
+                    type="text"
+                    className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-gradient-to-r from-blue-50 to-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-gray-800 placeholder-gray-500"
+                    placeholder="이름을 입력하세요"
+                    value={studentName}
+                    onChange={(e) => setStudentName(e.target.value)}
+                    required
+                    autoComplete="name"
+                    autoCapitalize="words"
+                  />
+                </div>
+                
+                <div>
+                  <label htmlFor="studentGroup" className="block text-sm font-bold text-blue-800 mb-2 flex items-center">
+                    👥 모둠명
+                  </label>
+                  <input
+                    id="studentGroup"
+                    type="text"
+                    className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-gradient-to-r from-blue-50 to-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-gray-800 placeholder-gray-500"
+                    placeholder="모둠명을 입력하세요"
+                    value={studentGroup}
+                    onChange={(e) => setStudentGroup(e.target.value)}
+                    required
+                    autoComplete="off"
+                  />
+                </div>
+                
+                <Button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  🚀 참여하기
+                </Button>
+              </form>
+            </CardContent>
           </Card>
         </div>
       </>
@@ -547,26 +562,64 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   return (
     <>
       <Header />
+      <div className="max-container mx-auto px-4 py-6">
+        {/* 브레드크럼 네비게이션 */}
+        <Breadcrumb 
+          items={[
+            { label: '학생용', href: `/student/session/${sessionCode}` },
+            { label: '토론 세션', href: `/student/session/${sessionCode}` },
+            { label: session?.title || '세션' }
+          ]}
+          className="mb-6"
+        />
+
+        {/* 네비게이션 액션 */}
+        <NavigationActions 
+          backHref="/"
+          backLabel="홈으로 돌아가기"
+          className="mb-6"
+        />
+      
       <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 px-4 md:px-6">
-        <div className="flex flex-col md:flex-row gap-2 md:gap-4 items-start md:items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold">토론 세션</h1>
-            <div className="bg-accent/10 text-accent inline-flex items-center px-3 py-1 rounded-full text-sm mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="font-medium">{studentName}</span> ({studentGroup} 모둠)
+        <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 shadow-lg mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="bg-gradient-to-r from-green-400 to-emerald-400 p-4 rounded-full shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl md:text-3xl font-bold text-green-800 mb-1">🎆 토론 세션</h1>
+                  <div className="bg-green-200 text-green-800 inline-flex items-center px-4 py-2 rounded-full text-sm shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="font-semibold">👨‍🎓 {studentName}</span>
+                    <span className="mx-2 text-green-600">|</span>
+                    <span className="font-medium">👥 {studentGroup} 모둠</span>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
         
-        <Card 
-          title={
+        <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 shadow-lg hover:shadow-xl transition-all duration-300">
+          <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <span>학습 자료</span>
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-orange-400 to-amber-400 p-3 rounded-full shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </div>
+                <CardTitle className="text-xl text-orange-800">📚 학습 자료</CardTitle>
+              </div>
               <button
                 onClick={() => setIsMaterialsExpanded(!isMaterialsExpanded)}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="bg-white/70 p-2 rounded-full shadow-sm hover:bg-white hover:shadow-md transition-all text-orange-600 hover:text-orange-800"
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
@@ -579,14 +632,13 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                 </svg>
               </button>
             </div>
-          }
-          className="shadow-md hover:shadow-lg transition-shadow"
-        >
-          {/* 자료 개수 및 요약 표시 */}
-          {!isMaterialsExpanded && (
-            <div className="bg-gray-50 rounded-lg p-3 -mx-6 -mb-6 mt-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-600">
+          </CardHeader>
+          <CardContent className="pt-0">
+            {/* 자료 개수 및 요약 표시 */}
+            {!isMaterialsExpanded && (
+              <div className="bg-gradient-to-r from-orange-100 to-amber-100 border-2 border-orange-200 rounded-xl p-4 mx-2 mt-2">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-orange-800">
                   {session.materials && session.materials.length > 0 ? (
                     <div className="flex items-center gap-3">
                       <span className="font-medium">자료 {session.materials.length}개</span>
@@ -624,15 +676,15 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                     <span className="text-gray-500">자료 없음</span>
                   )}
                 </div>
-                <button
-                  onClick={() => setIsMaterialsExpanded(true)}
-                  className="text-xs text-primary hover:text-primary-dark font-medium"
-                >
-                  자료 보기
-                </button>
+                  <button
+                    onClick={() => setIsMaterialsExpanded(true)}
+                    className="text-xs bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm"
+                  >
+                    📖 자료 보기
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
           
           {/* 다중 자료 지원 */}
           {isMaterialsExpanded && session.materials && session.materials.length > 0 ? (
@@ -734,18 +786,22 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             <p className="text-gray-500">학습 자료가 없습니다.</p>
           )}
           
-          {isMaterialsExpanded && session.keywords && session.keywords.length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-sm font-medium text-gray-700 mb-2">키워드:</h3>
-              <div className="flex flex-wrap gap-2">
-                {session.keywords.map((keyword, index) => (
-                  <span key={index} className="bg-primary/10 text-primary px-3 py-1 rounded-full text-sm">
-                    {keyword}
-                  </span>
-                ))}
+            {isMaterialsExpanded && session.keywords && session.keywords.length > 0 && (
+              <div className="mt-6 p-4 bg-gradient-to-r from-orange-100 to-amber-100 border border-orange-200 rounded-xl">
+                <h3 className="text-sm font-medium text-orange-800 mb-3 flex items-center gap-2">
+                  <span className="text-lg">🏷️</span>
+                  키워드
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {session.keywords.map((keyword, index) => (
+                    <span key={index} className="bg-orange-200 text-orange-800 px-3 py-1.5 rounded-full text-sm font-medium shadow-sm">
+                      {keyword}
+                    </span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </CardContent>
         </Card>
         
         {/* 네비게이션 탭 (데스크톱 & 모바일) */}
@@ -793,103 +849,200 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         
         {/* AI 논제 추천 섹션 */}
         <div id="ai-agenda" className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">AI 논제 추천</h2>
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-            {showAgendaRecommender ? (
-              <AgendaRecommender
-                onRequestAgendas={handleRequestAgendas}
-                isLoading={isGeneratingAgendas}
-              />
-            ) : studentAgendas.length > 0 ? (
-              <AgendaDisplay
-                agendas={studentAgendas}
-                onCreateNew={() => setShowAgendaRecommender(true)}
-              />
-            ) : (
-              <Card title="AI 논제 추천">
+          <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-blue-400 to-cyan-400 p-3 rounded-full shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <CardTitle className="text-xl text-blue-800">🤖 AI 논제 추천</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {showAgendaRecommender ? (
+                <AgendaRecommender
+                  onRequestAgendas={handleRequestAgendas}
+                  isLoading={isGeneratingAgendas}
+                />
+              ) : studentAgendas.length > 0 ? (
+                <AgendaDisplay
+                  agendas={studentAgendas}
+                  onCreateNew={() => setShowAgendaRecommender(true)}
+                />
+              ) : (
                 <div className="text-center py-8">
-                  <p className="text-gray-600 mb-4">
-                    모둠에서 토론하고 싶은 주제에 대해 AI가 논제를 추천해드립니다.
-                  </p>
+                  <div className="bg-gradient-to-r from-blue-100 to-cyan-100 rounded-xl p-6 mb-6 border-2 border-blue-200">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 rounded-full shadow-lg">
+                        <span className="text-3xl">🚀</span>
+                      </div>
+                    </div>
+                    <p className="text-blue-800 font-medium text-lg mb-2">
+                      모둠 토론 주제를 AI가 추천해드려요!
+                    </p>
+                    <p className="text-blue-600 text-sm">
+                      궁금한 주제나 관심사를 입력하면 흥미로운 논제를 만들어드립니다
+                    </p>
+                  </div>
                   <Button 
-                    variant="primary"
+                    className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
                     onClick={() => setShowAgendaRecommender(true)}
                   >
+                    <span className="mr-2">✨</span>
                     AI 논제 추천 시작하기
                   </Button>
                 </div>
-              </Card>
-            )}
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
         
         {/* 근거자료 검색 섹션 */}
         <div id="evidence-search" className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">근거자료 검색</h2>
-          <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-            <div className="text-center py-8">
-              <div className="bg-blue-50 p-6 rounded-lg mb-4">
-                <div className="text-4xl mb-3">🔍</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  AI 근거자료 검색
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
-                </p>
-                <ul className="text-sm text-gray-600 text-left space-y-1">
-                  <li>• 뉴스 기사 (신뢰할 수 있는 언론사)</li>
-                  <li>• 유튜브 교육 영상</li>
-                  <li>• 토론에 도움이 되는 근거자료</li>
-                </ul>
+          <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-violet-50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-purple-400 to-violet-400 p-3 rounded-full shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <CardTitle className="text-xl text-purple-800">🔍 AI 근거자료 검색</CardTitle>
               </div>
-              <Button 
-                variant="primary"
-                onClick={handleOpenEvidenceSearch}
-              >
-                🚀 근거자료 검색 시작하기
-              </Button>
-            </div>
-          </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <div className="bg-gradient-to-r from-purple-100 to-violet-100 rounded-xl p-6 mb-6 border-2 border-purple-200">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="bg-gradient-to-r from-purple-500 to-violet-500 p-4 rounded-full shadow-lg">
+                      <span className="text-3xl">📚</span>
+                    </div>
+                  </div>
+                  <h3 className="text-lg font-bold text-purple-800 mb-3">
+                    신뢰할 수 있는 근거자료 찾기
+                  </h3>
+                  <p className="text-purple-600 text-sm mb-4">
+                    토론 주제에 대한 다양한 자료를 AI가 찾아드려요
+                  </p>
+                  <div className="bg-white/70 rounded-lg p-4 mb-4">
+                    <ul className="text-sm text-purple-700 space-y-2">
+                      <li className="flex items-center justify-center gap-2">
+                        <span>📰</span>
+                        <span>뉴스 기사 (신뢰할 수 있는 언론사)</span>
+                      </li>
+                      <li className="flex items-center justify-center gap-2">
+                        <span>🎬</span>
+                        <span>유튜브 교육 영상</span>
+                      </li>
+                      <li className="flex items-center justify-center gap-2">
+                        <span>📖</span>
+                        <span>토론에 도움이 되는 근거자료</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+                <Button 
+                  className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                  onClick={handleOpenEvidenceSearch}
+                >
+                  <span className="mr-2">🚀</span>
+                  근거자료 검색 시작하기
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
         
         {/* 질문 도우미 섹션 */}
         <div id="helper" className="mb-8">
-          <h2 className="text-xl font-semibold mb-4">질문 도우미</h2>
-          <QuestionHelper />
+          <Card className="border-2 border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardHeader className="pb-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-gradient-to-r from-pink-400 to-rose-400 p-3 rounded-full shadow-lg">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <CardTitle className="text-xl text-pink-800">💡 질문 도우미</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <QuestionHelper />
+            </CardContent>
+          </Card>
         </div>
         
         {/* 교사 분석 결과 */}
         {showAnalysisResult && session.aiAnalysisResult && (
           <div id="result" className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">교사 분석 결과</h2>
-            
-            <Card title="교사 추천 논제" className="shadow-md hover:shadow-lg transition-shadow mb-6">
-              {session.aiAnalysisResult.recommendedAgendas && (
-                <div className="space-y-4">
-                  {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
-                    <div key={index} className="border-b border-gray-100 pb-3 last:border-0">
-                      <h3 className="font-medium mb-1 text-sm md:text-base">{agenda.agendaTitle}</h3>
-                      <p className="text-xs md:text-sm text-gray-600 mb-2">{agenda.reason}</p>
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                        {agenda.type}
-                      </span>
-                    </div>
-                  ))}
+            <Card className="border-2 border-indigo-200 bg-gradient-to-br from-indigo-50 to-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 mb-6">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-indigo-400 to-blue-400 p-3 rounded-full shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <CardTitle className="text-xl text-indigo-800">👨‍🏫 교사 추천 논제</CardTitle>
                 </div>
-              )}
+              </CardHeader>
+              <CardContent>
+                {session.aiAnalysisResult.recommendedAgendas && (
+                  <div className="space-y-4">
+                    {session.aiAnalysisResult.recommendedAgendas.map((agenda: any, index: number) => (
+                      <div key={index} className="bg-white/70 rounded-lg p-4 border border-indigo-100 hover:border-indigo-200 transition-colors">
+                        <h3 className="font-semibold mb-2 text-indigo-800 text-base">{agenda.agendaTitle}</h3>
+                        <p className="text-sm text-indigo-600 mb-3 leading-relaxed">{agenda.reason}</p>
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-indigo-100 to-blue-100 text-indigo-700 border border-indigo-200">
+                          <span className="mr-1">🏷️</span>
+                          {agenda.type}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
             </Card>
             
             <div className="mb-6">
-              <AgendaValidator />
+              <Card className="border-2 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 shadow-lg hover:shadow-xl transition-all duration-300">
+                <CardHeader className="pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-r from-emerald-400 to-teal-400 p-3 rounded-full shadow-lg">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <CardTitle className="text-xl text-emerald-800">✅ 논제 검증</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <AgendaValidator />
+                </CardContent>
+              </Card>
             </div>
             
-            <div>
-              <TermDefinition
-                sessionId={sessionId!}
-                studentGroup={studentGroup}
-                initialTerms={session.aiAnalysisResult.extractedTerms}
-              />
-            </div>
+            <Card className="border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 shadow-lg hover:shadow-xl transition-all duration-300">
+              <CardHeader className="pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-amber-400 to-yellow-400 p-3 rounded-full shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                  </div>
+                  <CardTitle className="text-xl text-amber-800">📚 용어 정의</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <TermDefinition
+                  sessionId={sessionId!}
+                  studentGroup={studentGroup}
+                  initialTerms={session.aiAnalysisResult.extractedTerms}
+                />
+              </CardContent>
+            </Card>
           </div>
         )}
         
@@ -934,6 +1087,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         
         {/* 모바일 하단 탭 영역 패딩 */}
         <div className="h-16 lg:hidden"></div>
+      </div>
       </div>
       
       {/* 근거자료 검색 모달 (공통 컴포넌트 사용) */}
