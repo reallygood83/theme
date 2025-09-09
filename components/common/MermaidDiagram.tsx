@@ -19,11 +19,13 @@ export default function MermaidDiagram({ chart, className = '' }: MermaidDiagram
         theme: 'default',
         securityLevel: 'loose',
         fontFamily: 'inherit',
-        fontSize: 14,
+        fontSize: 16,
         flowchart: {
           useMaxWidth: true,
           htmlLabels: true,
-          curve: 'basis'
+          curve: 'basis',
+          nodeSpacing: 80,
+          rankSpacing: 80
         }
       });
 

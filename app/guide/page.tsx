@@ -5,9 +5,61 @@ import { Card } from '@/components/common/Card'
 import MermaidDiagram from '@/components/common/MermaidDiagram'
 
 export default function GuidePage() {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <Header />
+      
+      {/* 네비게이션 바 */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="flex flex-wrap justify-center gap-2 py-3">
+            <button 
+              onClick={() => scrollToSection('overview')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            >
+              📖 서비스 개요
+            </button>
+            <button 
+              onClick={() => scrollToSection('ai-features')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            >
+              🤖 AI 기능
+            </button>
+            <button 
+              onClick={() => scrollToSection('collaboration')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            >
+              ⚡ 실시간 협업
+            </button>
+            <button 
+              onClick={() => scrollToSection('quick-start')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+            >
+              🚀 빠른 시작
+            </button>
+            <button 
+              onClick={() => scrollToSection('teacher-guide')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            >
+              👨‍🏫 교사 가이드
+            </button>
+            <button 
+              onClick={() => scrollToSection('student-guide')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            >
+              👨‍🎓 학생 가이드
+            </button>
+          </div>
+        </div>
+      </nav>
+      
       <div className="max-w-6xl mx-auto space-y-8 px-4">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -19,7 +71,8 @@ export default function GuidePage() {
         </div>
 
         {/* 서비스 개요 */}
-        <Card title="🚀 서비스 개요">
+        <div id="overview">
+          <Card title="🚀 서비스 개요">
           <div className="space-y-6">
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-3 text-gray-800">💡 혁신적인 AI 토론 교육 플랫폼</h3>
@@ -79,10 +132,12 @@ export default function GuidePage() {
               </div>
             </div>
            </div>
-         </Card>
+          </Card>
+        </div>
 
         {/* AI 기능 상세 가이드 */}
-        <Card title="🤖 AI 기반 핵심 기능">
+        <div id="ai-features">
+          <Card title="🤖 AI 기반 핵심 기능">
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-orange-50 to-yellow-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-orange-800">🧠 똑똑한 AI가 제공하는 맞춤형 교육 지원</h3>
@@ -198,10 +253,12 @@ export default function GuidePage() {
               </div>
             </div>
           </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* 실시간 기능 가이드 */}
-        <Card title="⚡ 실시간 협업 기능">
+        <div id="collaboration">
+          <Card title="⚡ 실시간 협업 기능">
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-green-50 to-teal-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-green-800">🌐 Firebase 기반 실시간 학습 환경</h3>
@@ -298,10 +355,12 @@ export default function GuidePage() {
               </div>
             </div>
           </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* 시작하기 가이드 */}
-        <Card title="🚀 빠른 시작 가이드">
+        <div id="quick-start">
+          <Card title="🚀 빠른 시작 가이드">
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-indigo-800">⏱️ 5분만에 토론 수업 시작하기</h3>
@@ -417,38 +476,14 @@ export default function GuidePage() {
               </div>
             </div>
           </div>
-        </Card>
+          </Card>
+        </div>
 
-        {/* 문의 및 지원 */}
-        <Card title="📞 문의 및 지원">
-          <div className="bg-gradient-to-r from-gray-50 to-blue-50 p-6 rounded-lg text-center">
-            <h3 className="text-xl font-bold mb-4 text-gray-800">🤝 언제든 도움이 필요하시면 연락주세요!</h3>
-            <p className="text-gray-600 mb-6">
-              질문톡톡! 논제샘솟! 사용 중 궁금한 점이나 기술적 문제가 있으시면 
-              언제든지 문의해 주세요. 더 나은 토론 교육을 위해 지속적으로 개선해 나가겠습니다.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-2xl mb-2">📧</div>
-                <h4 className="font-semibold text-gray-800">이메일 문의</h4>
-                <p className="text-sm text-gray-600">support@questiontalk.edu</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-2xl mb-2">💬</div>
-                <h4 className="font-semibold text-gray-800">실시간 채팅</h4>
-                <p className="text-sm text-gray-600">평일 09:00-18:00</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-2xl mb-2">📚</div>
-                <h4 className="font-semibold text-gray-800">사용자 매뉴얼</h4>
-                <p className="text-sm text-gray-600">상세 가이드 다운로드</p>
-              </div>
-            </div>
-          </div>
-        </Card>
+
 
         {/* 교사용 가이드 */}
-        <Card title="👨‍🏫 교사용 완벽 가이드">
+        <div id="teacher-guide">
+          <Card title="👨‍🏫 교사용 완벽 가이드">
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-blue-800">🎯 교사가 얻는 토론 교육의 혁신적 장점</h3>
@@ -493,7 +528,7 @@ export default function GuidePage() {
               <h4 className="text-lg font-semibold mb-4 text-center text-blue-800">📋 교사 워크플로우</h4>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <MermaidDiagram 
-                  chart={`flowchart LR
+                  chart={`flowchart TD
     A[📚 학습자료 준비] --> B[🔗 세션 생성]
     B --> C[👥 학생 초대]
     C --> D[📝 질문 수집 모니터링]
@@ -564,10 +599,12 @@ export default function GuidePage() {
               </div>
             </div>
           </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* 학생용 가이드 */}
-        <Card title="👨‍🎓 학생용 완벽 가이드">
+        <div id="student-guide">
+          <Card title="👨‍🎓 학생용 완벽 가이드">
           <div className="space-y-8">
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg">
               <h3 className="text-xl font-bold mb-4 text-purple-800">🌟 학생이 경험하는 흥미진진한 토론 학습</h3>
@@ -612,7 +649,7 @@ export default function GuidePage() {
               <h4 className="text-lg font-semibold mb-4 text-center text-purple-800">🎯 학생 학습 여정</h4>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <MermaidDiagram 
-                  chart={`flowchart LR
+                  chart={`flowchart TD
     A[🔗 세션 참여] --> B[📖 자료 학습]
     B --> C[❓ 질문 작성]
     C --> D[👀 다른 질문 확인]
@@ -684,7 +721,8 @@ export default function GuidePage() {
               </div>
             </div>
           </div>
-        </Card>
+          </Card>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card title="교사 가이드">
