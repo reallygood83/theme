@@ -545,8 +545,10 @@ export class RealtimeFeedbackTemplateService extends BaseFirebaseRealtimeService
     }
 
     return this.update(id, {
-      'usage.count': template.usage.count + 1,
-      'usage.lastUsed': new Date().toISOString()
+      usage: {
+        count: template.usage.count + 1,
+        lastUsed: new Date().toISOString()
+      }
     });
   }
 }
