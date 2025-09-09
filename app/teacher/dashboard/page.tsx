@@ -237,79 +237,91 @@ function TeacherDashboardContent() {
             </p>
           </div>
 
-          {/* 주요 기능 카드 섹션 */}
+          {/* 효율적인 기능 섹션 */}
           {!isJudgeMode && !isAdmin && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {/* 새 토론 세션 만들기 카드 */}
-              <Link href="/teacher/session/create" className="group block">
-                <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <CardHeader className="text-center">
-                    <div className="mx-auto bg-gradient-to-br from-purple-500 to-pink-500 p-4 rounded-full mb-3 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
+            <div className="space-y-8 mb-8">
+              {/* Hero CTA - 주요 액션 강조 */}
+              <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl font-bold text-purple-800 mb-2">🚀 새로운 토론 세션 시작하기</h2>
+                  <p className="text-purple-600 text-lg">학습 자료와 함께 재미있는 토론을 만들어보세요!</p>
+                </div>
+                <div className="flex justify-center">
+                  <Link href="/teacher/session/create">
+                    <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
-                    </div>
-                    <CardTitle className="text-xl text-purple-800">📝 새 토론 세션 만들기</CardTitle>
-                    <CardDescription className="text-purple-600">
-                      학습 자료와 함께 재미있는<br/>토론 세션을 만들어보세요!
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
-
-              {/* AI 토론 시나리오 생성기 카드 */}
-              <div className="group cursor-pointer block" onClick={() => setIsDebateScenarioModalOpen(true)}>
-                <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <CardHeader className="text-center">
-                    <div className="mx-auto bg-gradient-to-br from-blue-500 to-cyan-500 p-4 rounded-full mb-3 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                      </svg>
-                    </div>
-                    <CardTitle className="text-xl text-blue-800">🤖 AI 토론 시나리오 생성</CardTitle>
-                    <CardDescription className="text-blue-600">
-                      AI가 교육 목적에 맞는<br/>토론 주제를 만들어드려요!
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+                      📝 새 토론 세션 만들기
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
-              {/* 근거자료 검색 카드 */}
-              <div className="group cursor-pointer block" onClick={() => setIsEvidenceSearchModalOpen(true)}>
-                <Card className="border-2 border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <CardHeader className="text-center">
-                    <div className="mx-auto bg-gradient-to-br from-green-500 to-emerald-500 p-4 rounded-full mb-3 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <CardTitle className="text-xl text-green-800">🔍 근거자료 검색</CardTitle>
-                    <CardDescription className="text-green-600">
-                      신뢰할 수 있는 근거자료를<br/>AI가 찾아드립니다!
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </div>
+              {/* Quick Actions - AI 도구 및 관리 기능 */}
+              <div className="space-y-6">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">🛠️ 토론 지원 도구</h3>
+                  <p className="text-gray-600">AI 도구와 관리 기능을 활용해보세요</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* AI 토론 시나리오 생성기 - 컴팩트 카드 */}
+                  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50" onClick={() => setIsDebateScenarioModalOpen(true)}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-full mr-4 shadow-md">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-blue-800">🤖 AI 시나리오 생성</h4>
+                          <p className="text-sm text-blue-600">교육용 토론 주제 자동 생성</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* 토론 의견 관리 카드 */}
-              <Link href="/teacher/debate" className="group block">
-                <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50 hover:from-orange-100 hover:to-yellow-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
-                  <CardHeader className="text-center">
-                    <div className="mx-auto bg-gradient-to-br from-orange-500 to-yellow-500 p-4 rounded-full mb-3 w-16 h-16 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 20 20" fill="currentColor">
-                        <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                        <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                      </svg>
-                    </div>
-                    <CardTitle className="text-xl text-orange-800">💬 토론 의견 관리</CardTitle>
-                    <CardDescription className="text-orange-600">
-                      학생들의 토론 의견을 확인하고<br/>피드백을 제공하세요!
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </Link>
+                  {/* 근거자료 검색 - 컴팩트 카드 */}
+                  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-green-200 bg-gradient-to-br from-green-50 to-emerald-50" onClick={() => setIsEvidenceSearchModalOpen(true)}>
+                    <CardContent className="p-6">
+                      <div className="flex items-center mb-4">
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-3 rounded-full mr-4 shadow-md">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-green-800">🔍 근거자료 검색</h4>
+                          <p className="text-sm text-green-600">신뢰할 수 있는 자료 검색</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* 토론 의견 관리 - 컴팩트 카드 */}
+                  <Link href="/teacher/debate" className="block">
+                    <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
+                      <CardContent className="p-6">
+                        <div className="flex items-center mb-4">
+                          <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-3 rounded-full mr-4 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
+                              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-orange-800">💬 토론 의견 관리</h4>
+                            <p className="text-sm text-orange-600">학생 의견 확인 및 피드백</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
+              </div>
             </div>
-
           )}
         </div>
         
