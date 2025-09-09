@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutUser } from '@/lib/auth'
 import NotificationBell from '@/components/notifications/NotificationBell'
@@ -12,11 +12,37 @@ export default function Header() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [isTeacherMenuOpen, setIsTeacherMenuOpen] = useState(false)
+  const [isStudentMenuOpen, setIsStudentMenuOpen] = useState(false)
   const { user, userProfile, loading } = useAuth()
+  
+  const teacherMenuRef = useRef<HTMLDivElement>(null)
+  const studentMenuRef = useRef<HTMLDivElement>(null)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
   }
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (teacherMenuRef.current && !teacherMenuRef.current.contains(event.target as Node)) {
+        setIsTeacherMenuOpen(false)
+      }
+      if (studentMenuRef.current && !studentMenuRef.current.contains(event.target as Node)) {
+        setIsStudentMenuOpen(false)
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
   
   const handleLogout = async () => {
     try {
@@ -75,31 +101,42 @@ export default function Header() {
                 </Link>
               </Button>
               
-              <div className="relative group">
+              <div 
+                className="relative"
+                ref={teacherMenuRef}
+                onMouseEnter={() => setIsTeacherMenuOpen(true)}
+                onMouseLeave={() => setIsTeacherMenuOpen(false)}
+              >
                 <Button
                   variant={pathname?.startsWith('/teacher') ? 'default' : 'ghost'}
                   size="sm"
                   className="text-sm font-medium"
+                  onClick={() => setIsTeacherMenuOpen(!isTeacherMenuOpen)}
                 >
                   👩‍🏫 교사용
                 </Button>
-                <div className="absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 z-10 border border-purple-100">
+                <div className={`absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 transition-all duration-200 z-50 border border-purple-100 ${
+                  isTeacherMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                }`}>
                   <div className="p-2">
                     <Link 
                       href="/teacher/dashboard"
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                      onClick={() => setIsTeacherMenuOpen(false)}
                     >
                       📊 대시보드
                     </Link>
                     <Link 
                       href="/teacher/session/create"
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                      onClick={() => setIsTeacherMenuOpen(false)}
                     >
                       ➕ 세션 생성
                     </Link>
                     <Link 
                       href="/teacher/debate"
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
+                      onClick={() => setIsTeacherMenuOpen(false)}
                     >
                       💬 토론 관리
                     </Link>
@@ -107,25 +144,35 @@ export default function Header() {
                 </div>
               </div>
               
-              <div className="relative group">
+              <div 
+                className="relative"
+                ref={studentMenuRef}
+                onMouseEnter={() => setIsStudentMenuOpen(true)}
+                onMouseLeave={() => setIsStudentMenuOpen(false)}
+              >
                 <Button
                   variant={pathname?.startsWith('/student') ? 'default' : 'ghost'}
                   size="sm"
                   className="text-sm font-medium"
+                  onClick={() => setIsStudentMenuOpen(!isStudentMenuOpen)}
                 >
                   🙋‍♂️ 학생용
                 </Button>
-                <div className="absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-blue-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-200 z-10 border border-blue-100">
+                <div className={`absolute left-0 mt-2 w-52 rounded-xl shadow-xl bg-white ring-1 ring-blue-100 transition-all duration-200 z-50 border border-blue-100 ${
+                  isStudentMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+                }`}>
                   <div className="p-2">
                     <Link 
                       href="/"
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      onClick={() => setIsStudentMenuOpen(false)}
                     >
                       🎯 토론 세션 참여
                     </Link>
                     <Link 
                       href="/student/debate"
                       className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors"
+                      onClick={() => setIsStudentMenuOpen(false)}
                     >
                       ✍️ 토론 의견 제출
                     </Link>
@@ -166,6 +213,7 @@ export default function Header() {
                     
                     <div 
                       className="relative"
+                      ref={userMenuRef}
                       onMouseEnter={() => setIsUserMenuOpen(true)}
                       onMouseLeave={() => setIsUserMenuOpen(false)}
                     >
@@ -181,7 +229,7 @@ export default function Header() {
                       </Button>
                       
                       <div 
-                        className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 transition-all duration-150 z-10 border border-purple-100 ${
+                        className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl bg-white ring-1 ring-purple-100 transition-all duration-150 z-50 border border-purple-100 ${
                           isUserMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
                         }`}
                       >
