@@ -109,10 +109,9 @@ const TeacherSchema = new Schema<ITeacher>({
   timestamps: true
 });
 
-// 인덱스 설정
-TeacherSchema.index({ firebaseUid: 1 });
-TeacherSchema.index({ email: 1 });
-TeacherSchema.index({ legacyUserId: 1 });
+// 인덱스 설정 - 필드에 index: true가 이미 설정된 경우 중복 제거
+// firebaseUid, legacyUserId는 이미 필드에 index: true로 설정됨
+// email은 unique: true가 자동으로 인덱스 생성함
 TeacherSchema.index({ provider: 1 });
 TeacherSchema.index({ school: 1 });
 

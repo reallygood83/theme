@@ -101,9 +101,9 @@ OpinionSchema.index({ classId: 1 });
 OpinionSchema.index({ teacherId: 1 });
 OpinionSchema.index({ studentId: 1 });
 OpinionSchema.index({ status: 1 });
-OpinionSchema.index({ referenceCode: 1 });
-OpinionSchema.index({ sessionCode: 1 });
 OpinionSchema.index({ submittedAt: -1 }); // 최신순 정렬용
+// topicId와 sessionCode는 이미 필드에 index: true로 설정됨
+// referenceCode는 unique: true가 자동으로 인덱스 생성함
 
 export default function getOpinionModel() {
   return mongoose.models.Opinion || mongoose.model<IOpinion>('Opinion', OpinionSchema);
