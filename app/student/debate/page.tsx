@@ -66,10 +66,8 @@ function StudentDebateContent() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: studentForm.name,
-          accessCode: studentForm.accessCode,
-          classCode: studentForm.classCode,
-          sessionCode: sessionCode || undefined,
+          sessionCode: studentForm.classCode,
+          studentName: studentForm.name,
           groupName: studentForm.groupName || undefined
         }),
       });
