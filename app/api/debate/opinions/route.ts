@@ -95,6 +95,8 @@ export async function GET(request: NextRequest) {
 // 토론 의견 제출 (POST)
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔥 POST 요청 시작')
+    
     const body = await request.json()
     const { topic, content, studentName, studentId, classId, sessionCode } = body
 
@@ -109,7 +111,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const db = getDatabase()
+    console.log('🔥 Firebase 연결 시도 중...')
+    let db
+    try {
+      db = getDatabase()
+      console.log('✅ Firebase 데이터베이스 연결 성공')
+    } catch (dbError) {
+      console.error('❌ Firebase 데이터베이스 연결 실패:', dbError)
+      return NextResponse.json(
+        { success: false, error: 'Firebase 데이터베이스 연결에 실패했습니다.' },
+        { status: 500 }
+      )
+    }
     
     // 기존 session_participants와 동일한 패턴 사용
     let targetPath = 'session_opinions' // 기본 경로
@@ -119,8 +132,19 @@ export async function POST(request: NextRequest) {
       targetPath = `session_opinions/${classId}`
     }
     
-    const opinionsRef = ref(db, targetPath)
-    const newOpinionRef = push(opinionsRef)
+    console.log('🔥 Firebase 레퍼런스 생성 중...', targetPath)
+    let opinionsRef, newOpinionRef
+    try {
+      opinionsRef = ref(db, targetPath)
+      newOpinionRef = push(opinionsRef)
+      console.log('✅ Firebase 레퍼런스 생성 성공')
+    } catch (refError) {
+      console.error('❌ Firebase 레퍼런스 생성 실패:', refError)
+      return NextResponse.json(
+        { success: false, error: 'Firebase 레퍼런스 생성에 실패했습니다.' },
+        { status: 500 }
+      )
+    }
 
     const opinionData = {
       topic: topic.trim(),
@@ -134,11 +158,24 @@ export async function POST(request: NextRequest) {
       referenceCode: `DEBATE_${Date.now()}_${studentId.slice(-4)}`
     }
 
-    console.log('의견 저장 시도:', { path: targetPath, data: opinionData })
+    console.log('🔥 의견 저장 시도:', { path: targetPath, data: opinionData })
 
-    await set(newOpinionRef, opinionData)
-
-    console.log('✅ 의견 저장 성공')
+    try {
+      await set(newOpinionRef, opinionData)
+      console.log('✅ 의견 저장 성공')
+    } catch (saveError) {
+      console.error('❌ Firebase 저장 실패:', saveError)
+      console.error('❌ 저장 실패 상세:', {
+        errorCode: saveError.code,
+        errorMessage: saveError.message,
+        path: targetPath,
+        dataSize: JSON.stringify(opinionData).length
+      })
+      return NextResponse.json(
+        { success: false, error: `Firebase 저장 실패: ${saveError.message}` },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,
@@ -150,9 +187,19 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('토론 의견 제출 오류:', error)
+    console.error('❌ 토론 의견 제출 전체 오류:', error)
+    console.error('❌ 오류 상세 정보:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    })
     return NextResponse.json(
-      { success: false, error: '토론 의견 제출 중 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '토론 의견 제출 중 오류가 발생했습니다.',
+        details: error.message 
+      },
       { status: 500 }
     )
   }
