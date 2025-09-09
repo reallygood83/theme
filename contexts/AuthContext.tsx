@@ -94,21 +94,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser(firebaseUser);
           setAuthMethod('firebase');
           
-          // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
-          const response = await fetch('/api/debate/teachers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+          // Required fields validation before API call
+          if (firebaseUser.uid && firebaseUser.email && (firebaseUser.displayName || true)) {
+            const name = firebaseUser.displayName || firebaseUser.email.split('@')[0];
+            
+            console.log('Creating/updating teacher with:', {
               firebaseUid: firebaseUser.uid,
               email: firebaseUser.email,
-              name: firebaseUser.displayName,
+              name: name,
               provider: 'google'
-            })
-          });
+            });
+            
+            // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
+            const response = await fetch('/api/debate/teachers', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                firebaseUid: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: name,
+                provider: 'google'
+              })
+            });
 
-          if (response.ok) {
-            const data = await response.json();
-            setTeacher(data.data);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success) {
+                setTeacher(data.data);
+              } else {
+                console.warn('Teacher API success but no data:', data);
+              }
+            } else {
+              console.warn('Teacher API returned non-OK status:', response.status, response.statusText);
+              // Don't crash; continue with basic user auth
+            }
+          } else {
+            console.warn('Skipping teacher API call due to missing required fields:', {
+              hasUid: !!firebaseUser.uid,
+              hasEmail: !!firebaseUser.email,
+              hasName: !!firebaseUser.displayName
+            });
           }
         } else {
           // JWT 토큰이 있다면 제거 (Firebase 인증으로 통일)
@@ -123,6 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Auth state change error:', error);
+        // Don't crash the entire auth context; continue with basic user state
+        if (firebaseUser) {
+          setUser(firebaseUser);
+          setAuthMethod('firebase');
+        }
       } finally {
         setLoading(false);
       }

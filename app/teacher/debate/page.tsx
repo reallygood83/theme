@@ -62,21 +62,35 @@ export default function TeacherDebatePage() {
 
       const response = await fetch(`/api/debate/opinions/class?${params}`);
       if (response.ok) {
-        const data = await response.json();
-        // 안전한 데이터 접근으로 undefined 오류 방지
-        const opinions = data?.data?.opinions || [];
-        const stats = data?.data?.stats || {
-          total: 0,
-          pending: 0,
-          feedback_given: 0,
-          reviewed: 0
-        };
-        
-        setOpinions(opinions);
-        setStats(stats);
+        const responseData = await response.json();
+        if (responseData.success) {
+          // API returns {opinions, stats, pagination} directly under data
+          const opinions = responseData.data?.opinions || [];
+          const stats = responseData.data?.stats || {
+            total: 0,
+            pending: 0,
+            feedback_given: 0,
+            reviewed: 0
+          };
+          
+          setOpinions(opinions);
+          setStats(stats);
+        } else {
+          console.error('API returned error:', responseData.error);
+          setOpinions([]);
+          setStats({
+            total: 0,
+            pending: 0,
+            feedback_given: 0,
+            reviewed: 0
+          });
+        }
       } else {
-        console.error('Failed to fetch opinions:', response.statusText);
-        // API 오류 시 기본값 설정
+        console.error('Failed to fetch opinions:', response.status, response.statusText);
+        // Handle 404 specifically - teacher may not exist yet, but don't crash
+        if (response.status === 404) {
+          console.warn('Teacher not found, possibly first login. Opinions will be empty.');
+        }
         setOpinions([]);
         setStats({
           total: 0,
