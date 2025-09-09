@@ -12,9 +12,7 @@ import AgendaValidator from '@/components/student/AgendaValidator'
 import AgendaRecommender from '@/components/student/AgendaRecommender'
 import AgendaDisplay from '@/components/student/AgendaDisplay'
 import TermDefinition from '@/components/student/TermDefinition'
-import EvidenceSearchForm from '@/components/evidence/EvidenceSearchForm'
-import EvidenceResultsDisplay from '@/components/evidence/EvidenceResultsDisplay'
-import EvidenceSearchModal from '@/components/evidence/EvidenceSearchModal'
+import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
 import { database, getFirebaseDatabase, isInitialized } from '@/lib/firebase'
 import { ref, get, onValue, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
@@ -47,12 +45,8 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [studentAgendas, setStudentAgendas] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<string[]>([])
   
-  // 근거자료 검색 상태
-  const [showEvidenceSearch, setShowEvidenceSearch] = useState(false)
-  const [evidenceSearchModal, setEvidenceSearchModal] = useState(false)
-  const [evidenceSearchStep, setEvidenceSearchStep] = useState(0)
-  const [evidenceResults, setEvidenceResults] = useState<EvidenceResult[]>([])
-  const [isSearchingEvidence, setIsSearchingEvidence] = useState(false)
+  // 근거자료 검색 상태 (공통 컴포넌트 사용)
+  const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
   
   // 디버깅 정보 추가 함수
   const addDebugInfo = (message: string) => {
@@ -394,124 +388,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   }
   
   // 근거자료 검색 요청 처리
-  const handleEvidenceSearch = async (topic: string, stance: string, types: string[]) => {
-    setIsSearchingEvidence(true)
-    setEvidenceSearchModal(true)
-    setEvidenceSearchStep(1)
-    
-    let progressInterval: NodeJS.Timeout | null = null
-    
-    try {
-      console.log('🔍 근거자료 검색 시작:', { topic, stance, types })
-      
-      // 진행 상황을 동적으로 업데이트 (API 응답까지 기다림)
-      let currentStep = 1
-      setEvidenceSearchStep(currentStep)
-      
-      progressInterval = setInterval(() => {
-        if (currentStep < 4) { // 마지막 단계는 API 완료 후 설정
-          currentStep++
-          setEvidenceSearchStep(currentStep)
-          console.log('📊 진행 상황 업데이트:', currentStep)
-        }
-      }, 18000) // 18초마다 단계 증가 (총 72초 + API 완료)
-      
-      // 실제 API 호출
-      const response = await fetch('/api/evidence/search', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          topic,
-          stance,
-          selectedTypes: types
-        }),
-      })
-      
-      // API 완료 후 진행 상황 정리
-      if (progressInterval) {
-        clearInterval(progressInterval)
-        progressInterval = null
-      }
-      
-      // 마지막 단계로 설정
-      setEvidenceSearchStep(5)
-      console.log('📊 검색 완료 - 마지막 단계')
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || '근거자료 검색에 실패했습니다.')
-      }
-      
-      const result = await response.json()
-      console.log('✅ 근거자료 검색 완료:', result.evidences?.length || 0, '개')
-      
-      if (!result.evidences || result.evidences.length === 0) {
-        alert('검색 결과가 없습니다. 다른 키워드로 다시 시도해보세요.')
-        setEvidenceSearchModal(false)
-        return
-      }
-      
-      setEvidenceResults(result.evidences)
-      
-      // 2초 후 모달 자동 닫기 및 결과 섹션으로 이동
-      setTimeout(() => {
-        setEvidenceSearchModal(false) // 모달 닫기
-        setEvidenceSearchStep(0) // 단계 초기화
-        setShowEvidenceSearch(false) // 결과를 보여주는 섹션으로 전환
-        
-        // 결과 섹션으로 스크롤
-        setTimeout(() => {
-          const evidenceSection = document.getElementById('evidence-results')
-          if (evidenceSection) {
-            evidenceSection.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'start'
-            })
-          }
-        }, 100)
-      }, 2000)
-      
-    } catch (error) {
-      console.error('❌ 근거자료 검색 오류:', error)
-      
-      // 에러 발생 시 진행 상황 정리
-      if (progressInterval) {
-        clearInterval(progressInterval)
-        progressInterval = null
-      }
-      
-      setEvidenceSearchModal(false)
-      setEvidenceSearchStep(0)
-      
-      if (error instanceof Error) {
-        if (error.message.includes('API 키')) {
-          alert('⚠️ 근거자료 검색을 위한 API 키가 설정되지 않았습니다.\n\n관리자에게 문의하여 API 키를 설정해주세요.')
-        } else {
-          alert(`근거자료 검색 중 오류가 발생했습니다:\n${error.message}\n\n다시 시도해주세요.`)
-        }
-      } else {
-        alert('근거자료 검색 중 알 수 없는 오류가 발생했습니다. 다시 시도해주세요.')
-      }
-    } finally {
-      setIsSearchingEvidence(false)
-      
-      // 최종 정리 - 혹시 남아있는 interval 제거
-      if (progressInterval) {
-        clearInterval(progressInterval)
-      }
-    }
+  // 근거자료 검색 모달 열기 (공통 컴포넌트 사용)
+  const handleOpenEvidenceSearch = () => {
+    setIsEvidenceSearchModalOpen(true)
   }
   
-  const handleCloseEvidenceSearchModal = () => {
-    setEvidenceSearchModal(false)
-    setEvidenceSearchStep(0)
-  }
-  
-  const handleAutoCloseEvidenceSearchModal = () => {
-    handleCloseEvidenceSearchModal()
-  }
   
   if (loading) {
     return (
@@ -946,50 +827,30 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         <div id="evidence-search" className="mb-8">
           <h2 className="text-xl font-semibold mb-4">근거자료 검색</h2>
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-            {showEvidenceSearch ? (
-              <EvidenceSearchForm
-                onSearch={handleEvidenceSearch}
-                isLoading={isSearchingEvidence}
-              />
-            ) : (
-              <div className="text-center py-8">
-                <div className="bg-blue-50 p-6 rounded-lg mb-4">
-                  <div className="text-4xl mb-3">🔍</div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    AI 근거자료 검색
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
-                  </p>
-                  <ul className="text-sm text-gray-600 text-left space-y-1">
-                    <li>• 뉴스 기사 (신뢰할 수 있는 언론사)</li>
-                    <li>• 유튜브 교육 영상</li>
-                    <li>• 토론에 도움이 되는 근거자료</li>
-                  </ul>
-                </div>
-                <Button 
-                  variant="primary"
-                  onClick={() => setShowEvidenceSearch(true)}
-                >
-                  🚀 근거자료 검색 시작하기
-                </Button>
+            <div className="text-center py-8">
+              <div className="bg-blue-50 p-6 rounded-lg mb-4">
+                <div className="text-4xl mb-3">🔍</div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  AI 근거자료 검색
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  토론 주제에 대한 신뢰할 수 있는 근거자료를 AI가 찾아드립니다.
+                </p>
+                <ul className="text-sm text-gray-600 text-left space-y-1">
+                  <li>• 뉴스 기사 (신뢰할 수 있는 언론사)</li>
+                  <li>• 유튜브 교육 영상</li>
+                  <li>• 토론에 도움이 되는 근거자료</li>
+                </ul>
               </div>
-            )}
+              <Button 
+                variant="primary"
+                onClick={handleOpenEvidenceSearch}
+              >
+                🚀 근거자료 검색 시작하기
+              </Button>
+            </div>
           </div>
         </div>
-        
-        {/* 근거자료 검색 결과 섹션 */}
-        {evidenceResults.length > 0 && (
-          <div id="evidence-results" className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">검색된 근거자료</h2>
-            <EvidenceResultsDisplay
-              results={evidenceResults}
-              topic="검색한 주제"
-              stance="선택한 입장"
-              searchTime={new Date()}
-            />
-          </div>
-        )}
         
         {/* 질문 도우미 섹션 */}
         <div id="helper" className="mb-8">
@@ -1075,12 +936,11 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         <div className="h-16 lg:hidden"></div>
       </div>
       
-      {/* 근거자료 검색 진행 모달 */}
-      <EvidenceSearchModal
-        isVisible={evidenceSearchModal}
-        currentStep={evidenceSearchStep}
-        onClose={handleCloseEvidenceSearchModal}
-        onAutoClose={handleAutoCloseEvidenceSearchModal}
+      {/* 근거자료 검색 모달 (공통 컴포넌트 사용) */}
+      <EvidenceSearchModalContainer
+        isOpen={isEvidenceSearchModalOpen}
+        onClose={() => setIsEvidenceSearchModalOpen(false)}
+        initialTopic={session?.title || ''}
       />
     </>
   )

@@ -504,13 +504,52 @@ export function processEvidenceResults(
     )
     
     nonYoutubeEvidences.forEach((evidence: any, index: number) => {
+      // URL 정리 및 검증
+      let cleanUrl = evidence.url || ''
+      if (cleanUrl) {
+        // CORS proxy URL unwrapping
+        if (cleanUrl.includes('api.allorigins.win/raw?url=')) {
+          try {
+            const urlParam = new URLSearchParams(cleanUrl.split('?')[1])
+            const originalUrl = urlParam.get('url')
+            if (originalUrl) {
+              cleanUrl = decodeURIComponent(originalUrl)
+              console.log('🔗 CORS proxy URL 처리:', evidence.url, '→', cleanUrl)
+            }
+          } catch (error) {
+            console.warn('⚠️ CORS proxy URL 처리 실패:', evidence.url)
+          }
+        }
+        
+        // 뉴스 URL 특별 처리
+        if (evidence.type === '뉴스 기사') {
+          // 네이버 뉴스 URL 정리
+          if (cleanUrl.includes('n.news.naver.com') && !cleanUrl.includes('/article/')) {
+            console.warn('⚠️ 네이버 뉴스 메인 URL 발견, 제거:', cleanUrl)
+            cleanUrl = ''
+          }
+          // 다음 뉴스 URL 정리
+          else if (cleanUrl.includes('v.daum.net/v/') && cleanUrl.length < 50) {
+            console.warn('⚠️ 다음 뉴스 메인 URL 발견, 제거:', cleanUrl)
+            cleanUrl = ''
+          }
+          // 기타 메인 페이지 URL 필터링
+          else if (cleanUrl.match(/\.(com|co\.kr|net)\/?(index\.html?)?$/)) {
+            console.warn('⚠️ 뉴스 사이트 메인 페이지 URL 발견, 제거:', cleanUrl)
+            cleanUrl = ''
+          }
+        }
+        
+        console.log(`📰 [${evidence.type}] URL 처리:`, evidence.url, '→', cleanUrl)
+      }
+      
       results.push({
         id: `evidence-${index}`,
         type: evidence.type || '기타',
         title: evidence.title || '제목 없음',
         content: evidence.content || evidence.summary || '',
         source: evidence.source || '출처 불명',
-        url: evidence.url || '',
+        url: cleanUrl,
         reliability: evidence.reliability || 75,
         publishedDate: evidence.publishedDate || '',
         author: evidence.author || '',
@@ -565,13 +604,46 @@ function isValidNewsUrl(url: string): boolean {
   
   try {
     const urlObj = new URL(url)
-    // 더 유연한 도메인 매칭 (서브도메인 포함)
-    return trustedNewsDomains.some(domain =>
-      urlObj.hostname.includes(domain.replace('.co.kr', '')) ||
+    
+    // 메인 페이지 또는 잘못된 URL 차단
+    if (urlObj.pathname === '/' || urlObj.pathname === '/index.html' || urlObj.pathname === '/index.htm') {
+      console.warn('❌ 뉴스 사이트 메인 페이지 URL 차단:', url)
+      return false
+    }
+    
+    // 네이버 뉴스 특별 검증
+    if (urlObj.hostname.includes('naver.com')) {
+      // n.news.naver.com/article/xxx/xxx 형태만 허용
+      if (!urlObj.pathname.includes('/article/') || urlObj.pathname.split('/').length < 4) {
+        console.warn('❌ 네이버 뉴스 잘못된 URL 형식:', url)
+        return false
+      }
+    }
+    
+    // 다음 뉴스 특별 검증
+    if (urlObj.hostname.includes('daum.net')) {
+      // v.daum.net/v/20240101/xxx 형태만 허용
+      if (!urlObj.pathname.includes('/v/') || urlObj.pathname.length < 15) {
+        console.warn('❌ 다음 뉴스 잘못된 URL 형식:', url)
+        return false
+      }
+    }
+    
+    // 도메인 매칭 검증
+    const isDomainValid = trustedNewsDomains.some(domain =>
       urlObj.hostname.includes(domain) ||
       urlObj.hostname.endsWith('.' + domain) ||
       urlObj.hostname.endsWith(domain)
     )
+    
+    if (isDomainValid) {
+      console.log('✅ 유효한 뉴스 URL:', url)
+      return true
+    } else {
+      console.warn('❌ 신뢰할 수 없는 뉴스 도메인:', urlObj.hostname)
+      return false
+    }
+    
   } catch {
     return false
   }
