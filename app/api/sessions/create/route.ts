@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { ref, push, set } from 'firebase/database'
 import { initializeApp, getApps } from 'firebase/app'
 import { getDatabase } from 'firebase/database'
-import { NotificationService } from '@/lib/notifications'
+// Firebase 마이그레이션: NotificationService 제거됨
 
 export async function POST(request: Request) {
   try {
@@ -75,19 +75,8 @@ export async function POST(request: Request) {
     await set(newSessionRef, sessionData)
     console.log('✅ 세션 생성 완료:', newSessionRef.key)
     
-    // 교사에게 세션 생성 완료 알림 전송
-    if (sessionData.teacherId) {
-      try {
-        await NotificationService.notifySessionCreated(
-          sessionData.teacherId,
-          sessionData.title,
-          newSessionRef.key || ''
-        );
-      } catch (notificationError) {
-        console.error('세션 생성 알림 전송 실패:', notificationError);
-        // 알림 실패해도 세션 생성은 성공으로 처리
-      }
-    }
+    // Firebase 마이그레이션: 알림 시스템은 향후 Firebase 기반으로 재구현 예정
+    console.log('세션 생성 완료 - 교사ID:', sessionData.teacherId)
     
     return NextResponse.json({ 
       success: true, 

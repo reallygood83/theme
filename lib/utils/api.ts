@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import connectMongoDB from '@/lib/mongodb';
 
 export interface APIResponse<T = any> {
   success: boolean;
@@ -23,12 +22,12 @@ export function createErrorResponse(error: string, status: number = 400): NextRe
   }, { status });
 }
 
-export async function withMongoDB(handler: () => Promise<NextResponse>) {
+// Firebase 마이그레이션 완료: withMongoDB 함수 제거됨
+export async function withFirebase(handler: () => Promise<NextResponse>) {
   try {
-    await connectMongoDB();
     return await handler();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Firebase API Error:', error);
     return createErrorResponse('서버 오류가 발생했습니다.', 500);
   }
 }

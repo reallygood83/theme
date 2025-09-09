@@ -1,51 +1,8 @@
-import mongoose from 'mongoose';
-
-interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
-}
-
-declare global {
-  var mongoose: MongooseCache | undefined;
-}
-
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
-}
-
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+// Firebase 마이그레이션 완료: MongoDB 연결이 더 이상 필요하지 않습니다.
+// 모든 데이터가 Firebase Realtime Database로 이전되었습니다.
 
 export async function connectMongoDB() {
-  if (cached!.conn) {
-    return cached!.conn;
-  }
-
-  if (!cached!.promise) {
-    const opts = {
-      bufferCommands: false,
-    };
-
-    cached!.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      console.log('✅ MongoDB 연결 성공');
-      return mongoose;
-    });
-  }
-
-  try {
-    cached!.conn = await cached!.promise;
-  } catch (e) {
-    cached!.promise = null;
-    console.error('❌ MongoDB 연결 실패:', e);
-    throw e;
-  }
-
-  return cached!.conn;
+  throw new Error('MongoDB 연결은 Firebase 마이그레이션으로 인해 사용 중단되었습니다.');
 }
 
 export default connectMongoDB;
