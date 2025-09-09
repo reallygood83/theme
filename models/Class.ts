@@ -10,6 +10,8 @@ export interface ITopic {
 export interface IClass extends Document {
   name: string;
   code: string;
+  joinCode?: string;
+  description?: string;
   teacherId: Types.ObjectId;
   firebaseUid: string; // Firebase 교사 UID
   sessionCode?: string; // 질문톡톡 세션과 연결
@@ -51,6 +53,15 @@ const ClassSchema = new Schema<IClass>({
     unique: true,
     length: 4,
     uppercase: true
+  },
+  joinCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  description: {
+    type: String,
+    trim: true
   },
   teacherId: {
     type: Schema.Types.ObjectId,
