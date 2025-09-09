@@ -76,13 +76,13 @@ export async function GET(request: NextRequest) {
     console.log(`✅ 세션 찾기 성공: ${sessionId}`)
 
     // 해당 세션의 참여 학생 목록 반환 (권한 오류 처리)
-    let participants = []
+    let participants: any[] = []
     try {
       const participantsRef = ref(database, `session_participants/${sessionId}`)
       const participantsSnapshot = await get(participantsRef)
       participants = participantsSnapshot.exists() ? Object.values(participantsSnapshot.val()) : []
       console.log(`✅ 참여자 데이터 조회 성공: ${participants.length}명`)
-    } catch (error) {
+    } catch (error: any) {
       console.log(`⚠️ 참여자 데이터 조회 권한 없음, 빈 배열 반환:`, error.message)
       participants = []
     }
@@ -178,7 +178,7 @@ export async function POST(request: NextRequest) {
         sessionId,
         message: '세션에 성공적으로 참여했습니다.'
       })
-    } catch (pushError) {
+    } catch (pushError: any) {
       console.log(`⚠️ 참여자 데이터 저장 권한 없음, 시뮬레이션 모드로 처리:`, pushError.message)
       
       // Firebase 권한이 없을 때 시뮬레이션 모드로 성공 응답 (개발/테스트용)
