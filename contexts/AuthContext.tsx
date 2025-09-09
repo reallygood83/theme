@@ -37,7 +37,7 @@ interface AuthContextType {
   userProfile: UserProfile | null; // 기존 호환성
   teacher: Teacher | null;
   loading: boolean;
-  authMethod: 'firebase' | 'jwt' | null;
+  authMethod: 'firebase' | null;
   
   // Firebase 인증 메서드
   signInWithGoogle: () => Promise<void>;
@@ -70,17 +70,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [teacher, setTeacher] = useState<Teacher | null>(null);
   const [loading, setLoading] = useState(true);
-  const [authMethod, setAuthMethod] = useState<'firebase' | 'jwt' | null>(null);
+  const [authMethod, setAuthMethod] = useState<'firebase' | null>(null);
 
   // 기존 호환성을 위한 userProfile 계산
   const userProfile: UserProfile | null = user && teacher ? {
     uid: user.uid,
-    displayName: teacher.displayName || teacher.name,
-    email: teacher.email,
-    role: teacher.permissions.isAdmin ? 'admin' : 'teacher',
-    createdAt: new Date(teacher.createdAt).getTime()
-  } : teacher && authMethod === 'jwt' ? {
-    uid: teacher._id,
     displayName: teacher.displayName || teacher.name,
     email: teacher.email,
     role: teacher.permissions.isAdmin ? 'admin' : 'teacher',
@@ -117,35 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setTeacher(data.data);
           }
         } else {
-          // JWT 토큰 확인
+          // JWT 토큰이 있다면 제거 (Firebase 인증으로 통일)
           const token = localStorage.getItem('auth_token');
           if (token) {
-            try {
-              const response = await fetch('/api/debate/auth/migrate', {
-                headers: {
-                  'Authorization': `Bearer ${token}`
-                }
-              });
-              
-              if (response.ok) {
-                const data = await response.json();
-                setTeacher(data.data.teacher);
-                setAuthMethod('jwt');
-              } else {
-                // 유효하지 않은 토큰
-                localStorage.removeItem('auth_token');
-              }
-            } catch (error) {
-              console.error('JWT 토큰 검증 실패:', error);
-              localStorage.removeItem('auth_token');
-            }
+            localStorage.removeItem('auth_token');
           }
           
           setUser(null);
-          if (!localStorage.getItem('auth_token')) {
-            setTeacher(null);
-            setAuthMethod(null);
-          }
+          setTeacher(null);
+          setAuthMethod(null);
         }
       } catch (error) {
         console.error('Auth state change error:', error);
@@ -188,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // JWT 로그인
+  // JWT 로그인 (더 이상 지원하지 않음 - Firebase 전용)
   const signInWithCredentials = async (
     email: string, 
     password: string, 
@@ -196,35 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     school?: string, 
     position?: string
   ) => {
-    try {
-      const response = await fetch('/api/debate/auth/migrate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          school,
-          position
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || '로그인 실패');
-      }
-
-      const data = await response.json();
-      
-      // JWT 토큰 저장
-      localStorage.setItem('auth_token', data.data.token);
-      
-      setTeacher(data.data.teacher);
-      setAuthMethod('jwt');
-    } catch (error) {
-      console.error('JWT 로그인 실패:', error);
-      throw error;
-    }
+    throw new Error('JWT 로그인은 더 이상 지원되지 않습니다. Google 로그인을 사용해주세요.');
   };
 
   // JWT 로그아웃
@@ -238,8 +184,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const getCurrentUserId = (): string | null => {
     if (authMethod === 'firebase' && user) {
       return user.uid;
-    } else if (authMethod === 'jwt' && teacher) {
-      return teacher._id;
     }
     return null;
   };

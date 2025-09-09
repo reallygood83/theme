@@ -63,13 +63,38 @@ export default function TeacherDebatePage() {
       const response = await fetch(`/api/debate/opinions/class?${params}`);
       if (response.ok) {
         const data = await response.json();
-        setOpinions(data.data.opinions);
-        setStats(data.data.stats);
+        // 안전한 데이터 접근으로 undefined 오류 방지
+        const opinions = data?.data?.opinions || [];
+        const stats = data?.data?.stats || {
+          total: 0,
+          pending: 0,
+          feedback_given: 0,
+          reviewed: 0
+        };
+        
+        setOpinions(opinions);
+        setStats(stats);
       } else {
         console.error('Failed to fetch opinions:', response.statusText);
+        // API 오류 시 기본값 설정
+        setOpinions([]);
+        setStats({
+          total: 0,
+          pending: 0,
+          feedback_given: 0,
+          reviewed: 0
+        });
       }
     } catch (error) {
-      console.error('Error fetching opinions:', error);
+      console.error('Failed to fetch opinions:', error);
+      // 네트워크 오류 시 기본값 설정
+      setOpinions([]);
+      setStats({
+        total: 0,
+        pending: 0,
+        feedback_given: 0,
+        reviewed: 0
+      });
     } finally {
       setLoading(false);
     }
