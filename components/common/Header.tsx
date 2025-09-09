@@ -104,13 +104,19 @@ export default function Header() {
               <li>
                 <div className="relative group">
                   <Link 
-                    href="/student/debate"
+                    href="/"
                     className={`text-gray-600 hover:text-primary ${pathname?.startsWith('/student') ? 'font-medium text-primary' : ''}`}
                   >
                     학생용
                   </Link>
                   <div className="absolute left-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition duration-150 z-10">
                     <div className="py-1">
+                      <Link 
+                        href="/"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        토론 세션 참여
+                      </Link>
                       <Link 
                         href="/student/debate"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -242,6 +248,13 @@ export default function Header() {
               </li>
               <li>
                 <div className="flex flex-col space-y-4">
+                  <Link 
+                    href="/"
+                    className={`text-xl ${pathname === '/' ? 'font-medium text-primary' : 'text-gray-600'}`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    토론 세션 참여
+                  </Link>
                   <Link 
                     href="/student/debate"
                     className={`text-xl ${pathname === '/student/debate' ? 'font-medium text-primary' : 'text-gray-600'}`}

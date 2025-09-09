@@ -35,7 +35,6 @@ function StudentDebateContent() {
   const [student, setStudent] = useState<Student | null>(null);
   const [studentForm, setStudentForm] = useState({
     name: '',
-    accessCode: '',
     classCode: '',
     groupName: ''
   });
@@ -192,23 +191,8 @@ function StudentDebateContent() {
             </div>
 
             <div>
-              <label htmlFor="accessCode" className="block text-sm font-medium text-gray-700">
-                고유번호 <span className="text-red-500">*</span>
-              </label>
-              <input
-                id="accessCode"
-                type="text"
-                required
-                value={studentForm.accessCode}
-                onChange={(e) => setStudentForm(prev => ({ ...prev, accessCode: e.target.value }))}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="학번 또는 고유번호"
-              />
-            </div>
-
-            <div>
               <label htmlFor="classCode" className="block text-sm font-medium text-gray-700">
-                학급 코드 <span className="text-red-500">*</span>
+                세션 코드 <span className="text-red-500">*</span>
               </label>
               <input
                 id="classCode"
@@ -217,7 +201,7 @@ function StudentDebateContent() {
                 value={studentForm.classCode}
                 onChange={(e) => setStudentForm(prev => ({ ...prev, classCode: e.target.value }))}
                 className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="교사가 제공한 학급 코드"
+                placeholder="교사가 제공한 세션 코드"
               />
             </div>
 
@@ -261,8 +245,7 @@ function StudentDebateContent() {
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-500">
-                  {student?.groupName && `${student.groupName} | `}
-                  고유번호: {student?.accessCode}
+                  {student?.groupName && `${student.groupName}`}
                 </p>
                 <Button
                   onClick={() => setStep('view')}

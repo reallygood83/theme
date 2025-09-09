@@ -174,8 +174,12 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        participantId: newParticipantRef.key,
-        sessionId,
+        data: {
+          _id: newParticipantRef.key,
+          name: studentName,
+          groupName: groupName || null,
+          classId: sessionId
+        },
         message: '세션에 성공적으로 참여했습니다.'
       })
     } catch (pushError: any) {
@@ -187,8 +191,12 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        participantId: simulatedParticipantId,
-        sessionId,
+        data: {
+          _id: simulatedParticipantId,
+          name: studentName,
+          groupName: groupName || null,
+          classId: sessionId
+        },
         message: '세션에 성공적으로 참여했습니다. (시뮬레이션 모드)'
       })
     }
