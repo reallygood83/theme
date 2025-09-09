@@ -315,12 +315,20 @@ function TeacherDashboardContent() {
               새로고침
             </button>
           </div>
-          <SessionList
-            sessions={sessions || []}
-            loading={loading || authLoading}
-            error={error}
-            onRefresh={fetchSessions}
-          />
+          {/* Safe session list render */}
+          {Array.isArray(sessions) ? (
+            <SessionList
+              sessions={sessions}
+              loading={loading || authLoading}
+              error={error}
+              onRefresh={fetchSessions}
+            />
+          ) : (
+            <div className="text-center py-4">
+              <LoadingSpinner size="sm" />
+              <p className="text-sm text-gray-500 mt-2">세션 데이터를 준비 중입니다...</p>
+            </div>
+          )}
         </Card>
         
         {/* 통계 대시보드 */}
@@ -373,7 +381,7 @@ function TeacherDashboardContent() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">총 세션 수</p>
-                  <p className="text-2xl font-bold">{loading ? "-" : sessions?.length || 0}</p>
+                  <p className="text-2xl font-bold">{loading ? "-" : (Array.isArray(sessions) ? sessions.length : 0)}</p>
                 </div>
               </div>
               
@@ -405,7 +413,7 @@ function TeacherDashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600">AI 분석 완료 세션</p>
                   <p className="text-2xl font-bold">
-                    {loading ? "-" : (sessions?.filter(session => session?.aiAnalysisResult)?.length || 0)}
+                    {loading ? "-" : (Array.isArray(sessions) ? sessions.filter(session => session?.aiAnalysisResult).length : 0)}
                   </p>
                 </div>
               </div>
