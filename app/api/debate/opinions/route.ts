@@ -4,6 +4,7 @@ import getOpinionModel from '@/lib/models/Opinion';
 import getStudentModel from '@/lib/models/Student';
 import getClassModel from '@/lib/models/Class';
 import getTeacherModel from '@/lib/models/Teacher';
+import { NotificationService } from '@/lib/notifications';
 
 // GET: 의견 목록 조회
 export async function GET(request: NextRequest) {
@@ -129,6 +130,19 @@ export async function POST(request: NextRequest) {
     });
 
     await newOpinion.save();
+
+    // 교사에게 새 의견 제출 알림 전송
+    try {
+      await NotificationService.notifyNewOpinion(
+        teacher.firebaseUid,
+        studentName,
+        topic,
+        newOpinion._id.toString()
+      );
+    } catch (notificationError) {
+      console.error('알림 생성 실패:', notificationError);
+      // 알림 실패해도 의견 제출은 성공으로 처리
+    }
 
     // 세션 코드가 있으면 학생 정보에도 업데이트
     if (sessionCode && !student.sessionCode) {

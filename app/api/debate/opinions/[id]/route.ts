@@ -67,6 +67,14 @@ export async function PUT(
       )
     }
 
+    // 권한 확인 (본인 의견인지)
+    if (opinion.studentName !== sanitizedStudentName || opinion.studentClass !== sanitizedStudentClass) {
+      return NextResponse.json(
+        { success: false, error: '수정 권한이 없습니다.' },
+        { status: 403 }
+      )
+    }
+
     // 수정 가능한 시간 체크 (제출 후 30분 이내)
     const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000)
     if (opinion.submittedAt < thirtyMinutesAgo) {
@@ -84,11 +92,9 @@ export async function PUT(
       )
     }
 
-    // 의견 업데이트
+    // 의견 업데이트 (학생 이름과 클래스는 변경하지 않음)
     opinion.topic = sanitizedTopic
     opinion.content = sanitizedContent
-    opinion.studentName = sanitizedStudentName
-    opinion.studentClass = sanitizedStudentClass
     opinion.updatedAt = new Date()
     
     await opinion.save()
@@ -113,6 +119,17 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
+    const url = new URL(request.url)
+    const studentName = url.searchParams.get('studentName')
+    const studentClass = url.searchParams.get('studentClass')
+    
+    if (!studentName || !studentClass) {
+      return NextResponse.json(
+        { success: false, error: '학생 정보가 필요합니다.' },
+        { status: 400 }
+      )
+    }
+
     await connectMongoDB()
     
     const opinion = await Opinion.findById(params.id)
@@ -121,6 +138,14 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, error: '의견을 찾을 수 없습니다.' },
         { status: 404 }
+      )
+    }
+
+    // 권한 확인 (본인 의견인지)
+    if (opinion.studentName !== studentName || opinion.studentClass !== studentClass) {
+      return NextResponse.json(
+        { success: false, error: '삭제 권한이 없습니다.' },
+        { status: 403 }
       )
     }
 

@@ -17,6 +17,7 @@ interface FeedbackTemplate {
 }
 
 interface FeedbackTemplatesProps {
+  teacherId: string
   onTemplateSelect?: (template: string) => void
 }
 
@@ -53,7 +54,7 @@ const defaultTemplates: Omit<FeedbackTemplate, '_id' | 'createdAt' | 'updatedAt'
   }
 ]
 
-export default function FeedbackTemplates({ onTemplateSelect }: FeedbackTemplatesProps) {
+export default function FeedbackTemplates({ teacherId, onTemplateSelect }: FeedbackTemplatesProps) {
   const [templates, setTemplates] = useState<FeedbackTemplate[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -72,7 +73,7 @@ export default function FeedbackTemplates({ onTemplateSelect }: FeedbackTemplate
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/feedback/templates')
+      const response = await fetch(`/api/feedback/templates?teacherId=${teacherId}`)
       const data = await response.json()
       
       if (data.success) {
@@ -113,7 +114,7 @@ export default function FeedbackTemplates({ onTemplateSelect }: FeedbackTemplate
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ ...formData, teacherId })
       })
 
       const data = await response.json()
@@ -142,7 +143,7 @@ export default function FeedbackTemplates({ onTemplateSelect }: FeedbackTemplate
     if (!confirm('정말로 이 템플릿을 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`/api/feedback/templates/${templateId}`, {
+      const response = await fetch(`/api/feedback/templates/${templateId}?teacherId=${teacherId}`, {
         method: 'DELETE'
       })
 

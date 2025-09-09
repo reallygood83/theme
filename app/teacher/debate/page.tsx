@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import RequireAuth from '@/components/auth/RequireAuth';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
+import FeedbackTemplates from '@/components/teacher/FeedbackTemplates';
 
 interface Opinion {
   _id: string;
@@ -41,6 +42,7 @@ export default function TeacherDebatePage() {
   const [teacherFeedback, setTeacherFeedback] = useState('');
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'feedback_given' | 'reviewed'>('all');
+  const [showTemplates, setShowTemplates] = useState(false);
 
   useEffect(() => {
     if (user?.uid) {
@@ -139,6 +141,11 @@ export default function TeacherDebatePage() {
     } finally {
       setFeedbackLoading(false);
     }
+  };
+
+  const handleTemplateSelect = (templateContent: string) => {
+    setTeacherFeedback(templateContent);
+    setShowTemplates(false);
   };
 
   const getStatusColor = (status: string) => {
@@ -323,7 +330,18 @@ export default function TeacherDebatePage() {
 
                   {/* 교사 피드백 */}
                   <Card className="p-6">
-                    <h4 className="text-lg font-medium text-gray-900 mb-4">교사 피드백</h4>
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="text-lg font-medium text-gray-900">교사 피드백</h4>
+                      {!selectedOpinion.teacherFeedback && (
+                        <Button
+                          onClick={() => setShowTemplates(!showTemplates)}
+                          variant="secondary"
+                          size="sm"
+                        >
+                          {showTemplates ? '템플릿 닫기' : '템플릿 사용'}
+                        </Button>
+                      )}
+                    </div>
                     
                     {selectedOpinion.teacherFeedback ? (
                       <div className="bg-green-50 p-4 rounded-lg mb-4">
@@ -334,6 +352,16 @@ export default function TeacherDebatePage() {
                       </div>
                     ) : (
                       <div className="mb-4">
+                        {showTemplates && user?.uid && (
+                          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                            <h5 className="text-sm font-medium text-gray-700 mb-3">피드백 템플릿 선택</h5>
+                            <FeedbackTemplates
+                              teacherId={user.uid}
+                              onTemplateSelect={handleTemplateSelect}
+                            />
+                          </div>
+                        )}
+                        
                         <textarea
                           value={teacherFeedback}
                           onChange={(e) => setTeacherFeedback(e.target.value)}

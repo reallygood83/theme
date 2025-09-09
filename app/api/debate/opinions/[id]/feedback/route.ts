@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { connectMongoDB } from '@/lib/mongodb'
 import { Opinion } from '@/models/Opinion'
 import { validateTeacherFeedback, sanitizeInput } from '@/lib/validation'
+import { NotificationService } from '@/lib/notifications'
 
 export async function POST(
   request: NextRequest,
@@ -69,6 +70,20 @@ export async function POST(
     opinion.updatedAt = new Date()
     
     await opinion.save()
+
+    // 학생에게 피드백 도착 알림 전송 (studentId가 있는 경우)
+    if (opinion.studentId) {
+      try {
+        await NotificationService.notifyFeedbackReceived(
+          opinion.studentId.toString(),
+          opinion.topic,
+          opinion._id.toString()
+        );
+      } catch (notificationError) {
+        console.error('피드백 알림 생성 실패:', notificationError);
+        // 알림 실패해도 피드백 제출은 성공으로 처리
+      }
+    }
 
     return NextResponse.json({
       success: true,

@@ -128,7 +128,7 @@ export default function OpinionManager({
     if (!confirm('정말로 이 의견을 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`/api/debate/opinions/${opinionId}`, {
+      const response = await fetch(`/api/debate/opinions/${opinionId}?studentName=${encodeURIComponent(studentName)}&studentClass=${encodeURIComponent(studentClass)}`, {
         method: 'DELETE'
       })
 
