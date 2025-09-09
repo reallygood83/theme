@@ -30,9 +30,17 @@ export default function InteractiveMermaid({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [scale, setScale] = useState(1);
 
-  const themes = {
+  const themes: Record<string, {
+    theme: 'default' | 'base' | 'dark' | 'forest' | 'neutral' | 'null';
+    primaryColor: string;
+    primaryTextColor: string;
+    primaryBorderColor: string;
+    lineColor: string;
+    secondaryColor: string;
+    tertiaryColor: string;
+  }> = {
     default: {
-      theme: 'default',
+      theme: 'default' as const,
       primaryColor: '#0ea5e9',
       primaryTextColor: '#1f2937',
       primaryBorderColor: '#0ea5e9',
@@ -41,7 +49,7 @@ export default function InteractiveMermaid({
       tertiaryColor: '#ffffff'
     },
     dark: {
-      theme: 'dark',
+      theme: 'dark' as const,
       primaryColor: '#3b82f6',
       primaryTextColor: '#f8fafc',
       primaryBorderColor: '#3b82f6',
@@ -50,7 +58,7 @@ export default function InteractiveMermaid({
       tertiaryColor: '#0f172a'
     },
     forest: {
-      theme: 'forest',
+      theme: 'forest' as const,
       primaryColor: '#10b981',
       primaryTextColor: '#065f46',
       primaryBorderColor: '#10b981',
@@ -59,7 +67,7 @@ export default function InteractiveMermaid({
       tertiaryColor: '#ffffff'
     },
     neutral: {
-      theme: 'neutral',
+      theme: 'neutral' as const,
       primaryColor: '#6b7280',
       primaryTextColor: '#1f2937',
       primaryBorderColor: '#6b7280',
@@ -68,7 +76,7 @@ export default function InteractiveMermaid({
       tertiaryColor: '#ffffff'
     },
     colorful: {
-      theme: 'base',
+      theme: 'base' as const,
       primaryColor: '#8b5cf6',
       primaryTextColor: '#1f2937',
       primaryBorderColor: '#8b5cf6',
@@ -117,9 +125,8 @@ export default function InteractiveMermaid({
               titleTopMargin: 25,
               barHeight: 20,
               fontSize: 11,
-              sidePadding: 75,
               gridLineStartPadding: 35,
-              bottomPadding: 25
+              topPadding: 25
             },
             themeVariables: themes[currentTheme]
           });
