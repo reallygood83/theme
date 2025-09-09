@@ -73,12 +73,14 @@ function StudentDebateContent() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 학생 로그인 응답:', data);
         setStudent(data.data);
         await fetchStudentOpinions(data.data._id);
         setStep('submit');
       } else {
         const errorData = await response.json();
-        alert(errorData.message || '로그인에 실패했습니다.');
+        console.error('❌ 로그인 실패:', errorData);
+        alert(errorData.error || errorData.message || '로그인에 실패했습니다.');
       }
     } catch (error) {
       console.error('Student login error:', error);
@@ -90,10 +92,15 @@ function StudentDebateContent() {
 
   const fetchStudentOpinions = async (studentId: string) => {
     try {
+      console.log('🔍 토론 의견 조회 시작 - 학생 ID:', studentId);
       const response = await fetch(`/api/debate/opinions?studentId=${studentId}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('✅ 토론 의견 조회 성공:', data);
         setOpinions(data.data.opinions || []);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ 토론 의견 조회 실패:', errorData);
       }
     } catch (error) {
       console.error('Failed to fetch opinions:', error);
@@ -106,6 +113,15 @@ function StudentDebateContent() {
 
     setSubmitLoading(true);
     try {
+      console.log('🔍 토론 의견 제출 시작:', {
+        topic: opinion.topic.trim(),
+        content: opinion.content.trim(),
+        studentName: student.name,
+        studentId: student._id,
+        classId: student.classId,
+        sessionCode: sessionCode
+      });
+
       const response = await fetch('/api/debate/opinions', {
         method: 'POST',
         headers: {
@@ -123,13 +139,15 @@ function StudentDebateContent() {
 
       if (response.ok) {
         const data = await response.json();
-        alert('의견이 성공적으로 제출되었습니다!');
+        console.log('✅ 토론 의견 제출 성공:', data);
+        alert(data.message || '의견이 성공적으로 제출되었습니다!');
         setOpinion({ topic: '', content: '' });
         await fetchStudentOpinions(student._id);
         setStep('view');
       } else {
         const errorData = await response.json();
-        alert(errorData.message || '의견 제출에 실패했습니다.');
+        console.error('❌ 토론 의견 제출 실패:', errorData);
+        alert(errorData.error || errorData.message || '의견 제출에 실패했습니다.');
       }
     } catch (error) {
       console.error('Opinion submission error:', error);
