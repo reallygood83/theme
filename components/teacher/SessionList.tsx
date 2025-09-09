@@ -80,7 +80,7 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
           : bQuestions - aQuestions
       }
     })
-  }, [sessions, searchTerm, sortBy, sortOrder])
+  }, [sessions, searchTerm, sortBy, sortOrder]) || []
   
   // 날짜 형식화 함수
   const formatDate = (timestamp: number) => {
@@ -303,9 +303,9 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
         </div>
       </div>
       
-      {filteredAndSortedSessions.length > 0 ? (
+      {filteredAndSortedSessions && filteredAndSortedSessions.length > 0 ? (
         <ul className="space-y-4">
-          {filteredAndSortedSessions.map((session) => {
+          {(filteredAndSortedSessions || []).map((session) => {
             const questionCount = Object.keys(session.questions || {}).length
             const hasAnalysisResult = !!session.aiAnalysisResult
             
