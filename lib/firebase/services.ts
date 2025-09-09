@@ -69,7 +69,7 @@ export class BaseFirebaseService<T extends { id: string }> {
       return {
         id: docSnap.id,
         ...docSnap.data()
-      } as T;
+      } as unknown as T;
     } catch (error) {
       console.error(`Firebase ${this.collectionName} getById 오류:`, error);
       throw new FirebaseServiceError(
@@ -112,7 +112,7 @@ export class BaseFirebaseService<T extends { id: string }> {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      } as T));
+      } as unknown as T));
     } catch (error) {
       console.error(`Firebase ${this.collectionName} getMany 오류:`, error);
       throw new FirebaseServiceError(
@@ -140,7 +140,7 @@ export class BaseFirebaseService<T extends { id: string }> {
       return {
         id: docRef.id,
         ...docData
-      } as T;
+      } as unknown as T;
     } catch (error) {
       console.error(`Firebase ${this.collectionName} create 오류:`, error);
       throw new FirebaseServiceError(

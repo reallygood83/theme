@@ -193,7 +193,7 @@ export class BaseFirebaseRealtimeService<T extends FirebaseRealtimeDocument> {
       return {
         id: snapshot.key!,
         ...snapshot.val()
-      } as T;
+      } as unknown as T;
     } catch (error) {
       console.error(`Firebase Realtime ${this.path} getById 오류:`, error);
       throw new FirebaseRealtimeServiceError(
@@ -245,7 +245,7 @@ export class BaseFirebaseRealtimeService<T extends FirebaseRealtimeDocument> {
         results.push({
           id: child.key!,
           ...child.val()
-        } as T);
+        } as unknown as T);
       });
       
       return results;
@@ -279,7 +279,7 @@ export class BaseFirebaseRealtimeService<T extends FirebaseRealtimeDocument> {
       return {
         id: newDocRef.key!,
         ...docData
-      } as T;
+      } as unknown as T;
     } catch (error) {
       console.error(`Firebase Realtime ${this.path} create 오류:`, error);
       throw new FirebaseRealtimeServiceError(
@@ -356,7 +356,7 @@ export class BaseFirebaseRealtimeService<T extends FirebaseRealtimeDocument> {
               results.push({
                 id: child.key!,
                 ...child.val()
-              } as T);
+              } as unknown as T);
             });
           }
           callback(results);
