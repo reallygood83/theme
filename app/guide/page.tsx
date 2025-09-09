@@ -56,6 +56,12 @@ export default function GuidePage() {
             >
               👨‍🎓 학생 가이드
             </button>
+            <button 
+              onClick={() => scrollToSection('faq')} 
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              ❓ 자주 묻는 질문
+            </button>
           </div>
         </div>
       </nav>
@@ -731,7 +737,8 @@ export default function GuidePage() {
               <div className="bg-gray-50 p-4 rounded-lg border-l-4 border-blue-400">
                 <h3 className="font-semibold mb-2 text-gray-800">Q: 서비스를 이용하기 위해 계정이 필요한가요?</h3>
                 <p className="text-gray-600 text-sm">
-                  A: 아니요, 별도의 계정 생성 없이 교사는 세션을 만들고 학생은 세션 코드로 참여할 수 있습니다.
+                  A: <strong>교사는 구글 계정으로 로그인</strong>해야 세션을 생성하고 관리할 수 있습니다. 
+                  <strong>학생은 별도 로그인 없이</strong> 교사가 제공한 세션 코드만으로 참여할 수 있습니다.
                 </p>
               </div>
               
