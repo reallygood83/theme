@@ -165,14 +165,17 @@ export async function POST(request: NextRequest) {
       console.log('✅ 의견 저장 성공')
     } catch (saveError) {
       console.error('❌ Firebase 저장 실패:', saveError)
+      const errorMsg = saveError instanceof Error ? saveError.message : String(saveError)
+      const errorCode = (saveError as any)?.code || 'UNKNOWN'
+      
       console.error('❌ 저장 실패 상세:', {
-        errorCode: saveError.code,
-        errorMessage: saveError.message,
+        errorCode,
+        errorMessage: errorMsg,
         path: targetPath,
         dataSize: JSON.stringify(opinionData).length
       })
       return NextResponse.json(
-        { success: false, error: `Firebase 저장 실패: ${saveError.message}` },
+        { success: false, error: `Firebase 저장 실패: ${errorMsg}` },
         { status: 500 }
       )
     }
@@ -188,17 +191,21 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ 토론 의견 제출 전체 오류:', error)
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    const errorName = error instanceof Error ? error.name : 'UnknownError'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    
     console.error('❌ 오류 상세 정보:', {
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
+      name: errorName,
+      message: errorMsg,
+      stack: errorStack,
       timestamp: new Date().toISOString()
     })
     return NextResponse.json(
       { 
         success: false, 
         error: '토론 의견 제출 중 오류가 발생했습니다.',
-        details: error.message 
+        details: errorMsg 
       },
       { status: 500 }
     )
