@@ -62,7 +62,8 @@ function TeacherDashboardContent() {
         console.log('조회된 세션 ID 목록:', sessionIds)
       }
       
-      setSessions(data.sessions || [])
+      // Ensure sessions is always an array
+      setSessions(Array.isArray(data.sessions) ? data.sessions : [])
     } catch (err) {
       console.error('세션 목록 로드 오류:', err)
       setError('세션 목록을 불러오는 중 오류가 발생했습니다.')
@@ -107,16 +108,32 @@ function TeacherDashboardContent() {
         console.log('실시간으로 받은 세션 데이터:', sessionsData)
         
         // 세션 데이터를 배열로 변환
+        // Ensure sessionsData exists and is object
+        if (!sessionsData || typeof sessionsData !== 'object') {
+          console.log('Invalid sessionsData, setting empty array')
+          setSessions([])
+          setLoading(false)
+          return
+        }
+        
         const sessionsArray = Object.entries(sessionsData).map(([sessionId, data]) => ({
           sessionId,
           ...(data as any)
-        }))
+        })).filter(session => session && session.sessionId) // Filter invalid entries
         
         // 현재 로그인한 교사의 세션만 필터링 (심사위원 모드 시 특정 UID 필터링)
         const mySessionsArray = sessionsArray.filter(session => {
           if (!session) return false
           return session.teacherId === effectiveUserId || (!session.teacherId && !isJudgeMode)
         })
+        
+        console.log('전체 세션:', sessionsArray.length, '개')
+        console.log('내 세션:', mySessionsArray.length, '개')
+        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s?.sessionId || 'unknown'))
+        
+        // Ensure mySessionsArray is always an array
+        setSessions(Array.isArray(mySessionsArray) ? mySessionsArray : [])
+        setError(null)
         
         console.log('=== 세션 필터링 디버깅 ===')
         console.log('현재 User UID:', user.uid)
@@ -142,6 +159,7 @@ function TeacherDashboardContent() {
         setError(null)
       } else {
         console.log('Firebase에 세션 데이터 없음')
+        // Ensure empty state is array
         setSessions([])
       }
       
@@ -297,9 +315,9 @@ function TeacherDashboardContent() {
               새로고침
             </button>
           </div>
-          <SessionList 
-            sessions={sessions} 
-            loading={loading || authLoading} 
+          <SessionList
+            sessions={sessions || []}
+            loading={loading || authLoading}
             error={error}
             onRefresh={fetchSessions}
           />

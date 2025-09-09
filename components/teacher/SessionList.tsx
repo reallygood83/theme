@@ -26,18 +26,24 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
   // sessions prop 변화 감지 (디버깅용)
   useEffect(() => {
     console.log('SessionList: sessions prop 변경됨')
-    console.log('현재 세션 수:', sessions?.length || 0)
-    console.log('세션 ID 목록:', sessions?.map((s: Session) => s.sessionId) || [])
+    const safeSessions = Array.isArray(sessions) ? sessions : []
+    console.log('현재 세션 수:', safeSessions.length)
+    console.log('세션 ID 목록:', safeSessions.map((s: Session) => s.sessionId) || [])
   }, [sessions])
   
   // 검색 및 정렬된 세션 목록 (useMemo로 최적화)
   const filteredAndSortedSessions = useMemo(() => {
     console.log('filteredAndSortedSessions 재계산됨, 입력 세션 수:', sessions?.length || 0)
-    if (!sessions || !Array.isArray(sessions)) {
-      console.warn('Sessions is not an array or undefined:', sessions)
+    
+    // Ensure sessions is always an array
+    const safeSessions = Array.isArray(sessions) ? sessions : []
+    
+    if (safeSessions.length === 0) {
+      console.log('No sessions to process')
       return []
     }
-    return [...sessions]
+    
+    return [...safeSessions]
     // 검색어로 필터링
     .filter(session => {
       if (!searchTerm) return true
