@@ -86,11 +86,10 @@ const ClassSchema = new Schema<IClass>({
   timestamps: true
 });
 
-// 인덱스 설정
+// 인덱스 설정 - 필드에 index: true가 이미 설정된 경우 중복 제거
 ClassSchema.index({ code: 1 });
 ClassSchema.index({ teacherId: 1 });
-ClassSchema.index({ firebaseUid: 1 });
-ClassSchema.index({ sessionCode: 1 });
+// firebaseUid와 sessionCode는 이미 필드에 index: true로 설정됨
 
 export default function getClassModel() {
   return mongoose.models.Class || mongoose.model<IClass>('Class', ClassSchema);

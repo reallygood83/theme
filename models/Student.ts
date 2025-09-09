@@ -43,10 +43,10 @@ const StudentSchema = new Schema<IStudent>({
   timestamps: true
 });
 
-// 인덱스 설정
+// 인덱스 설정 - 필드에 index: true가 이미 설정된 경우 중복 제거
 StudentSchema.index({ accessCode: 1 });
 StudentSchema.index({ classId: 1 });
-StudentSchema.index({ sessionCode: 1 });
+// sessionCode는 이미 필드에 index: true로 설정됨
 
 export default function getStudentModel() {
   return mongoose.models.Student || mongoose.model<IStudent>('Student', StudentSchema);

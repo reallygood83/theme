@@ -45,9 +45,8 @@ const TeacherSchema = new Schema<ITeacher>({
   timestamps: true
 });
 
-// 인덱스 설정
-TeacherSchema.index({ firebaseUid: 1 });
-TeacherSchema.index({ email: 1 });
+// 인덱스 설정 - 필드에 index: true가 이미 설정된 경우 중복 제거
+// firebaseUid와 email은 이미 필드에 index: true로 설정됨
 
 export default function getTeacherModel() {
   return mongoose.models.Teacher || mongoose.model<ITeacher>('Teacher', TeacherSchema);
