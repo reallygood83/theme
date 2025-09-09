@@ -26,6 +26,8 @@ export default function EvidenceSearchModalContainer({
   const [results, setResults] = useState<EvidenceResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTime, setSearchTime] = useState<Date | null>(null)
+  const [filteringMessage, setFilteringMessage] = useState<string | null>(null)
+  const [wasFiltered, setWasFiltered] = useState(false)
 
   // 검색 시작 함수
   const handleSearch = useCallback(async (topic: string, stance: string, types: string[]) => {
@@ -37,6 +39,8 @@ export default function EvidenceSearchModalContainer({
     setLoading(true)
     setCurrentStep(1)
     setResults([])
+    setFilteringMessage(null)
+    setWasFiltered(false)
     
     try {
       console.log('근거자료 검색 시작:', { topic, stance, types })
@@ -68,13 +72,21 @@ export default function EvidenceSearchModalContainer({
       
       // API 응답을 기다림
       const response = await apiPromise
-
-      if (!response.ok) {
-        throw new Error('검색 요청이 실패했습니다.')
-      }
-
       const data = await response.json()
       console.log('근거자료 검색 결과:', data)
+
+      // 콘텐츠 필터링으로 인한 차단 처리
+      if (!response.ok) {
+        if (data.blocked && data.severity) {
+          console.log('🛡️ 콘텐츠 필터링 차단:', data.error)
+          setFilteringMessage(data.error)
+          setWasFiltered(true)
+          setCurrentStep(0)
+          setLoading(false)
+          return
+        }
+        throw new Error(data.error || '검색 요청이 실패했습니다.')
+      }
       
       if (data.evidences && Array.isArray(data.evidences) && data.evidences.length > 0) {
         // API 완료 후 6단계로 설정하여 완료 상태 표시
@@ -85,15 +97,28 @@ export default function EvidenceSearchModalContainer({
         
         setResults(data.evidences)
         setSearchTime(new Date())
+        
+        // 필터링으로 인한 결과 감소 확인
+        if (data.filtered && data.message) {
+          setFilteringMessage(data.message)
+          setWasFiltered(true)
+        }
+        
         setCurrentStep(0) // 결과 표시 모드로 전환
       } else if (data.success === false) {
         throw new Error(data.error || '검색 결과를 가져올 수 없습니다.')
       } else if (!data.evidences || data.evidences.length === 0) {
-        // 빈 결과도 성공으로 처리
+        // 빈 결과 처리 - 필터링으로 인한 것인지 확인
         setCurrentStep(6)
         await new Promise(resolve => setTimeout(resolve, 1500))
         setResults([])
         setSearchTime(new Date())
+        
+        if (data.filtered && data.message) {
+          setFilteringMessage(data.message)
+          setWasFiltered(true)
+        }
+        
         setCurrentStep(0)
       } else {
         throw new Error('예상하지 못한 응답 형식입니다.')
@@ -117,6 +142,8 @@ export default function EvidenceSearchModalContainer({
     setResults([])
     setSearchTime(null)
     setCurrentStep(0)
+    setFilteringMessage(null)
+    setWasFiltered(false)
   }, [])
 
   // 모달 닫기 함수
@@ -125,6 +152,8 @@ export default function EvidenceSearchModalContainer({
     setResults([])
     setSearchTime(null)
     setLoading(false)
+    setFilteringMessage(null)
+    setWasFiltered(false)
     onClose()
   }, [onClose])
 
@@ -176,8 +205,39 @@ export default function EvidenceSearchModalContainer({
             />
           )}
 
-          {/* 검색 폼 (결과가 없을 때만 표시) */}
-          {!loading && results.length === 0 && (
+          {/* 콘텐츠 필터링 안내 메시지 */}
+          {!loading && filteringMessage && wasFiltered && (
+            <div className="p-6">
+              <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded-md">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-orange-800">
+                      🛡️ 콘텐츠 필터링 안내
+                    </h3>
+                    <div className="mt-2 text-sm text-orange-700">
+                      <p>{filteringMessage}</p>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={handleNewSearch}
+                        className="bg-orange-100 px-4 py-2 rounded-md text-sm font-medium text-orange-800 hover:bg-orange-200 transition-colors"
+                      >
+                        새로운 주제로 검색하기
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 검색 폼 (결과가 없고 필터링되지 않았을 때만 표시) */}
+          {!loading && results.length === 0 && !wasFiltered && (
             <div className="p-6">
               <EvidenceSearchForm
                 onSearch={handleSearch}
@@ -190,6 +250,24 @@ export default function EvidenceSearchModalContainer({
           {/* 검색 결과 */}
           {!loading && results.length > 0 && (
             <div className="p-6">
+              {/* 필터링 알림 (결과가 있지만 일부 필터링된 경우) */}
+              {filteringMessage && wasFiltered && (
+                <div className="mb-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-md">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <svg className="h-4 w-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm text-blue-700">
+                        ℹ️ {filteringMessage}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <EvidenceResultsDisplay
                 results={results}
                 topic={searchParams.topic}

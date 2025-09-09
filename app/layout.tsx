@@ -12,18 +12,19 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: '질문톡톡! 논제샘솟!',
   description: '학생들이 질문을 생성하고, AI가 토론 논제를 추천하는 교육용 웹 서비스',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
-  themeColor: '#4F46E5',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
     title: '질문톡톡! 논제샘솟!',
   },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#4F46E5',
 }
 
 export default function RootLayout({

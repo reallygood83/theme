@@ -7,6 +7,7 @@ import {
   validateEvidenceResults 
 } from '@/lib/evidence'
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
+import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
 
 // 원본 프로그램과 동일한 검색 로직
 export async function POST(request: NextRequest) {
@@ -15,12 +16,34 @@ export async function POST(request: NextRequest) {
     
     console.log('🔍 근거자료 검색 시작:', { topic, stance, selectedTypes })
     
-    // 입력 검증
+    // 1단계: 기본 입력 검증
     if (!topic || !stance) {
       return NextResponse.json(
         { error: '토론 주제와 입장을 입력해주세요.' },
         { status: 400 }
       )
+    }
+
+    // 2단계: 콘텐츠 적절성 검사 (교육용 필터링)
+    const contentCheck = checkTopicAppropriateness(topic)
+    console.log('🛡️ 콘텐츠 필터링 결과:', contentCheck)
+
+    if (!contentCheck.isAppropriate) {
+      console.warn('🚫 부적절한 주제 차단:', topic, '- 이유:', contentCheck.reason)
+      return NextResponse.json(
+        { 
+          error: generateStudentMessage(contentCheck),
+          blocked: true,
+          severity: contentCheck.severity,
+          suggestedAlternative: contentCheck.suggestedAlternative
+        },
+        { status: 400 }
+      )
+    }
+
+    // 경고 수준의 민감한 주제인 경우 로깅
+    if (contentCheck.severity === 'warning') {
+      console.warn('⚠️ 민감한 주제 검색:', topic, '- 사유:', contentCheck.reason)
     }
     
     // API 키 검증
@@ -82,18 +105,29 @@ export async function POST(request: NextRequest) {
     const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
     console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')
     
+    // 3단계: 콘텐츠 안전성 필터링 (교육용 후처리)
+    const safeResults = filterSearchResults(evidenceResults)
+    console.log('🛡️ 콘텐츠 필터링 적용:', evidenceResults.length, '→', safeResults.length, '개')
+    
     // 결과 검증 및 필터링
-    const validatedResults = validateEvidenceResults(evidenceResults)
+    const validatedResults = validateEvidenceResults(safeResults)
     console.log('✅ 검증 완료:', validatedResults.length + '개 유효한 결과')
     
     // 결과가 없는 경우 처리
     if (validatedResults.length === 0) {
+      // 필터링으로 인한 결과 부족인지 확인
+      const wasFiltered = evidenceResults.length > safeResults.length
+      const message = wasFiltered 
+        ? '교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적인 키워드로 검색해보세요.' 
+        : '검색 결과가 없습니다. 다른 키워드로 다시 검색해보세요.'
+      
       return NextResponse.json({
         evidences: [],
         totalCount: 0,
         searchQuery: topic,
         timestamp: new Date(),
-        message: '검색 결과가 없습니다. 다른 키워드로 다시 검색해보세요.'
+        message,
+        filtered: wasFiltered
       })
     }
     
