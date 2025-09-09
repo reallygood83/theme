@@ -47,16 +47,20 @@ export async function GET(request: NextRequest) {
     let targetSession = null
     let sessionId = null
 
-    // sessionCode로 세션 찾기 (디버깅 로그 추가)
+    // sessionCode로 세션 찾기 (디버깅 로그 추가 + accessCode 지원)
     console.log(`🔍 ${sessionCode} 코드로 세션 검색 중...`)
     for (const [id, session] of Object.entries(sessions)) {
       const currentSessionCode = (session as any).sessionCode
-      console.log(`세션 ${id}: 코드 ${currentSessionCode || 'undefined'}`)
+      const currentAccessCode = (session as any).accessCode
+      const sessionTitle = (session as any).title
       
-      if (currentSessionCode === sessionCode) {
+      console.log(`세션 ${id}: 제목="${sessionTitle}", sessionCode=${currentSessionCode || 'undefined'}, accessCode=${currentAccessCode || 'undefined'}`)
+      
+      // sessionCode 또는 accessCode 중 하나라도 일치하면 찾은 것으로 간주
+      if (currentSessionCode === sessionCode || currentAccessCode === sessionCode) {
         targetSession = session
         sessionId = id
-        console.log(`✅ 매칭된 세션 발견: ${id}`)
+        console.log(`✅ 매칭된 세션 발견: ${id} (sessionCode: ${currentSessionCode}, accessCode: ${currentAccessCode})`)
         break
       }
     }
@@ -130,8 +134,13 @@ export async function POST(request: NextRequest) {
     let sessionId = null
 
     for (const [id, session] of Object.entries(sessions)) {
-      if ((session as any).sessionCode === sessionCode) {
+      const currentSessionCode = (session as any).sessionCode
+      const currentAccessCode = (session as any).accessCode
+      
+      // sessionCode 또는 accessCode 중 하나라도 일치하면 찾은 것으로 간주
+      if (currentSessionCode === sessionCode || currentAccessCode === sessionCode) {
         sessionId = id
+        console.log(`학생 참여용 세션 발견: ${id} (sessionCode: ${currentSessionCode}, accessCode: ${currentAccessCode})`)
         break
       }
     }
