@@ -160,29 +160,8 @@ export async function POST(request: NextRequest) {
 
     console.log('🔥 의견 저장 시도:', { path: targetPath, data: opinionData })
 
-    try {
-      await set(newOpinionRef, opinionData)
-      console.log('✅ 의견 저장 성공')
-    } catch (saveError) {
-      console.error('❌ Firebase 저장 실패:', saveError)
-      const errorMsg = saveError instanceof Error ? saveError.message : String(saveError)
-      const errorCode = (saveError as any)?.code || 'UNKNOWN'
-      
-      console.log(`⚠️ 의견 데이터 저장 권한 없음, 시뮬레이션 모드로 처리:`, errorMsg)
-      
-      // Firebase 권한이 없을 때 시뮬레이션 모드로 성공 응답 (개발/테스트용)
-      const simulatedOpinionId = `sim_${Date.now()}`
-      console.log(`📝 시뮬레이션 모드: ${studentName} 의견 -> ${targetPath} (ID: ${simulatedOpinionId})`)
-
-      return NextResponse.json({
-        success: true,
-        message: '토론 의견이 성공적으로 제출되었습니다. (시뮬레이션 모드)',
-        data: {
-          _id: simulatedOpinionId,
-          ...opinionData
-        }
-      })
-    }
+    await set(newOpinionRef, opinionData)
+    console.log('✅ 의견 저장 성공')
 
     return NextResponse.json({
       success: true,
