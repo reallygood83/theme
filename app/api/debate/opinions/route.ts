@@ -105,9 +105,25 @@ export async function POST(request: NextRequest) {
 
     // 필수 필드 검증
     if (!topic || !content || !studentName || !studentId || !sessionCode) {
-      console.log('필수 필드 누락:', { topic: !!topic, content: !!content, studentName: !!studentName, studentId: !!studentId, sessionCode: !!sessionCode })
+      console.log('필수 필드 누락:', { 
+        topic: { value: topic, exists: !!topic }, 
+        content: { value: content, exists: !!content }, 
+        studentName: { value: studentName, exists: !!studentName }, 
+        studentId: { value: studentId, exists: !!studentId }, 
+        sessionCode: { value: sessionCode, exists: !!sessionCode }
+      })
       return NextResponse.json(
-        { success: false, error: '필수 정보(토론 주제, 내용, 학생명, 학생ID, 세션코드)가 누락되었습니다.' },
+        { 
+          success: false, 
+          error: '필수 정보(토론 주제, 내용, 학생명, 학생ID, 세션코드)가 누락되었습니다.',
+          missingFields: {
+            topic: !topic,
+            content: !content,
+            studentName: !studentName,
+            studentId: !studentId,
+            sessionCode: !sessionCode
+          }
+        },
         { status: 400 }
       )
     }

@@ -30,9 +30,10 @@ interface Opinion {
 
 function StudentDebateContent() {
   const searchParams = useSearchParams();
-  const sessionCode = searchParams.get('session');
+  const sessionCode = searchParams.get('session') || searchParams.get('sessionCode') || searchParams.get('code');
   
   const [student, setStudent] = useState<Student | null>(null);
+  const [sessionCodeInput, setSessionCodeInput] = useState('');
   const [studentForm, setStudentForm] = useState({
     name: '',
     classCode: '',
@@ -110,6 +111,11 @@ function StudentDebateContent() {
   const handleSubmitOpinion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!student || !opinion.topic.trim() || !opinion.content.trim()) return;
+
+    if (!sessionCode) {
+      alert('세션 코드가 없습니다. 올바른 세션에서 의견을 제출해주세요.');
+      return;
+    }
 
     setSubmitLoading(true);
     try {
@@ -276,6 +282,46 @@ function StudentDebateContent() {
               </div>
             </div>
           </div>
+
+          {/* 세션 코드 입력 폼 */}
+          {!sessionCode && (
+            <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-center">
+                <div className="text-blue-600 mb-3">
+                  <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-blue-800 mb-2">세션 코드를 입력하세요</h3>
+                <p className="text-sm text-blue-700 mb-4">
+                  교사가 제공한 토론 세션 코드를 입력하면 토론에 참여할 수 있습니다.
+                </p>
+                <div className="max-w-md mx-auto">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={sessionCodeInput}
+                      onChange={(e) => setSessionCodeInput(e.target.value.toUpperCase())}
+                      placeholder="세션 코드 입력 (예: ABC123)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      maxLength={10}
+                    />
+                    <Button
+                      onClick={() => {
+                        if (sessionCodeInput.trim()) {
+                          window.location.href = `/student/debate?session=${sessionCodeInput.trim()}`
+                        }
+                      }}
+                      disabled={!sessionCodeInput.trim()}
+                      className="px-4 py-2"
+                    >
+                      입장하기
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* OpinionManager 컴포넌트 */}
           <OpinionManager

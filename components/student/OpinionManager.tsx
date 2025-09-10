@@ -85,6 +85,12 @@ export default function OpinionManager({
       setError(validation.errors.join(' '))
       return
     }
+    
+    // 세션 코드 검증
+    if (!sessionCode) {
+      setError('세션 코드가 없습니다. 올바른 세션에서 의견을 제출해주세요.')
+      return
+    }
 
     setSubmitting(true)
 

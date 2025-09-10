@@ -239,7 +239,7 @@ function TeacherDashboardContent() {
           </div>
 
           {/* 효율적인 기능 섹션 */}
-          {!isJudgeMode && (
+          {(!isJudgeMode || isAdmin) && (
             <div className="space-y-8 mb-8">
               {/* Hero CTA - 주요 액션 강조 */}
               <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
