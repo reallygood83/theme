@@ -1,17 +1,33 @@
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null",
+    ".read": false,
+    ".write": false,
     "teachers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       "$userId": {
         ".write": "$userId === auth.uid"
       }
     },
     "sessions": {
+      ".read": true,
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()",
       ".indexOn": ["teacherId", "createdAt", "status"],
       "$sessionId": {
         ".write": "root.child('teachers').child(auth.uid).exists()"
       }
+    },
+    "questions": {
+      ".read": true,
+      ".write": true
+    },
+    "agendas": {
+      ".read": true,
+      ".write": "auth != null"
+    },
+    "materials": {
+      ".read": true,
+      ".write": "auth != null"
     },
     "sharedSessions": {
       ".read": "auth != null",

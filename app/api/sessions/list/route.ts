@@ -17,18 +17,31 @@ export async function GET(request: Request) {
       )
     }
     
-    // 타임아웃 설정 (12초로 증가: 콜드스타트/네트워크 지연 보완)
+    // 타임아웃 설정 (18초로 증가: Vercel 콜드스타트/네트워크 지연 보완)
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Sessions list API timeout')), 12000)
+      setTimeout(() => reject(new Error('Sessions list API timeout')), 18000)
     })
     
     // Firebase 쿼리 실행 (필터링/정렬을 쿼리 단계에서 최대한 수행)
     const queryPromise = (async () => {
-      // Firebase Admin SDK 사용
+      console.log('🔥 Firebase Admin SDK 연결 시도...')
+      
+      // Firebase Admin SDK 사용 (연결 검증 강화)
       const db = getAdminDatabase()
       if (!db) {
-        console.error('Firebase Admin 데이터베이스 연결 실패')
+        console.error('❌ Firebase Admin 데이터베이스 연결 실패 - null 반환')
         throw new Error('Firebase 데이터베이스 연결 실패')
+      }
+      
+      console.log('✅ Firebase Admin SDK 연결 성공')
+      
+      // 연결 테스트 (빠른 확인)
+      try {
+        await db.ref('.info/connected').once('value')
+        console.log('✅ Firebase 연결 상태 확인 완료')
+      } catch (connectError) {
+        console.error('⚠️ Firebase 연결 테스트 실패:', connectError)
+        // 연결 실패해도 계속 진행 (fallback 시도)
       }
       
       // 관리자 계정 체크 (judge@questiontalk.demo)
