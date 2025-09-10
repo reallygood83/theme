@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAdminDatabase } from '@/lib/firebase-admin'
-import { ref, get, push, update, query, orderByChild, equalTo } from 'firebase-admin/database'
+import { getFirebaseDatabase } from '@/lib/firebase'
+import { ref, get, push, update, query, orderByChild, equalTo } from 'firebase/database'
 
 // Firebase 기반 토론 의견 관리 API
 export async function GET(request: NextRequest) {
@@ -19,16 +19,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log('🔍 Firebase Admin 데이터베이스 연결 시도')
-    const database = getAdminDatabase()
+    console.log('🔍 Firebase 데이터베이스 연결 시도')
+    const database = getFirebaseDatabase()
     if (!database) {
-      console.log('❌ Firebase Admin 데이터베이스 연결 실패')
+      console.log('❌ Firebase 데이터베이스 연결 실패')
       return NextResponse.json(
-        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
-    console.log('✅ Firebase Admin 데이터베이스 연결 성공')
+    console.log('✅ Firebase 데이터베이스 연결 성공')
 
     // 해당 교사의 세션들을 먼저 조회
     console.log('🔍 교사 세션 조회 중:', firebaseUid)
@@ -140,10 +140,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const database = getAdminDatabase()
+    const database = getFirebaseDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }

@@ -471,7 +471,7 @@ function StudentDebateContent() {
             </div>
           )}
         </div>
-      </>
+      </div>
     );
   }
 
