@@ -229,14 +229,28 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
           title: session.title || '제목 없음',
           materialText: session.materialText || '',
           materialUrl: session.materialUrl || '',
-          materials: (session.materials || []).map(material => ({
+          materials: (session.materials || [])
+            .filter(material => {
+              // undefined나 빈 값이 있는 자료는 제외
+              if (material.type === 'text' && (!material.content || material.content.trim() === '')) {
+                return false;
+              }
+              if ((material.type === 'youtube' || material.type === 'link') && !material.url) {
+                return false;
+              }
+              if (material.type === 'file' && !material.fileUrl && !material.url) {
+                return false;
+              }
+              return true;
+            })
+            .map(material => ({
              type: material.type === 'file' ? 'pdf' as const : 
                    material.type === 'link' ? 'text' as const : 
                    material.type === 'text' ? 'text' as const :
                    material.type === 'youtube' ? 'youtube' as const : 'text' as const,
-             content: material.content,
-             url: material.url || material.fileUrl,
-             title: material.linkTitle || material.fileName
+             content: material.content || '',
+             url: material.url || material.fileUrl || '',
+             title: material.linkTitle || material.fileName || '제목 없음'
            })),
           keywords: session.keywords || [],
           teacherId: user.uid,

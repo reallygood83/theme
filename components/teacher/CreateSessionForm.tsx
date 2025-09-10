@@ -124,12 +124,12 @@ export default function CreateSessionForm() {
   
   const validateMaterials = () => {
     for (const material of materials) {
-      if (material.type === 'text' && !material.content?.trim()) {
+      if (material.type === 'text' && (!material.content || !material.content.trim())) {
         alert('텍스트 자료의 내용을 입력해주세요.')
         return false
       }
       if (material.type === 'youtube') {
-        if (!material.url?.trim()) {
+        if (!material.url || !material.url.trim()) {
           alert('유튜브 URL을 입력해주세요.')
           return false
         }
@@ -140,16 +140,16 @@ export default function CreateSessionForm() {
           return false
         }
       }
-      if (material.type === 'file' && !material.fileUrl) {
+      if (material.type === 'file' && (!material.fileName || !material.fileUrl)) {
         alert('파일을 업로드해주세요.')
         return false
       }
       if (material.type === 'link') {
-        if (!material.url?.trim()) {
+        if (!material.url || !material.url.trim()) {
           alert('링크 URL을 입력해주세요.')
           return false
         }
-        if (!material.linkTitle?.trim()) {
+        if (!material.linkTitle || !material.linkTitle.trim()) {
           alert('링크 제목을 입력해주세요.')
           return false
         }

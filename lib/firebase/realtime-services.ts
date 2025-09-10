@@ -658,8 +658,37 @@ export class RealtimeSharedSessionService extends BaseFirebaseRealtimeService<Fi
 
   // 세션 공유하기
   async shareSession(sessionData: Omit<FirebaseRealtimeSharedSession, 'id' | 'createdAt' | 'updatedAt' | 'sharedAt' | 'copyCount'>): Promise<FirebaseRealtimeSharedSession> {
-    return this.create({
+    // 데이터 유효성 검사 및 정리
+    const cleanedMaterials = (sessionData.materials || []).filter(material => {
+      // undefined나 빈 값이 있는 자료는 제외
+      if (material.type === 'text' && (!material.content || material.content.trim() === '')) {
+        return false;
+      }
+      if ((material.type === 'youtube') && !material.url) {
+        return false;
+      }
+      if (material.type === 'pdf' && !material.url) {
+        return false;
+      }
+      return true;
+    }).map(material => ({
+      ...material,
+      content: material.content || '',
+      url: material.url || '',
+      title: material.title || '제목 없음'
+    }));
+
+    const cleanedSessionData = {
       ...sessionData,
+      materials: cleanedMaterials,
+      title: sessionData.title || '제목 없음',
+      keywords: sessionData.keywords || [],
+      teacherName: sessionData.teacherName || '익명',
+      creatorName: sessionData.creatorName || '익명'
+    };
+
+    return this.create({
+      ...cleanedSessionData,
       sharedAt: new Date().toISOString(),
       copyCount: 0
     });
