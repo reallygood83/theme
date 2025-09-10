@@ -13,7 +13,7 @@ interface Teacher {
   position?: string;
   provider: 'google' | 'email' | 'existing';
   displayName?: string;
-  permissions: {
+  permissions?: {
     canCreateSession: boolean;
     canManageStudents: boolean;
     canViewStatistics: boolean;
@@ -67,6 +67,20 @@ const AuthContext = createContext<AuthContextType>({
   hasPermission: () => false,
   isAdminAccount: () => false
 });
+
+// 안전한 Teacher 데이터를 보장하는 helper 함수
+const ensureSafeTeacherData = (teacherData: any): Teacher => {
+  return {
+    ...teacherData,
+    permissions: {
+      canCreateSession: true,
+      canManageStudents: true,
+      canViewStatistics: true,
+      isAdmin: false,
+      ...(teacherData.permissions || {})
+    }
+  };
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -123,8 +137,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const data = await response.json();
               console.log('Teacher API response:', data); // 디버그용 로그
               if (data.success) {
-                // API에서 teacher를 반환하므로 data.teacher 사용
-                setTeacher(data.teacher || data.data);
+                // API에서 teacher를 반환하므로 data.teacher 사용하되 안전한 데이터 보장
+                const teacherData = data.teacher || data.data;
+                if (teacherData) {
+                  setTeacher(ensureSafeTeacherData(teacherData));
+                }
               } else {
                 console.warn('Teacher API success but no data:', data);
               }
@@ -228,8 +245,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // 권한 확인
-  const hasPermission = (permission: keyof Teacher['permissions']): boolean => {
-    if (!teacher) return false;
+  const hasPermission = (permission: keyof NonNullable<Teacher['permissions']>): boolean => {
+    if (!teacher || !teacher.permissions) return false;
     return teacher.permissions[permission] === true;
   };
 

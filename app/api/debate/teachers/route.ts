@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
       email,
       name: name || email.split('@')[0],
       provider: provider || 'google',
+      permissions: {
+        canCreateSession: true,
+        canManageStudents: true,
+        canViewStatistics: true,
+        isAdmin: false
+      },
       createdAt: new Date().toISOString(),
       lastLoginAt: new Date().toISOString()
     }
@@ -47,12 +53,25 @@ export async function POST(request: NextRequest) {
       
       if (existingTeacher.exists()) {
         console.log('✅ 기존 교사 정보 발견, 업데이트 중')
-        // 기존 교사의 마지막 로그인 시간만 업데이트
-        await update(teacherRef, {
+        const existingData = existingTeacher.val()
+        // 기존 교사의 마지막 로그인 시간과 permissions 업데이트
+        const updateData = {
           lastLoginAt: new Date().toISOString(),
           email: email,  // 이메일도 업데이트 (변경될 수 있음)
-          name: name || existingTeacher.val().name
-        })
+          name: name || existingData.name
+        }
+        
+        // permissions가 없으면 기본값으로 추가
+        if (!existingData.permissions) {
+          updateData.permissions = {
+            canCreateSession: true,
+            canManageStudents: true,
+            canViewStatistics: true,
+            isAdmin: false
+          }
+        }
+        
+        await update(teacherRef, updateData)
         console.log('✅ 기존 교사 정보 업데이트 완료')
       } else {
         console.log('🆕 새로운 교사 정보 생성 중')
@@ -70,14 +89,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // 완전한 교사 데이터를 Firebase에서 다시 조회해서 반환
+    const finalTeacherSnapshot = await get(teacherRef)
+    const finalTeacherData = finalTeacherSnapshot.val()
+    
     return NextResponse.json({
       success: true,
-      teacher: {
-        firebaseUid,
-        email,
-        name: teacherData.name,
-        provider: teacherData.provider
-      },
+      teacher: finalTeacherData,
       message: '교사 정보가 성공적으로 저장되었습니다.'
     })
     
