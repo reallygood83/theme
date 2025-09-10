@@ -10,6 +10,7 @@ import AIAnalysisModal from './AIAnalysisModal'
 import EvidenceSearchForm from '../evidence/EvidenceSearchForm'
 import EvidenceSearchModal from '../evidence/EvidenceSearchModal'
 import EvidenceResultsDisplay from '../evidence/EvidenceResultsDisplay'
+import DebateOpinionManager from './DebateOpinionManager'
 import { Session, Question } from '@/lib/utils'
 import { EvidenceResult } from '@/lib/types/evidence'
 
@@ -846,6 +847,14 @@ export default function SessionManager({
           </Card>
         </div>
       )}
+      
+      {/* 토론 의견 관리 */}
+      <div className="space-y-6">
+        <DebateOpinionManager 
+          sessionId={sessionId} 
+          sessionCode={sessionCode}
+        />
+      </div>
       
       {/* 근거자료 검색 모달 */}
       {showEvidenceSearch && (
