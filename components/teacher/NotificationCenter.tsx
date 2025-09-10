@@ -100,50 +100,48 @@ export default function NotificationCenter({ className = '' }: NotificationCente
     setLoading(true)
     setError(null)
 
-    try {
-      // 실시간 리스너 설정
-      const unsubscribe = realtimeNotificationService.onSnapshot(
-        (allNotifications) => {
-          console.log('🔔 실시간 알림 데이터 받음:', allNotifications.length)
-          
-          // 현재 교사의 알림만 필터링
-          const teacherNotifications = allNotifications.filter(
-            notification => notification.teacherId === user.uid
-          )
-          
-          // 최신순으로 정렬
-          const sortedNotifications = teacherNotifications.sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-          )
-          
-          // 최근 50개만 표시
-          const recentNotifications = sortedNotifications.slice(0, 50)
-          
-          setNotifications(recentNotifications)
-          
-          // 읽지 않은 알림 개수 계산
-          const unread = recentNotifications.filter(n => !n.isRead).length
-          setUnreadCount(unread)
-          
-          setLoading(false)
-          console.log(`✅ 알림 업데이트 완료: 총 ${recentNotifications.length}개, 읽지않음 ${unread}개`)
-        },
-        (error) => {
-          console.error('❌ 알림 실시간 리스너 오류:', error)
-          setError('알림을 불러올 수 없습니다.')
-          setLoading(false)
-        }
-      )
-
-      // 컴포넌트 언마운트 시 리스너 해제
-      return () => {
-        console.log('🔔 알림 리스너 해제')
-        unsubscribe()
+    // 권한 오류 방지를 위해 API 기반 알림 조회로 변경
+    const fetchNotifications = async () => {
+      try {
+        const teacherNotifications = await realtimeNotificationService.getByTeacherId(user.uid)
+        
+        // 최신순으로 정렬
+        const sortedNotifications = teacherNotifications.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        )
+        
+        // 최근 50개만 표시
+        const recentNotifications = sortedNotifications.slice(0, 50)
+        
+        setNotifications(recentNotifications)
+        
+        // 읽지 않은 알림 개수 계산
+        const unread = recentNotifications.filter(n => !n.isRead).length
+        setUnreadCount(unread)
+        
+        setLoading(false)
+        console.log(`✅ 알림 업데이트 완료: 총 ${recentNotifications.length}개, 읽지않음 ${unread}개`)
+      } catch (error) {
+        console.error('❌ 알림 조회 실패:', error)
+        setError('알림을 불러올 수 없습니다.')
+        setLoading(false)
+        
+        // 권한 오류인 경우 빈 배열로 설정
+        setNotifications([])
+        setUnreadCount(0)
       }
-    } catch (error) {
-      console.error('❌ 알림 리스너 설정 실패:', error)
-      setError('알림 시스템을 초기화할 수 없습니다.')
-      setLoading(false)
+    }
+
+    // 초기 로드
+    fetchNotifications()
+    
+    // 주기적 업데이트 (30초마다)
+    const intervalId = setInterval(fetchNotifications, 30000)
+
+    // 컴포넌트 언마운트 시 인터벌 해제
+    return () => {
+      console.log('🔔 알림 업데이트 인터벌 해제')
+      clearInterval(intervalId)
     }
   }, [user?.uid])
 

@@ -5,28 +5,46 @@ import { getAdminDatabase } from '@/lib/firebase-admin'
 export async function POST(request: NextRequest) {
   try {
     console.log('🔥 교사 API POST 시작')
-    const { firebaseUid, email, name, provider } = await request.json()
     
-    console.log('📝 교사 데이터:', { firebaseUid, email, name, provider })
+    // 요청 타임아웃 설정 (10초)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timeout')), 10000)
+    })
     
-    if (!firebaseUid || !email) {
-      console.log('❌ 필수 데이터 누락')
-      return NextResponse.json(
-        { success: false, error: 'Firebase UID와 이메일이 필요합니다.' },
-        { status: 400 }
-      )
-    }
+    const requestPromise = async () => {
+      const { firebaseUid, email, name, provider } = await request.json()
+      
+      console.log('📝 교사 데이터:', { firebaseUid, email, name, provider })
+      
+      if (!firebaseUid || !email) {
+        console.log('❌ 필수 데이터 누락')
+        return NextResponse.json(
+          { success: false, error: 'Firebase UID와 이메일이 필요합니다.' },
+          { status: 400 }
+        )
+      }
 
-    console.log('🔍 Firebase Admin 데이터베이스 연결 시도')
-    const database = getAdminDatabase()
-    if (!database) {
-      console.log('❌ Firebase Admin 데이터베이스 연결 실패')
-      return NextResponse.json(
-        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
-        { status: 500 }
-      )
+      console.log('🔍 Firebase Admin 데이터베이스 연결 시도')
+      const database = getAdminDatabase()
+      if (!database) {
+        console.log('❌ Firebase Admin 데이터베이스 연결 실패')
+        return NextResponse.json(
+          { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
+          { status: 500 }
+        )
+      }
+      console.log('✅ Firebase Admin 데이터베이스 연결 성공')
+      
+      return { database, firebaseUid, email, name, provider }
     }
-    console.log('✅ Firebase Admin 데이터베이스 연결 성공')
+    
+    const result = await Promise.race([requestPromise(), timeoutPromise])
+    
+    if (result instanceof Error) {
+      throw result
+    }
+    
+    const { database, firebaseUid, email, name, provider } = result as any
 
     // 교사 정보 저장/업데이트
     const teacherData = {
