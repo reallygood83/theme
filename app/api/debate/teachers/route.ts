@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         console.log('✅ 기존 교사 정보 발견, 업데이트 중')
         const existingData = existingTeacher.val()
         // 기존 교사의 마지막 로그인 시간과 permissions 업데이트
-        const updateData = {
+        const updateData: any = {
           lastLoginAt: new Date().toISOString(),
           email: email,  // 이메일도 업데이트 (변경될 수 있음)
           name: name || existingData.name

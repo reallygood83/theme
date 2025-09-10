@@ -30,23 +30,28 @@ export async function GET(request: NextRequest) {
     const opinions: any[] = []
 
     try {
-      // 세션별 의견 조회 시도
+      // 세션별 의견 조회 - 컴포넌트와 동일한 경로 사용
       if (sessionCode) {
-        const sessionOpinionsRef = ref(db, `session-opinions/${sessionCode}`)
-        const sessionQuery = query(sessionOpinionsRef, orderByChild('studentId'), equalTo(studentId))
-        const sessionSnapshot = await get(sessionQuery)
+        // sessionCode로 sessionId 찾기 (임시로 sessionCode를 sessionId로 사용)
+        const sessionId = sessionCode
+        const sessionOpinionsRef = ref(db, `sessions/${sessionId}/debateOpinions`)
+        const sessionSnapshot = await get(sessionOpinionsRef)
         
         if (sessionSnapshot.exists()) {
-          sessionSnapshot.forEach((childSnapshot) => {
-            opinions.push({
-              _id: childSnapshot.key,
-              ...childSnapshot.val()
-            })
+          const opinionsData = sessionSnapshot.val()
+          Object.entries(opinionsData).forEach(([key, value]: [string, any]) => {
+            // studentId 대신 studentName으로 필터링
+            if (value.studentName === studentId || value.studentId === studentId) {
+              opinions.push({
+                _id: key,
+                ...value
+              })
+            }
           })
         }
       }
 
-      // 기본 경로에서도 조회
+      // 기본 경로에서도 조회 (레거시 지원)
       const opinionsRef = ref(db, 'debate-opinions')
       const studentOpinionsQuery = query(opinionsRef, orderByChild('studentId'), equalTo(studentId))
       const snapshot = await get(studentOpinionsQuery)
@@ -194,8 +199,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 🔥 핵심: debate_opinions/${sessionId} 경로에 저장 (교사가 조회하는 경로와 동일)
-    const targetPath = `debate_opinions/${sessionId}`
+    // Firebase에 토론 의견 저장 - 컴포넌트와 동일한 경로 사용
+    const targetPath = `sessions/${sessionId}/debateOpinions`
     
     console.log('🔥 Firebase 레퍼런스 생성 중...', targetPath)
     let opinionsRef, newOpinionRef

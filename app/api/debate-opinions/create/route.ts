@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Firebase에 토론 의견 저장
+    // Firebase에 토론 의견 저장 - 컴포넌트와 동일한 경로 사용
     const opinionsRef = ref(database, `sessions/${sessionId}/debateOpinions`)
     const newOpinionRef = push(opinionsRef)
     await set(newOpinionRef, opinionData)
