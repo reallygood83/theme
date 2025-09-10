@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getFirebaseDatabase } from '@/lib/firebase'
 import { ref, get, push, update, query, orderByChild, equalTo } from 'firebase/database'
 
+// API route는 동적으로 처리 필요
+export const dynamic = 'force-dynamic'
+
 // Firebase 기반 토론 의견 관리 API
 export async function GET(request: NextRequest) {
   try {
     console.log('🔥 의견 조회 API GET 시작')
-    const { searchParams } = new URL(request.url)
-    const firebaseUid = searchParams.get('firebaseUid')
+    const url = new URL(request.url || '', 'http://localhost')
+    const firebaseUid = url.searchParams.get('firebaseUid')
     
     console.log('📝 교사 UID:', firebaseUid)
     

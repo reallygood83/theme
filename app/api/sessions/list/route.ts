@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server'
-import { getAdminDatabase } from '@/lib/firebase-admin'
+import { ref, query, orderByChild, equalTo, limitToLast, get } from 'firebase/database'
+import { initializeApp, getApps } from 'firebase/app'
+import { getDatabase } from 'firebase/database'
+
+// API route는 동적으로 처리 필요
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
   try {
-    // URL 매개변수에서 teacherId 추출
-    const { searchParams } = new URL(request.url)
-    const teacherId = searchParams.get('teacherId')
+    // URL 매개변수에서 teacherId 추출 (Next.js 동적 처리를 위한 수정)
+    const url = new URL(request.url || '', 'http://localhost')
+    const teacherId = url.searchParams.get('teacherId')
     
     console.log('세션 목록 조회 시작... teacherId:', teacherId)
     
@@ -17,32 +22,36 @@ export async function GET(request: Request) {
       )
     }
     
-    // 타임아웃 설정 (18초로 증가: Vercel 콜드스타트/네트워크 지연 보완)
+    // 타임아웃 설정 (10초로 단축: 클라이언트 SDK 사용으로 성능 향상)
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Sessions list API timeout')), 18000)
+      setTimeout(() => reject(new Error('Sessions list API timeout')), 10000)
     })
     
-    // Firebase 쿼리 실행 (필터링/정렬을 쿼리 단계에서 최대한 수행)
+    // Firebase 쿼리 실행 - Client SDK 사용 (create API와 동일한 방식)
     const queryPromise = (async () => {
-      console.log('🔥 Firebase Admin SDK 연결 시도...')
+      console.log('🔥 Firebase Client SDK 연결 시도...')
       
-      // Firebase Admin SDK 사용 (연결 검증 강화)
-      const db = getAdminDatabase()
-      if (!db) {
-        console.error('❌ Firebase Admin 데이터베이스 연결 실패 - null 반환')
-        throw new Error('Firebase 데이터베이스 연결 실패')
+      // Firebase Client SDK 설정 (create API와 동일)
+      const firebaseConfig = {
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
       }
       
-      console.log('✅ Firebase Admin SDK 연결 성공')
-      
-      // 연결 테스트 (빠른 확인)
-      try {
-        await db.ref('.info/connected').once('value')
-        console.log('✅ Firebase 연결 상태 확인 완료')
-      } catch (connectError) {
-        console.error('⚠️ Firebase 연결 테스트 실패:', connectError)
-        // 연결 실패해도 계속 진행 (fallback 시도)
+      // Firebase 앱 초기화
+      let app
+      if (getApps().length === 0) {
+        app = initializeApp(firebaseConfig)
+      } else {
+        app = getApps()[0]
       }
+      
+      const db = getDatabase(app)
+      console.log('✅ Firebase Client SDK 연결 성공')
       
       // 관리자 계정 체크 (judge@questiontalk.demo)
       const isAdmin = teacherId === 'MSMk1a3iHBfbLzLwwnwpFnwJjS63' // 관리자 UID
@@ -52,20 +61,22 @@ export async function GET(request: Request) {
       if (isAdmin) {
         // 관리자: 최신 생성 순으로 최대 100개만 조회
         console.log('Firebase 세션 데이터 조회 중... (admin latest 100 by createdAt)')
-        snapshot = await db
-          .ref('sessions')
-          .orderByChild('createdAt')
-          .limitToLast(100)
-          .once('value')
+        const sessionQuery = query(
+          ref(db, 'sessions'),
+          orderByChild('createdAt'),
+          limitToLast(100)
+        )
+        snapshot = await get(sessionQuery)
       } else {
         // 일반 교사: 본인 세션만 조회 (teacherId 인덱스 기반)
         console.log('Firebase 세션 데이터 조회 중... (by teacherId)')
-        snapshot = await db
-          .ref('sessions')
-          .orderByChild('teacherId')
-          .equalTo(teacherId)
-          .limitToLast(100)
-          .once('value')
+        const sessionQuery = query(
+          ref(db, 'sessions'),
+          orderByChild('teacherId'),
+          equalTo(teacherId),
+          limitToLast(100)
+        )
+        snapshot = await get(sessionQuery)
       }
       
       console.log('Firebase 스냅샷 존재 여부:', snapshot.exists())
