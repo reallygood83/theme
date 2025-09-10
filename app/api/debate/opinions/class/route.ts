@@ -35,6 +35,9 @@ export async function GET(request: NextRequest) {
     const sessionsRef = ref(database, 'sessions')
     const sessionsQuery = query(sessionsRef, orderByChild('teacherId'), equalTo(firebaseUid))
     
+    // 각 세션의 토론 의견들을 수집
+    const allOpinions: any[] = []
+    
     try {
       const sessionsSnapshot = await get(sessionsQuery)
       
@@ -49,9 +52,6 @@ export async function GET(request: NextRequest) {
 
       const teacherSessions = Object.keys(sessionsSnapshot.val())
       console.log('✅ 교사의 세션 목록:', teacherSessions, '개수:', teacherSessions.length)
-
-      // 각 세션의 토론 의견들을 수집
-      const allOpinions: any[] = []
       
       for (const sessionId of teacherSessions) {
         console.log(`🔍 세션 ${sessionId}의 의견 조회 중`)
