@@ -806,31 +806,36 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
           </CardContent>
         </Card>
         
-        {/* 네비게이션 탭 (데스크톱 & 모바일) */}
+        {/* 모던 플로팅 네비게이션 */}
         <div className="mb-6">
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex flex-wrap justify-center md:justify-start gap-2 md:gap-8 overflow-x-auto pb-1 scrollbar-hide">
-              <a href="#questions" className="whitespace-nowrap py-3 px-3 border-b-2 border-primary font-medium text-primary">
-                질문 작성 및 목록
-              </a>
-              <a href="#debate-opinion" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                토론 의견 제출
-              </a>
-              <a href="#ai-agenda" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                AI 논제 추천
-              </a>
-              <a href="#evidence-search" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                근거자료 검색
-              </a>
-              <a href="#helper" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                질문 도우미
-              </a>
-              {showAnalysisResult && (
-                <a href="#result" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
-                  교사 분석 결과
-                </a>
-              )}
-            </nav>
+          {/* 데스크톱용 안내 메시지 */}
+          <div className="hidden lg:block bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-blue-800 mb-1">💡 편리한 플로팅 버튼 활용하세요!</p>
+                <p className="text-xs text-blue-600">화면 우측에서 AI 논제추천, 근거자료 검색, 토론의견 등의 기능을 바로 사용할 수 있어요</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* 모바일용 안내 메시지 */}
+          <div className="lg:hidden bg-gradient-to-r from-green-50 to-teal-50 border border-green-200 rounded-xl p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-green-500 to-teal-500 p-2 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-green-800 mb-1">📱 모바일 최적화</p>
+                <p className="text-xs text-green-600">하단 탭바와 플로팅 버튼으로 쉽게 기능을 이용하세요</p>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -1074,109 +1079,152 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         )}
         
         
-        {/* 모바일 하단 탭 바 */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-2 px-4 lg:hidden">
-          <div className="flex justify-around max-w-lg mx-auto">
-            <a href="#questions" className="flex flex-col items-center text-primary">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
-              <span className="text-xs mt-1">질문</span>
-            </a>
-            <a href="#debate-opinion" className="flex flex-col items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <span className="text-xs mt-1">토론의견</span>
-            </a>
-            <a href="#ai-agenda" className="flex flex-col items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-              <span className="text-xs mt-1">논제</span>
-            </a>
-            <a href="#evidence-search" className="flex flex-col items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span className="text-xs mt-1">근거자료</span>
-            </a>
-            {showAnalysisResult && (
-              <a href="#result" className="flex flex-col items-center text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        {/* 개선된 모바일 하단 탭 바 */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 shadow-2xl py-3 px-4 lg:hidden z-50">
+          <div className="flex justify-around items-center max-w-lg mx-auto">
+            <a href="#questions" className="flex flex-col items-center group transition-all duration-200 hover:scale-110">
+              <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-2 rounded-full shadow-lg group-hover:shadow-blue-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                 </svg>
-                <span className="text-xs mt-1">교사논제</span>
+              </div>
+              <span className="text-xs mt-1 font-medium text-blue-600">질문</span>
+            </a>
+            
+            <a href="#debate-opinion" className="flex flex-col items-center group transition-all duration-200 hover:scale-110">
+              <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-2 rounded-full shadow-lg group-hover:shadow-green-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <span className="text-xs mt-1 font-medium text-green-600">토론의견</span>
+            </a>
+            
+            <a href="#ai-agenda" className="flex flex-col items-center group transition-all duration-200 hover:scale-110">
+              <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-2 rounded-full shadow-lg group-hover:shadow-indigo-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <span className="text-xs mt-1 font-medium text-indigo-600">AI논제</span>
+            </a>
+            
+            <a href="#helper" className="flex flex-col items-center group transition-all duration-200 hover:scale-110">
+              <div className="bg-gradient-to-r from-pink-500 to-rose-500 p-2 rounded-full shadow-lg group-hover:shadow-pink-500/30">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <span className="text-xs mt-1 font-medium text-pink-600">도우미</span>
+            </a>
+            
+            {showAnalysisResult && (
+              <a href="#result" className="flex flex-col items-center group transition-all duration-200 hover:scale-110">
+                <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-2 rounded-full shadow-lg group-hover:shadow-amber-500/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                </div>
+                <span className="text-xs mt-1 font-medium text-amber-600">교사논제</span>
               </a>
             )}
           </div>
         </div>
         
         {/* 모바일 하단 탭 영역 패딩 */}
-        <div className="h-16 lg:hidden"></div>
+        <div className="h-20 lg:hidden"></div>
       </div>
       </div>
       
-      {/* 플로팅 버튼 - AI 근거자료 검색 (데스크톱용) */}
-      <div className="hidden lg:block fixed bottom-6 right-6 z-40">
-        <Button
-          onClick={handleOpenEvidenceSearch}
-          className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl hover:shadow-purple-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
-          aria-label="AI 근거자료 검색"
-        >
-          {/* 아이콘 */}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-6 w-6"
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
+      {/* 플로팅 네비게이션 - 데스크톱용 */}
+      <div className="hidden lg:block fixed right-6 top-1/2 -translate-y-1/2 z-50">
+        <div className="flex flex-col gap-4">
+          {/* AI 논제 추천 */}
+          <Button
+            onClick={() => document.getElementById('ai-agenda')?.scrollIntoView({ behavior: 'smooth' })}
+            className="group relative bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-2xl hover:shadow-blue-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+            aria-label="AI 논제 추천"
           >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-            />
-          </svg>
-          
-          {/* 툴팁 */}
-          <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-            AI 근거자료 검색
-          </span>
-          
-          {/* 펄스 애니메이션 */}
-          <span className="absolute top-0 left-0 -ml-1 -mt-1 flex h-3 w-3">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
-          </span>
-        </Button>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+              🤖 AI 논제 추천
+            </span>
+          </Button>
+
+          {/* 근거자료 검색 */}
+          <Button
+            onClick={handleOpenEvidenceSearch}
+            className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl hover:shadow-purple-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+            aria-label="AI 근거자료 검색"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+              🔍 AI 근거자료 검색
+            </span>
+            <span className="absolute top-0 left-0 -ml-1 -mt-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+            </span>
+          </Button>
+
+          {/* 토론 의견 제출 */}
+          <Button
+            onClick={() => document.getElementById('debate-opinion')?.scrollIntoView({ behavior: 'smooth' })}
+            className="group relative bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-2xl hover:shadow-green-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+            aria-label="토론 의견 제출"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+            </svg>
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+              💬 토론 의견 제출
+            </span>
+          </Button>
+
+          {/* 질문 도우미 */}
+          <Button
+            onClick={() => document.getElementById('helper')?.scrollIntoView({ behavior: 'smooth' })}
+            className="group relative bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white shadow-2xl hover:shadow-pink-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+            aria-label="질문 도우미"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+              💡 질문 도우미
+            </span>
+          </Button>
+
+          {/* 위로 스크롤 */}
+          <Button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="group relative bg-gradient-to-r from-gray-500 to-slate-500 hover:from-gray-600 hover:to-slate-600 text-white shadow-2xl hover:shadow-gray-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+            aria-label="맨 위로"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+              ⬆️ 맨 위로
+            </span>
+          </Button>
+        </div>
       </div>
       
-      {/* 플로팅 버튼 - AI 근거자료 검색 (모바일용 - 하단 탭바 위) */}
-      <div className="lg:hidden fixed bottom-20 right-4 z-40">
+      {/* 플로팅 버튼 - 근거자료 검색 (모바일용) */}
+      <div className="lg:hidden fixed bottom-24 right-4 z-40">
         <Button
           onClick={handleOpenEvidenceSearch}
-          className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl rounded-full p-3 transition-all duration-300"
+          className="group relative bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white shadow-2xl rounded-full p-3 transition-all duration-300 transform hover:scale-110"
           aria-label="AI 근거자료 검색"
         >
-          {/* 아이콘 */}
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            className="h-5 w-5"
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" 
-            />
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          
-          {/* 작은 배지 - 모바일용 */}
           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
             AI
           </span>
