@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     const queryPromise = (async () => {
       console.log('🔥 Firebase Client SDK 연결 시도...')
       
-      // Firebase Client SDK 설정 (create API와 동일)
+      // 환경 변수 확인
       const firebaseConfig = {
         apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
         authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -42,16 +42,33 @@ export async function GET(request: Request) {
         databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
       }
       
-      // Firebase 앱 초기화
-      let app
-      if (getApps().length === 0) {
-        app = initializeApp(firebaseConfig)
-      } else {
-        app = getApps()[0]
+      console.log('환경변수 확인:', {
+        FIREBASE_API_KEY: !!firebaseConfig.apiKey,
+        FIREBASE_PROJECT_ID: firebaseConfig.projectId,
+        FIREBASE_DATABASE_URL: firebaseConfig.databaseURL
+      })
+      
+      // 필수 환경 변수 검증
+      if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.databaseURL) {
+        throw new Error('Firebase 환경 변수 누락: API key, Project ID, Database URL이 필요합니다.')
       }
       
-      const db = getDatabase(app)
-      console.log('✅ Firebase Client SDK 연결 성공')
+      // Firebase 앱 초기화
+      let app
+      let db
+      try {
+        if (getApps().length === 0) {
+          app = initializeApp(firebaseConfig)
+        } else {
+          app = getApps()[0]
+        }
+        
+        db = getDatabase(app)
+        console.log('✅ Firebase Client SDK 연결 성공')
+      } catch (initError) {
+        console.error('❌ Firebase 초기화 실패:', initError)
+        throw new Error(`Firebase 초기화 실패: ${initError instanceof Error ? initError.message : String(initError)}`)
+      }
       
       // 관리자 계정 체크 (judge@questiontalk.demo)
       const isAdmin = teacherId === 'MSMk1a3iHBfbLzLwwnwpFnwJjS63' // 관리자 UID
