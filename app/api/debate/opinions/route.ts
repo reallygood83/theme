@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase, ref, push, set, get, query, orderByChild, equalTo } from 'firebase/database'
 import { initializeApp, getApps } from 'firebase/app'
+import { realtimeNotificationService } from '@/lib/firebase/realtime-services'
 
 // Firebase 설정
 const firebaseConfig = {
@@ -207,6 +208,32 @@ export async function POST(request: NextRequest) {
 
     await set(newOpinionRef, opinionData)
     console.log('✅ 의견 저장 성공')
+
+    // 🔥 실시간 알림 생성 - 교사에게 새 토론 의견 알림
+    try {
+      console.log('🔔 교사 알림 생성 중...', { teacherId, studentName })
+      
+      await realtimeNotificationService.create({
+        teacherId: teacherId,
+        title: '새로운 토론 의견이 제출되었습니다',
+        message: `${studentName} 학생이 "${topic.slice(0, 30)}${topic.length > 30 ? '...' : ''}" 주제에 대한 의견을 제출했습니다.`,
+        type: 'info',
+        isRead: false,
+        actionUrl: `/teacher/debate`,
+        metadata: {
+          opinionId: newOpinionRef.key,
+          sessionId: sessionId,
+          studentName: studentName,
+          topic: topic,
+          submittedAt: opinionData.submittedAt
+        }
+      })
+      
+      console.log('✅ 교사 알림 생성 완료')
+    } catch (notificationError) {
+      console.error('⚠️ 알림 생성 실패 (의견 저장은 성공):', notificationError)
+      // 알림 실패는 전체 프로세스를 중단시키지 않음
+    }
 
     return NextResponse.json({
       success: true,

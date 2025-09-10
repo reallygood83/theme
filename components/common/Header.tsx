@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { logoutUser } from '@/lib/auth'
-import NotificationBell from '@/components/notifications/NotificationBell'
+import NotificationCenter from '@/components/teacher/NotificationCenter'
 import { Button } from '@/components/ui/button'
 
 export default function Header() {
@@ -208,8 +208,8 @@ export default function Header() {
               <>
                 {user ? (
                   <div className="flex items-center gap-3">
-                    {/* 알림 벨 */}
-                    <NotificationBell />
+                    {/* 실시간 알림 센터 */}
+                    <NotificationCenter />
                     
                     <div 
                       className="relative"
