@@ -4,8 +4,6 @@ import { useState } from 'react';
 import RequireAuth from '@/components/auth/RequireAuth';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
-import SharedSessionsList from '@/components/materials/SharedSessionsList';
-import SharedScenariosList from '@/components/materials/SharedScenariosList';
 
 interface Worksheet {
   id: string;
@@ -524,7 +522,18 @@ export default function MaterialsPage() {
                 </div>
               </div>
               
-              <SharedSessionsList />
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">🚀</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">공유 세션 준비 중</h3>
+                <p className="text-gray-600 mb-4">
+                  다른 선생님들이 공유한 검증된 토론 세션을 곧 만나보실 수 있습니다.
+                </p>
+                <div className="text-sm text-blue-600 bg-blue-50 rounded-lg p-3">
+                  💡 현재 시스템 개선 작업 중입니다. 조금만 기다려주세요!
+                </div>
+              </div>
             </div>
           )}
 
@@ -581,7 +590,18 @@ export default function MaterialsPage() {
                 </div>
               </div>
               
-              <SharedScenariosList />
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-3xl">💡</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">공유 주제 준비 중</h3>
+                <p className="text-gray-600 mb-4">
+                  창의적이고 흥미진진한 토론 주제 모음을 곧 선보일 예정입니다.
+                </p>
+                <div className="text-sm text-green-600 bg-green-50 rounded-lg p-3">
+                  🌟 다양한 수준과 주제의 토론 시나리오를 준비하고 있어요!
+                </div>
+              </div>
             </div>
           )}
 
