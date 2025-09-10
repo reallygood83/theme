@@ -101,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!auth) {
       console.error('Firebase Auth가 초기화되지 않았습니다.');
+      setLoading(false);
       return;
     }
 
@@ -141,14 +142,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const teacherData = data.teacher || data.data;
                 if (teacherData) {
                   setTeacher(ensureSafeTeacherData(teacherData));
+                } else {
+                  console.warn('Teacher API success but no teacher data:', data);
+                  // 기본 teacher 객체 생성
+                  setTeacher(ensureSafeTeacherData({
+                    _id: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    name: name,
+                    provider: 'google',
+                    createdAt: new Date().toISOString()
+                  }));
                 }
               } else {
                 console.warn('Teacher API success but no data:', data);
+                // 기본 teacher 객체 생성
+                setTeacher(ensureSafeTeacherData({
+                  _id: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  name: name,
+                  provider: 'google',
+                  createdAt: new Date().toISOString()
+                }));
               }
             } else {
               const errorText = await response.text();
               console.error('Teacher API returned non-OK status:', response.status, response.statusText, errorText);
-              // Don't crash; continue with basic user auth
+              // API 실패 시에도 기본 teacher 객체 생성하여 무한 로딩 방지
+              setTeacher(ensureSafeTeacherData({
+                _id: firebaseUser.uid,
+                email: firebaseUser.email,
+                name: name,
+                provider: 'google',
+                createdAt: new Date().toISOString()
+              }));
             }
           } else {
             console.warn('Skipping teacher API call due to missing required fields:', {

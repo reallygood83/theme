@@ -72,9 +72,29 @@ const isInitialized = initializeFirebaseServices();
 export const getFirebaseDatabase = () => {
   if (!database) {
     console.warn('⚠️ Database가 초기화되지 않음, 재시도 중...');
-    initializeFirebaseServices();
+    const retryResult = initializeFirebaseServices();
+    if (!retryResult) {
+      console.error('❌ Firebase Database 재초기화 실패');
+      return null;
+    }
   }
   return database;
+};
+
+// Firebase 서비스 상태 확인 함수
+export const checkFirebaseStatus = () => {
+  return {
+    isInitialized,
+    hasDatabase: !!database,
+    hasFirestore: !!firestore,
+    hasAuth: !!auth,
+    hasStorage: !!storage,
+    config: {
+      hasApiKey: !!firebaseConfig.apiKey,
+      hasProjectId: !!firebaseConfig.projectId,
+      hasDatabaseURL: !!firebaseConfig.databaseURL
+    }
+  };
 };
 
 export { database, firestore, auth, storage, isInitialized };

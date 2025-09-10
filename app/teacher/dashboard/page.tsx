@@ -79,6 +79,8 @@ function TeacherDashboardContent() {
     } catch (err) {
       console.error('세션 목록 로드 오류:', err)
       setError('세션 목록을 불러오는 중 오류가 발생했습니다.')
+      // 에러 발생 시에도 빈 배열로 설정하여 UI가 정상 동작하도록 함
+      setSessions([])
     } finally {
       setLoading(false)
     }
