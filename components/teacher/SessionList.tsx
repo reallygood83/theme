@@ -178,8 +178,11 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       
       console.log('세션 삭제 성공!')
       
-      // Firebase 실시간 리스너가 자동으로 UI를 업데이트하므로 
-      // 별도의 상태 조작이나 새로고침이 불필요함
+      // 삭제 완료 후 세션 목록 새로고침
+      if (onRefresh) {
+        console.log('세션 삭제 후 목록 새로고침 중...')
+        onRefresh()
+      }
       
       alert('세션이 성공적으로 삭제되었습니다.')
     } catch (error) {
