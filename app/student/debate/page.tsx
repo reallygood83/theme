@@ -50,7 +50,7 @@ function StudentDebateContent() {
   const [selectedOpinion, setSelectedOpinion] = useState<Opinion | null>(null);
 
   useEffect(() => {
-    if (sessionCode && studentForm.classCode === '') {
+    if (sessionCode) {
       setStudentForm(prev => ({ ...prev, classCode: sessionCode }));
     }
   }, [sessionCode]);

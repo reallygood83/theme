@@ -15,6 +15,8 @@ import AgendaRecommender from '@/components/student/AgendaRecommender'
 import AgendaDisplay from '@/components/student/AgendaDisplay'
 import TermDefinition from '@/components/student/TermDefinition'
 import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
+import DebateOpinionInput from '@/components/student/DebateOpinionInput'
+import DebateOpinionList from '@/components/student/DebateOpinionList'
 import { database, getFirebaseDatabase, isInitialized } from '@/lib/firebase'
 import { ref, get, onValue, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
@@ -811,6 +813,9 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               <a href="#questions" className="whitespace-nowrap py-3 px-3 border-b-2 border-primary font-medium text-primary">
                 질문 작성 및 목록
               </a>
+              <a href="#debate-opinion" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                토론 의견 제출
+              </a>
               <a href="#ai-agenda" className="whitespace-nowrap py-3 px-3 border-b-2 border-transparent font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 AI 논제 추천
               </a>
@@ -843,6 +848,28 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
             <QuestionList
               sessionId={sessionId!}
               studentName={studentName}
+            />
+          </div>
+        </div>
+        
+        {/* 토론 의견 제출 섹션 */}
+        <div id="debate-opinion" className="mb-8">
+          <h2 className="text-xl font-semibold mb-4">💬 토론 의견 제출</h2>
+          <DebateOpinionInput
+            sessionId={sessionId!}
+            sessionCode={sessionCode}
+            studentName={studentName}
+            studentGroup={studentGroup}
+            onOpinionSubmit={() => {}}
+          />
+          
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold mb-4">📋 제출된 토론 의견</h2>
+            <DebateOpinionList
+              sessionId={sessionId!}
+              sessionCode={sessionCode}
+              currentStudentName={studentName}
+              currentStudentGroup={studentGroup}
             />
           </div>
         </div>
@@ -1049,18 +1076,24 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
         
         {/* 모바일 하단 탭 바 */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg py-2 px-4 lg:hidden">
-          <div className="flex justify-around max-w-md mx-auto">
+          <div className="flex justify-around max-w-lg mx-auto">
             <a href="#questions" className="flex flex-col items-center text-primary">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
               </svg>
               <span className="text-xs mt-1">질문</span>
             </a>
+            <a href="#debate-opinion" className="flex flex-col items-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+              </svg>
+              <span className="text-xs mt-1">토론의견</span>
+            </a>
             <a href="#ai-agenda" className="flex flex-col items-center text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
-              <span className="text-xs mt-1">논제 추천</span>
+              <span className="text-xs mt-1">논제</span>
             </a>
             <a href="#evidence-search" className="flex flex-col items-center text-gray-500">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1068,18 +1101,12 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
               </svg>
               <span className="text-xs mt-1">근거자료</span>
             </a>
-            <a href="#helper" className="flex flex-col items-center text-gray-500">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span className="text-xs mt-1">도우미</span>
-            </a>
             {showAnalysisResult && (
               <a href="#result" className="flex flex-col items-center text-gray-500">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
-                <span className="text-xs mt-1">교사 논제</span>
+                <span className="text-xs mt-1">교사논제</span>
               </a>
             )}
           </div>
