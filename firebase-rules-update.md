@@ -70,7 +70,7 @@
       "$teacherId": {
         ".read": "auth != null && auth.uid == $teacherId",
         ".write": "auth != null && auth.uid == $teacherId",
-        ".indexOn": ["timestamp", "read"]
+        ".indexOn": ["teacherId", "isRead", "createdAt"]
       }
     },
     "shared-sessions": {

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFirebaseDatabase } from '@/lib/firebase'
-import { ref, get, set, update } from 'firebase/database'
+import { getAdminDatabase } from '@/lib/firebase-admin'
 
 // Firebase 기반 교사 관리 API
 export async function POST(request: NextRequest) {
@@ -18,16 +17,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('🔍 Firebase 데이터베이스 연결 시도')
-    const database = getFirebaseDatabase()
+    console.log('🔍 Firebase Admin 데이터베이스 연결 시도')
+    const database = getAdminDatabase()
     if (!database) {
-      console.log('❌ Firebase 데이터베이스 연결 실패')
+      console.log('❌ Firebase Admin 데이터베이스 연결 실패')
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
-    console.log('✅ Firebase 데이터베이스 연결 성공')
+    console.log('✅ Firebase Admin 데이터베이스 연결 성공')
 
     // 교사 정보 저장/업데이트
     const teacherData = {
@@ -45,11 +44,11 @@ export async function POST(request: NextRequest) {
       lastLoginAt: new Date().toISOString()
     }
 
-    const teacherRef = ref(database, `teachers/${firebaseUid}`)
+    const teacherRef = database.ref(`teachers/${firebaseUid}`)
     console.log('🔍 기존 교사 정보 확인 중:', `teachers/${firebaseUid}`)
     
     try {
-      const existingTeacher = await get(teacherRef)
+      const existingTeacher = await teacherRef.once('value')
       
       if (existingTeacher.exists()) {
         console.log('✅ 기존 교사 정보 발견, 업데이트 중')
@@ -71,12 +70,12 @@ export async function POST(request: NextRequest) {
           }
         }
         
-        await update(teacherRef, updateData)
+        await teacherRef.update(updateData)
         console.log('✅ 기존 교사 정보 업데이트 완료')
       } else {
         console.log('🆕 새로운 교사 정보 생성 중')
         // 새로운 교사 생성
-        await set(teacherRef, teacherData)
+        await teacherRef.set(teacherData)
         console.log('✅ 새로운 교사 정보 생성 완료')
       }
 
@@ -90,7 +89,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 완전한 교사 데이터를 Firebase에서 다시 조회해서 반환
-    const finalTeacherSnapshot = await get(teacherRef)
+    const finalTeacherSnapshot = await teacherRef.once('value')
     const finalTeacherData = finalTeacherSnapshot.val()
     
     return NextResponse.json({
@@ -120,16 +119,16 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const database = getFirebaseDatabase()
+    const database = getAdminDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
 
-    const teacherRef = ref(database, `teachers/${firebaseUid}`)
-    const teacherSnapshot = await get(teacherRef)
+    const teacherRef = database.ref(`teachers/${firebaseUid}`)
+    const teacherSnapshot = await teacherRef.once('value')
     
     if (!teacherSnapshot.exists()) {
       return NextResponse.json(
@@ -163,16 +162,16 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const database = getFirebaseDatabase()
+    const database = getAdminDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
 
-    const teacherRef = ref(database, `teachers/${firebaseUid}`)
-    const teacherSnapshot = await get(teacherRef)
+    const teacherRef = database.ref(`teachers/${firebaseUid}`)
+    const teacherSnapshot = await teacherRef.once('value')
     
     if (!teacherSnapshot.exists()) {
       return NextResponse.json(
@@ -189,7 +188,7 @@ export async function PUT(request: NextRequest) {
     if (name) updateData.name = name
     if (email) updateData.email = email
 
-    await update(teacherRef, updateData)
+    await teacherRef.update(updateData)
 
     return NextResponse.json({
       success: true,
