@@ -239,13 +239,13 @@ function TeacherDashboardContent() {
           </div>
 
           {/* 효율적인 기능 섹션 */}
-          {!isJudgeMode && !isAdmin && (
+          {!isJudgeMode && (
             <div className="space-y-8 mb-8">
               {/* Hero CTA - 주요 액션 강조 */}
               <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-2xl p-8 border-2 border-purple-200 shadow-lg">
                 <div className="text-center mb-6">
                   <h2 className="text-2xl font-bold text-purple-800 mb-2">🚀 새로운 토론 세션 시작하기</h2>
-                  <p className="text-purple-600 text-lg">학습 자료와 함께 재미있는 토론을 만들어보세요!</p>
+                  <p className="text-purple-600 text-lg">{isAdmin ? '관리자 권한으로 토론 세션을 생성하고 관리하세요!' : '학습 자료와 함께 재미있는 토론을 만들어보세요!'}</p>
                 </div>
                 <div className="flex justify-center">
                   <Link href="/teacher/session/create">
@@ -263,7 +263,7 @@ function TeacherDashboardContent() {
               <div className="space-y-6">
                 <div className="text-center">
                   <h3 className="text-xl font-semibold text-gray-800 mb-2">🛠️ 토론 지원 도구</h3>
-                  <p className="text-gray-600">AI 도구와 관리 기능을 활용해보세요</p>
+                  <p className="text-gray-600">{isAdmin ? '관리자용 AI 도구와 관리 기능을 활용해보세요' : 'AI 도구와 관리 기능을 활용해보세요'}</p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
