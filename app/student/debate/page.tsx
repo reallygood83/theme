@@ -212,7 +212,7 @@ function StudentDebateContent() {
                 required
                 value={studentForm.name}
                 onChange={(e) => setStudentForm(prev => ({ ...prev, name: e.target.value }))}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="실명을 입력하세요"
               />
             </div>
@@ -227,7 +227,7 @@ function StudentDebateContent() {
                 required
                 value={studentForm.classCode}
                 onChange={(e) => setStudentForm(prev => ({ ...prev, classCode: e.target.value }))}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="교사가 제공한 세션 코드"
               />
             </div>
@@ -241,7 +241,7 @@ function StudentDebateContent() {
                 type="text"
                 value={studentForm.groupName}
                 onChange={(e) => setStudentForm(prev => ({ ...prev, groupName: e.target.value }))}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                 placeholder="모둠명 (예: 1모둠)"
               />
             </div>
@@ -288,15 +288,15 @@ function StudentDebateContent() {
 
           {/* 세션 코드 입력 폼 - 이미 세션 코드가 있으면 표시하지 않음 */}
           {!sessionCode && !sessionCodeInput && (
-            <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mb-6 p-6 bg-emerald-50 border border-emerald-200 rounded-lg">
               <div className="text-center">
-                <div className="text-blue-600 mb-3">
+                <div className="text-emerald-600 mb-3">
                   <svg className="w-8 h-8 mx-auto" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-blue-800 mb-2">세션 코드를 입력하세요</h3>
-                <p className="text-sm text-blue-700 mb-4">
+                <h3 className="text-lg font-medium text-emerald-800 mb-2">세션 코드를 입력하세요</h3>
+                <p className="text-sm text-emerald-700 mb-4">
                   교사가 제공한 토론 세션 코드를 입력하면 토론에 참여할 수 있습니다.
                 </p>
                 <div className="max-w-md mx-auto">
@@ -306,7 +306,7 @@ function StudentDebateContent() {
                       value={sessionCodeInput}
                       onChange={(e) => setSessionCodeInput(e.target.value.toUpperCase())}
                       placeholder="세션 코드 입력 (예: ABC123)"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       maxLength={10}
                     />
                     <Button
@@ -383,7 +383,7 @@ function StudentDebateContent() {
                       key={op._id}
                       className={`p-4 cursor-pointer transition-all hover:shadow-md ${
                         selectedOpinion?._id === op._id 
-                          ? 'ring-2 ring-blue-500 bg-blue-50' 
+                          ? 'ring-2 ring-emerald-500 bg-emerald-50' 
                           : 'hover:bg-gray-50'
                       }`}
                       onClick={() => setSelectedOpinion(op)}
@@ -471,7 +471,7 @@ function StudentDebateContent() {
             </div>
           )}
         </div>
-      </div>
+      </>
     );
   }
 

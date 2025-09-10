@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getFirebaseDatabase } from '@/lib/firebase'
-import { ref, get, set, update } from 'firebase/database'
+import { getAdminDatabase } from '@/lib/firebase-admin'
+import { ref, get, set, update } from 'firebase-admin/database'
 
 // Firebase 기반 교사 관리 API
 export async function POST(request: NextRequest) {
@@ -18,16 +18,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log('🔍 Firebase 데이터베이스 연결 시도')
-    const database = getFirebaseDatabase()
+    console.log('🔍 Firebase Admin 데이터베이스 연결 시도')
+    const database = getAdminDatabase()
     if (!database) {
-      console.log('❌ Firebase 데이터베이스 연결 실패')
+      console.log('❌ Firebase Admin 데이터베이스 연결 실패')
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
-    console.log('✅ Firebase 데이터베이스 연결 성공')
+    console.log('✅ Firebase Admin 데이터베이스 연결 성공')
 
     // 교사 정보 저장/업데이트
     const teacherData = {
@@ -102,10 +102,10 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const database = getFirebaseDatabase()
+    const database = getAdminDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
@@ -145,10 +145,10 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const database = getFirebaseDatabase()
+    const database = getAdminDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { success: false, error: 'Firebase Admin 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }

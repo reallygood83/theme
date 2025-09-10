@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import RequireAuth from '@/components/auth/RequireAuth';
+import DebateHeader from '@/components/debate/DebateHeader';
 import { Button } from '@/components/common/Button';
 import { Card } from '@/components/common/Card';
 import FeedbackTemplates from '@/components/teacher/FeedbackTemplates';
@@ -215,13 +216,15 @@ export default function TeacherDebatePage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* 헤더 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">토론 의견 관리</h1>
-            <p className="mt-2 text-gray-600">학생들의 토론 의견을 확인하고 피드백을 제공하세요.</p>
-          </div>
+      <DebateHeader 
+        title="교사 토론 관리"
+        subtitle="학생들의 토론 의견을 확인하고 피드백을 제공하세요"
+        isTeacher={true}
+        backHref="/teacher/dashboard"
+        backLabel="대시보드로"
+        showSessionInfo={false}
+      />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
           {/* 통계 카드 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -430,7 +433,6 @@ export default function TeacherDebatePage() {
               )}
             </div>
           </div>
-        </div>
       </div>
     </RequireAuth>
   );

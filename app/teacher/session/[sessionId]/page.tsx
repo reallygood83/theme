@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import Header from '@/components/common/Header'
+import DebateHeader from '@/components/debate/DebateHeader'
 import RequireAuth from '@/components/auth/RequireAuth'
 import SessionManager from '@/components/teacher/SessionManager'
 import { database } from '@/lib/firebase'
@@ -88,7 +88,14 @@ export default function SessionPage({ params }: SessionPageProps) {
   
   return (
     <RequireAuth>
-      <Header />
+      <DebateHeader 
+        title="교사 토론 관리"
+        subtitle="세션 관리 및 토론 의견 분석"
+        sessionCode={sessionCode || session?.accessCode}
+        isTeacher={true}
+        backHref="/teacher/dashboard"
+        backLabel="대시보드로"
+      />
       <div className="max-w-4xl mx-auto">
         {loading ? (
           <div className="text-center py-12">
