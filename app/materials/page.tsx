@@ -4,6 +4,8 @@ import { useState } from 'react';
 import RequireAuth from '@/components/auth/RequireAuth';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
+import SharedSessionsList from '@/components/materials/SharedSessionsList';
+import SharedScenariosList from '@/components/materials/SharedScenariosList';
 
 interface Worksheet {
   id: string;
@@ -334,6 +336,7 @@ const worksheets: Worksheet[] = [
 
 export default function MaterialsPage() {
   const [selectedWorksheet, setSelectedWorksheet] = useState<Worksheet | null>(null);
+  const [activeTab, setActiveTab] = useState<'worksheets' | 'sessions' | 'scenarios'>('worksheets');
 
   const handlePrint = (worksheet: Worksheet) => {
     const printWindow = window.open('', '_blank');
@@ -403,116 +406,181 @@ export default function MaterialsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">교육자료실</h1>
-            <p className="text-gray-600">토론 교육을 위한 활동지와 교육 자료를 제공합니다.</p>
+            <p className="text-gray-600">토론 교육을 위한 활동지, 공유 세션, 토론 주제를 제공합니다.</p>
           </div>
 
-          {!selectedWorksheet ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {worksheets.map((worksheet) => (
-                <Card key={worksheet.id} className="hover:shadow-lg transition-shadow">
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                          {worksheet.title}
-                        </h3>
-                        <p className="text-gray-600 text-sm">
-                          {worksheet.description}
-                        </p>
-                      </div>
-                      <div className="ml-4">
-                        <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                          <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
+          {/* 탭 네비게이션 */}
+          <div className="mb-8">
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <button
+                  onClick={() => setActiveTab('worksheets')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'worksheets'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  📝 활동지
+                </button>
+                <button
+                  onClick={() => setActiveTab('sessions')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'sessions'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  🎯 토론 세션 공유
+                </button>
+                <button
+                  onClick={() => setActiveTab('scenarios')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'scenarios'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  💡 토론 주제 공유
+                </button>
+              </nav>
+            </div>
+          </div>
+
+          {/* 활동지 탭 */}
+          {activeTab === 'worksheets' && (
+            !selectedWorksheet ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {worksheets.map((worksheet) => (
+                  <Card key={worksheet.id} className="hover:shadow-lg transition-shadow">
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                            {worksheet.title}
+                          </h3>
+                          <p className="text-gray-600 text-sm">
+                            {worksheet.description}
+                          </p>
+                        </div>
+                        <div className="ml-4">
+                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
+                      
+                      <div className="flex space-x-2">
+                        <Button
+                          onClick={() => setSelectedWorksheet(worksheet)}
+                          variant="primary"
+                          size="sm"
+                          className="flex-1"
+                        >
+                          미리보기
+                        </Button>
+                        <Button
+                          onClick={() => handlePrint(worksheet)}
+                          variant="outline"
+                          size="sm"
+                          className="px-3"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                          </svg>
+                        </Button>
+                        <Button
+                          onClick={() => handleDownload(worksheet)}
+                          variant="outline"
+                          size="sm"
+                          className="px-3"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                        </Button>
+                      </div>
                     </div>
-                    
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm">
+                <div className="p-6 border-b border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {selectedWorksheet.title}
+                      </h2>
+                      <p className="text-gray-600 mt-1">
+                        {selectedWorksheet.description}
+                      </p>
+                    </div>
                     <div className="flex space-x-2">
                       <Button
-                        onClick={() => setSelectedWorksheet(worksheet)}
-                        variant="primary"
-                        size="sm"
-                        className="flex-1"
-                      >
-                        미리보기
-                      </Button>
-                      <Button
-                        onClick={() => handlePrint(worksheet)}
+                        onClick={() => handlePrint(selectedWorksheet)}
                         variant="outline"
                         size="sm"
-                        className="px-3"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
                         </svg>
+                        인쇄
                       </Button>
                       <Button
-                        onClick={() => handleDownload(worksheet)}
+                        onClick={() => handleDownload(selectedWorksheet)}
                         variant="outline"
                         size="sm"
-                        className="px-3"
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
+                        다운로드
+                      </Button>
+                      <Button
+                        onClick={() => setSelectedWorksheet(null)}
+                        variant="secondary"
+                        size="sm"
+                      >
+                        목록으로
                       </Button>
                     </div>
                   </div>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      {selectedWorksheet.title}
-                    </h2>
-                    <p className="text-gray-600 mt-1">
-                      {selectedWorksheet.description}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button
-                      onClick={() => handlePrint(selectedWorksheet)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                      </svg>
-                      인쇄
-                    </Button>
-                    <Button
-                      onClick={() => handleDownload(selectedWorksheet)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      다운로드
-                    </Button>
-                    <Button
-                      onClick={() => setSelectedWorksheet(null)}
-                      variant="secondary"
-                      size="sm"
-                    >
-                      목록으로
-                    </Button>
-                  </div>
+                </div>
+                
+                <div className="p-6">
+                  <div 
+                    className="prose max-w-none"
+                    dangerouslySetInnerHTML={{ __html: selectedWorksheet.content }}
+                  />
                 </div>
               </div>
-              
-              <div className="p-6">
-                <div 
-                  className="prose max-w-none"
-                  dangerouslySetInnerHTML={{ __html: selectedWorksheet.content }}
-                />
+            )
+          )}
+
+          {/* 토론 세션 공유 탭 */}
+          {activeTab === 'sessions' && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">공유된 토론 세션</h2>
+                <p className="text-gray-600">다른 선생님들이 공유한 토론 세션을 활용해보세요.</p>
               </div>
+              
+              <SharedSessionsList />
+            </div>
+          )}
+
+          {/* 토론 주제 공유 탭 */}
+          {activeTab === 'scenarios' && (
+            <div>
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">공유된 토론 주제</h2>
+                <p className="text-gray-600">다른 선생님들이 공유한 토론 주제를 활용해보세요.</p>
+              </div>
+              
+              <SharedScenariosList />
             </div>
           )}
         </div>

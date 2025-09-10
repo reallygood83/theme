@@ -56,6 +56,39 @@ export default function DebateOpinionManager({ sessionId, sessionCode }: DebateO
       sessionCode,
       Firebase경로: `sessions/${sessionId}/debateOpinions`
     });
+
+    // 🔥 추가: Firebase 전체 세션 데이터도 조회해보기
+    const allSessionsRef = ref(db, 'sessions')
+    onValue(allSessionsRef, (allSnapshot) => {
+      if (allSnapshot.exists()) {
+        const allSessions = allSnapshot.val()
+        console.log('🗂️ Firebase 전체 세션 목록:', {
+          전체세션수: Object.keys(allSessions).length,
+          세션ID목록: Object.keys(allSessions),
+          현재찾는세션: sessionId,
+          현재세션존재여부: allSessions[sessionId] ? '존재함' : '존재하지 않음'
+        });
+        
+        if (allSessions[sessionId]) {
+          console.log('📋 현재 세션 데이터:', allSessions[sessionId]);
+          
+          if (allSessions[sessionId].debateOpinions) {
+            console.log('💬 현재 세션의 토론의견 데이터:', {
+              토론의견수: Object.keys(allSessions[sessionId].debateOpinions).length,
+              토론의견목록: allSessions[sessionId].debateOpinions
+            });
+          } else {
+            console.log('❌ 현재 세션에 debateOpinions 데이터가 없습니다!');
+          }
+        } else {
+          console.log('❌ 현재 sessionId에 해당하는 세션이 Firebase에 존재하지 않습니다!');
+          console.log('🤔 세션ID 비교:');
+          Object.keys(allSessions).forEach(key => {
+            console.log(`   - Firebase 세션: "${key}" vs 현재세션: "${sessionId}" => 같은가? ${key === sessionId}`);
+          });
+        }
+      }
+    }, { onlyOnce: true });
     
     const unsubscribe = onValue(opinionsRef, (snapshot) => {
       console.log('📡 Firebase 실시간 업데이트:', {
@@ -66,10 +99,21 @@ export default function DebateOpinionManager({ sessionId, sessionCode }: DebateO
       
       if (snapshot.exists()) {
         const opinionsData = snapshot.val()
-        const opinionsList = Object.entries(opinionsData).map(([key, value]) => ({
-          id: key,
-          ...(value as Omit<DebateOpinion, 'id'>)
-        }))
+        const opinionsList = Object.entries(opinionsData).map(([key, value]) => {
+          const opinion = value as any;
+          return {
+            id: key,
+            sessionId: opinion.sessionId || sessionId,
+            sessionCode: opinion.sessionCode || sessionCode,
+            studentName: opinion.studentName || '',
+            studentGroup: opinion.studentGroup || '미지정',
+            selectedAgenda: opinion.topic || opinion.selectedAgenda || '알 수 없음',
+            position: opinion.position || 'agree',
+            opinionText: opinion.content || opinion.opinionText || '',
+            createdAt: opinion.createdAt ? new Date(opinion.createdAt).getTime() : Date.now(),
+            timestamp: opinion.submittedAt || opinion.timestamp || new Date().toISOString()
+          };
+        })
         
         console.log('✅ 토론 의견 데이터 로드 완료:', {
           총개수: opinionsList.length,
@@ -77,7 +121,8 @@ export default function DebateOpinionManager({ sessionId, sessionCode }: DebateO
             학생명: o.studentName,
             모둠: o.studentGroup,
             논제: o.selectedAgenda,
-            입장: o.position
+            입장: o.position,
+            의견: o.opinionText.substring(0, 50) + '...'
           }))
         });
         

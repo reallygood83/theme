@@ -130,6 +130,73 @@ export interface FirebaseRealtimeFeedbackTemplate extends FirebaseRealtimeDocume
   };
 }
 
+// ==================== 공유 토론 세션 타입 ====================
+
+export interface FirebaseRealtimeSharedSession extends FirebaseRealtimeDocument {
+  title: string;
+  description?: string;
+  originalSessionId: string;
+  teacherId: string;
+  teacherName: string;
+  school?: string;
+  
+  // 세션 구성 요소
+  materials: {
+    type: 'text' | 'youtube' | 'image' | 'pdf';
+    content?: string;
+    url?: string;
+    title?: string;
+  }[];
+  keywords: string[];
+  
+  // 공유 관련
+  sharedAt: string;
+  isPublic: boolean;
+  copyCount: number;
+  participantCount: number;
+  
+  // 생성자 정보
+  creatorName: string;
+  creatorId: string;
+  
+  // 메타데이터
+  category?: string;
+  tags?: string[];
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  estimatedTime?: number; // 분 단위
+}
+
+// ==================== 공유 토론 시나리오 타입 ====================
+
+export interface FirebaseRealtimeSharedScenario extends FirebaseRealtimeDocument {
+  title: string;
+  description: string;
+  scenario: string;
+  teacherId: string;
+  teacherName: string;
+  school?: string;
+  
+  // AI 생성 관련
+  originalPrompt?: string;
+  aiModel?: string;
+  
+  // 공유 관련
+  sharedAt: string;
+  isPublic: boolean;
+  copyCount: number;
+  
+  // 생성자 정보
+  creatorName: string;
+  creatorId: string;
+  
+  // 메타데이터
+  category?: string;
+  tags?: string[];
+  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  subject?: string;
+  gradeLevel?: string;
+}
+
 // ==================== 컬렉션 경로 상수 ====================
 
 export const FIREBASE_REALTIME_PATHS = {
@@ -138,7 +205,9 @@ export const FIREBASE_REALTIME_PATHS = {
   STUDENTS: 'students',
   OPINIONS: 'opinions',
   NOTIFICATIONS: 'notifications',
-  FEEDBACK_TEMPLATES: 'feedbackTemplates'
+  FEEDBACK_TEMPLATES: 'feedbackTemplates',
+  SHARED_SESSIONS: 'sharedSessions',
+  SHARED_SCENARIOS: 'sharedScenarios'
 } as const;
 
 // ==================== 에러 처리 ====================
@@ -553,6 +622,224 @@ export class RealtimeFeedbackTemplateService extends BaseFirebaseRealtimeService
   }
 }
 
+// ==================== 공유 토론 세션 서비스 ====================
+
+export class RealtimeSharedSessionService extends BaseFirebaseRealtimeService<FirebaseRealtimeSharedSession> {
+  constructor() {
+    super(FIREBASE_REALTIME_PATHS.SHARED_SESSIONS);
+  }
+
+  // 공개된 공유 세션 조회
+  async getPublicSessions(limitCount = 20): Promise<FirebaseRealtimeSharedSession[]> {
+    return this.getMany('isPublic', true, 'sharedAt', limitCount);
+  }
+
+  // 교사별 공유 세션 조회
+  async getByTeacherId(teacherId: string): Promise<FirebaseRealtimeSharedSession[]> {
+    return this.getMany('teacherId', teacherId, 'sharedAt');
+  }
+
+  // 카테고리별 공유 세션 조회
+  async getByCategory(category: string): Promise<FirebaseRealtimeSharedSession[]> {
+    return this.getMany('category', category, 'sharedAt');
+  }
+
+  // 복사 횟수 증가
+  async incrementCopyCount(id: string): Promise<FirebaseRealtimeSharedSession> {
+    const session = await this.getById(id);
+    if (!session) {
+      throw new FirebaseRealtimeServiceError('공유 세션을 찾을 수 없습니다.', 'SHARED_SESSION_NOT_FOUND');
+    }
+
+    return this.update(id, {
+      copyCount: session.copyCount + 1
+    });
+  }
+
+  // 세션 공유하기
+  async shareSession(sessionData: Omit<FirebaseRealtimeSharedSession, 'id' | 'createdAt' | 'updatedAt' | 'sharedAt' | 'copyCount'>): Promise<FirebaseRealtimeSharedSession> {
+    return this.create({
+      ...sessionData,
+      sharedAt: new Date().toISOString(),
+      copyCount: 0
+    });
+  }
+
+  // 공유 세션 목록 조회 (필터링 및 페이지네이션 지원)
+  async getSharedSessions(options: {
+    limit?: number;
+    offset?: number;
+    grade?: string;
+    keyword?: string;
+  } = {}): Promise<FirebaseRealtimeSharedSession[]> {
+    try {
+      const { limit = 20, offset = 0, grade, keyword } = options;
+      
+      // 모든 공개 세션 가져오기
+      let sessions = await this.getPublicSessions(1000); // 충분히 큰 수로 모든 데이터 가져오기
+      
+      // 필터링
+      if (grade) {
+        sessions = sessions.filter(session => 
+          session.tags?.includes(grade) || 
+          session.category === grade
+        );
+      }
+      
+      if (keyword) {
+        const lowerKeyword = keyword.toLowerCase();
+        sessions = sessions.filter(session => 
+          session.title.toLowerCase().includes(lowerKeyword) ||
+          session.description?.toLowerCase().includes(lowerKeyword) ||
+          session.keywords.some(k => k.toLowerCase().includes(lowerKeyword))
+        );
+      }
+      
+      // 정렬 (최신순)
+      sessions.sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime());
+      
+      // 페이지네이션
+      return sessions.slice(offset, offset + limit);
+    } catch (error) {
+      console.error('공유 세션 조회 실패:', error);
+      throw new FirebaseRealtimeServiceError(
+        '공유 세션 조회에 실패했습니다.',
+        'GET_SHARED_SESSIONS_FAILED',
+        error as Error
+      );
+    }
+  }
+
+  // 세션 복사
+  async copySession(sessionId: string, userId: string): Promise<{ success: boolean; sessionId?: string }> {
+    try {
+      // 복사 카운트 증가
+      await this.incrementCopyCount(sessionId);
+      
+      return { success: true, sessionId };
+    } catch (error) {
+      console.error('세션 복사 실패:', error);
+      throw new FirebaseRealtimeServiceError(
+        '세션 복사에 실패했습니다.',
+        'COPY_SESSION_FAILED',
+        error as Error
+      );
+    }
+  }
+}
+
+// ==================== 공유 토론 시나리오 서비스 ====================
+
+export class RealtimeSharedScenarioService extends BaseFirebaseRealtimeService<FirebaseRealtimeSharedScenario> {
+  constructor() {
+    super(FIREBASE_REALTIME_PATHS.SHARED_SCENARIOS);
+  }
+
+  // 공개된 공유 시나리오 조회
+  async getPublicScenarios(limitCount = 20): Promise<FirebaseRealtimeSharedScenario[]> {
+    return this.getMany('isPublic', true, 'sharedAt', limitCount);
+  }
+
+  // 교사별 공유 시나리오 조회
+  async getByTeacherId(teacherId: string): Promise<FirebaseRealtimeSharedScenario[]> {
+    return this.getMany('teacherId', teacherId, 'sharedAt');
+  }
+
+  // 카테고리별 공유 시나리오 조회
+  async getByCategory(category: string): Promise<FirebaseRealtimeSharedScenario[]> {
+    return this.getMany('category', category, 'sharedAt');
+  }
+
+  // 학년별 공유 시나리오 조회
+  async getByGradeLevel(gradeLevel: string): Promise<FirebaseRealtimeSharedScenario[]> {
+    return this.getMany('gradeLevel', gradeLevel, 'sharedAt');
+  }
+
+  // 복사 횟수 증가
+  async incrementCopyCount(id: string): Promise<FirebaseRealtimeSharedScenario> {
+    const scenario = await this.getById(id);
+    if (!scenario) {
+      throw new FirebaseRealtimeServiceError('공유 시나리오를 찾을 수 없습니다.', 'SHARED_SCENARIO_NOT_FOUND');
+    }
+
+    return this.update(id, {
+      copyCount: scenario.copyCount + 1
+    });
+  }
+
+  // 시나리오 공유하기
+  async shareScenario(scenarioData: Omit<FirebaseRealtimeSharedScenario, 'id' | 'createdAt' | 'updatedAt' | 'sharedAt' | 'copyCount'>): Promise<FirebaseRealtimeSharedScenario> {
+    return this.create({
+      ...scenarioData,
+      sharedAt: new Date().toISOString(),
+      copyCount: 0
+    });
+  }
+
+  // 공유 시나리오 목록 조회 (필터링 및 페이지네이션 지원)
+  async getSharedScenarios(options: {
+    limit?: number;
+    offset?: number;
+    grade?: string;
+    keyword?: string;
+  } = {}): Promise<FirebaseRealtimeSharedScenario[]> {
+    try {
+      const { limit = 20, offset = 0, grade, keyword } = options;
+      
+      // 모든 공개 시나리오 가져오기
+      let scenarios = await this.getPublicScenarios(1000); // 충분히 큰 수로 모든 데이터 가져오기
+      
+      // 필터링
+      if (grade) {
+        scenarios = scenarios.filter(scenario => 
+          scenario.gradeLevel === grade ||
+          scenario.tags?.includes(grade)
+        );
+      }
+      
+      if (keyword) {
+        const lowerKeyword = keyword.toLowerCase();
+        scenarios = scenarios.filter(scenario => 
+          scenario.title.toLowerCase().includes(lowerKeyword) ||
+          scenario.description.toLowerCase().includes(lowerKeyword) ||
+          scenario.scenario.toLowerCase().includes(lowerKeyword) ||
+          scenario.tags?.some(tag => tag.toLowerCase().includes(lowerKeyword))
+        );
+      }
+      
+      // 정렬 (최신순)
+      scenarios.sort((a, b) => new Date(b.sharedAt).getTime() - new Date(a.sharedAt).getTime());
+      
+      // 페이지네이션
+      return scenarios.slice(offset, offset + limit);
+    } catch (error) {
+      console.error('공유 시나리오 조회 실패:', error);
+      throw new FirebaseRealtimeServiceError(
+        '공유 시나리오 조회에 실패했습니다.',
+        'GET_SHARED_SCENARIOS_FAILED',
+        error as Error
+      );
+    }
+  }
+
+  // 시나리오 복사
+  async copyScenario(scenarioId: string, userId: string): Promise<{ success: boolean; scenarioId?: string }> {
+    try {
+      // 복사 카운트 증가
+      await this.incrementCopyCount(scenarioId);
+      
+      return { success: true, scenarioId };
+    } catch (error) {
+      console.error('시나리오 복사 실패:', error);
+      throw new FirebaseRealtimeServiceError(
+        '시나리오 복사에 실패했습니다.',
+        'COPY_SCENARIO_FAILED',
+        error as Error
+      );
+    }
+  }
+}
+
 // ==================== 서비스 인스턴스 생성 ====================
 
 export const realtimeTeacherService = new RealtimeTeacherService();
@@ -561,3 +848,5 @@ export const realtimeStudentService = new RealtimeStudentService();
 export const realtimeOpinionService = new RealtimeOpinionService();
 export const realtimeNotificationService = new RealtimeNotificationService();
 export const realtimeFeedbackTemplateService = new RealtimeFeedbackTemplateService();
+export const realtimeSharedSessionService = new RealtimeSharedSessionService();
+export const realtimeSharedScenarioService = new RealtimeSharedScenarioService();

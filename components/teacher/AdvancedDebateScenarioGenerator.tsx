@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
 import { Card } from '@/components/common/Card'
+import { realtimeSharedScenarioService } from '@/lib/firebase/realtime-services'
+import { useAuth } from '@/contexts/AuthContext'
 
 // 타입 정의 (참고 구현체 기반 고품질 JSON 구조)
 interface DebateScenario {
@@ -61,6 +63,7 @@ interface TopicRecommendation {
 }
 
 export default function AdvancedDebateScenarioGenerator() {
+  const { user } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [showProgressModal, setShowProgressModal] = useState(false)
@@ -78,6 +81,7 @@ export default function AdvancedDebateScenarioGenerator() {
   const [additionalInfo, setAdditionalInfo] = useState('')
   const [generatedScenario, setGeneratedScenario] = useState<DebateScenario | null>(null)
   const [isOfflineMode, setIsOfflineMode] = useState(false)
+  const [sharingScenarioId, setSharingScenarioId] = useState<string | null>(null)
 
   // 교육 목적 옵션
   const purposes = [
@@ -443,6 +447,54 @@ export default function AdvancedDebateScenarioGenerator() {
     // 세션 생성 페이지로 데이터와 함께 이동
     localStorage.setItem('scenarioData', JSON.stringify(sessionData))
     window.location.href = '/teacher/session/create'
+  }
+
+  // 시나리오 공유 함수
+  const handleShareScenario = async (scenario: DebateScenario) => {
+    if (!user) {
+      alert('로그인이 필요합니다.')
+      return
+    }
+
+    try {
+      setSharingScenarioId('sharing')
+      
+      // 공유할 시나리오 데이터 준비
+       const sharedScenarioData = {
+         originalScenarioId: `generated_${Date.now()}`,
+         title: scenario.title || scenario.topic || '제목 없음',
+         description: scenario.background || '토론 시나리오입니다.',
+         scenario: JSON.stringify({
+            topic: scenario.topic,
+            purpose: scenario.purpose,
+            grade: scenario.grade,
+            timeLimit: scenario.timeLimit,
+            background: scenario.background,
+            proArguments: scenario.proArguments || scenario.pros || [],
+            conArguments: scenario.conArguments || scenario.cons || [],
+            keyQuestions: scenario.keyQuestions || [],
+            expectedOutcomes: scenario.expectedOutcomes || [],
+            materials: scenario.materials || [],
+            teacherTips: scenario.teacherTips || '',
+            keywords: scenario.keywords || [],
+            subject: scenario.subject || []
+          }),
+         teacherId: user.uid,
+         teacherName: user.displayName || user.email || '익명',
+         creatorId: user.uid,
+         creatorName: user.displayName || user.email || '익명',
+         participantCount: 0,
+         isPublic: true
+       }
+
+      await realtimeSharedScenarioService.shareScenario(sharedScenarioData)
+      alert('시나리오가 성공적으로 공유되었습니다!')
+    } catch (error) {
+      console.error('시나리오 공유 실패:', error)
+      alert('시나리오 공유에 실패했습니다.')
+    } finally {
+      setSharingScenarioId(null)
+    }
   }
 
   // 시나리오를 텍스트 형태로 변환 (새로운 JSON 구조 대응)
@@ -897,6 +949,23 @@ ${(scenario.subject || []).join(', ')}
           </div>
 
           <div className="flex justify-center space-x-3">
+            <Button
+              onClick={() => {
+                const scenarioText = generateScenarioText(generatedScenario)
+                navigator.clipboard.writeText(scenarioText)
+                alert('시나리오가 클립보드에 복사되었습니다!')
+              }}
+              variant="secondary"
+            >
+              📋 클립보드에 복사
+            </Button>
+            <Button
+              onClick={() => handleShareScenario(generatedScenario)}
+              variant="secondary"
+              disabled={sharingScenarioId === 'sharing'}
+            >
+              {sharingScenarioId === 'sharing' ? '공유 중...' : '🔗 교육자료실에 공유'}
+            </Button>
             <Button onClick={resetGenerator} variant="secondary">
               새 시나리오 생성
             </Button>

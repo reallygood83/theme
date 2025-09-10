@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { Session } from '@/lib/utils'
 import { Button } from '../common/Button'
 import EditSessionModal from './EditSessionModal'
+import { realtimeSharedSessionService } from '@/lib/firebase/realtime-services'
+import { useAuth } from '@/contexts/AuthContext'
 
 interface SessionListProps {
   sessions: Session[]
@@ -22,6 +24,8 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
   const [duplicatingSessionId, setDuplicatingSessionId] = useState<string | null>(null)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
+  const [sharingSessionId, setSharingSessionId] = useState<string | null>(null)
+  const { user } = useAuth()
 
   // sessions prop 변화 감지 (디버깅용)
   useEffect(() => {
@@ -206,6 +210,50 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     setEditingSession(null)
     if (onRefresh) {
       onRefresh()
+    }
+  }
+
+  // 세션 공유 함수
+  const handleShareSession = async (session: Session, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    if (sharingSessionId || !user) return
+    
+    try {
+      setSharingSessionId(session.sessionId)
+      
+      // 공유할 세션 데이터 준비 (학생 질문 데이터 제외)
+        const sharedSessionData = {
+          originalSessionId: session.sessionId,
+          title: session.title || '제목 없음',
+          materialText: session.materialText || '',
+          materialUrl: session.materialUrl || '',
+          materials: (session.materials || []).map(material => ({
+             type: material.type === 'file' ? 'pdf' as const : 
+                   material.type === 'link' ? 'text' as const : 
+                   material.type === 'text' ? 'text' as const :
+                   material.type === 'youtube' ? 'youtube' as const : 'text' as const,
+             content: material.content,
+             url: material.url || material.fileUrl,
+             title: material.linkTitle || material.fileName
+           })),
+          keywords: session.keywords || [],
+          teacherId: user.uid,
+          teacherName: user.displayName || user.email || '익명',
+          creatorId: user.uid,
+          creatorName: user.displayName || user.email || '익명',
+          participantCount: Object.keys(session.questions || {}).length,
+          isPublic: true
+        }
+      
+      await realtimeSharedSessionService.shareSession(sharedSessionData)
+      alert('토론 세션이 교육자료실에 공유되었습니다!')
+    } catch (error) {
+      console.error('세션 공유 오류:', error)
+      alert('세션 공유에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setSharingSessionId(null)
     }
   }
   
@@ -423,6 +471,24 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                   {/* 세션 액션 버튼 */}
                   <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-100">
                     <div className="flex gap-2">
+                      {/* 공유 버튼 */}
+                      <button
+                        className={`p-2 bg-white rounded-full shadow hover:bg-gray-50 ${sharingSessionId === session.sessionId ? 'opacity-50 pointer-events-none' : ''}`}
+                        onClick={(e) => handleShareSession(session, e)}
+                        title="교육자료실에 공유"
+                      >
+                        {sharingSessionId === session.sessionId ? (
+                          <svg className="animate-spin h-5 w-5 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                          </svg>
+                        )}
+                      </button>
+
                       {/* 수정 버튼 */}
                       <button
                         className="p-2 bg-white rounded-full shadow hover:bg-gray-50"
