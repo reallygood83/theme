@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     uid: user.uid,
     displayName: teacher.displayName || teacher.name,
     email: teacher.email,
-    role: teacher.permissions.isAdmin ? 'admin' : 'teacher',
+    role: teacher.permissions?.isAdmin ? 'admin' : 'teacher',
     createdAt: new Date(teacher.createdAt).getTime()
   } : null;
 
