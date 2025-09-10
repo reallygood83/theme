@@ -1,12 +1,9 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Session } from '@/lib/utils'
-import { Button } from '../common/Button'
 import EditSessionModal from './EditSessionModal'
-import { useAuth } from '@/contexts/AuthContext'
 
 interface SessionListProps {
   sessions: Session[]
@@ -16,14 +13,11 @@ interface SessionListProps {
 }
 
 export default function SessionList({ sessions, loading, error, onRefresh }: SessionListProps) {
-  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'questions'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [duplicatingSessionId, setDuplicatingSessionId] = useState<string | null>(null)
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
-  const { user } = useAuth()
 
   // sessions prop 변화 감지 (디버깅용)
   useEffect(() => {
@@ -114,41 +108,6 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     }
   }
   
-  // 세션 복제 함수
-  const handleDuplicateSession = async (sessionId: string, e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    if (duplicatingSessionId) return
-    
-    try {
-      setDuplicatingSessionId(sessionId)
-      
-      const response = await fetch('/api/sessions/duplicate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ sessionId }),
-      })
-      
-      if (!response.ok) {
-        throw new Error('세션 복제에 실패했습니다.')
-      }
-      
-      const { success, sessionId: newSessionId, sessionCode } = await response.json()
-      
-      if (success) {
-        // 새로 생성된 세션 페이지로 이동
-        router.push(`/teacher/session/${newSessionId}?code=${sessionCode}`)
-      }
-    } catch (error) {
-      console.error('세션 복제 오류:', error)
-      alert('세션 복제에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setDuplicatingSessionId(null)
-    }
-  }
 
   // 세션 삭제 함수
   const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
@@ -339,11 +298,6 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                               분석 완료
                             </span>
                           )}
-                          {session.isDuplicated && (
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                              복제됨
-                            </span>
-                          )}
                         </div>
                         <span className="text-sm text-gray-500">
                           {formatDate(session.createdAt)}
@@ -441,23 +395,6 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                         </svg>
                       </button>
 
-                      {/* 복제 버튼 */}
-                      <button
-                        className={`p-2 bg-white rounded-full shadow hover:bg-gray-50 ${duplicatingSessionId === session.sessionId ? 'opacity-50 pointer-events-none' : ''}`}
-                        onClick={(e) => handleDuplicateSession(session.sessionId, e)}
-                        title="세션 복제"
-                      >
-                        {duplicatingSessionId === session.sessionId ? (
-                          <svg className="animate-spin h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                          </svg>
-                        )}
-                      </button>
 
                       {/* 삭제 버튼 */}
                       <button
