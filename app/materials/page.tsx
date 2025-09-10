@@ -336,7 +336,7 @@ const worksheets: Worksheet[] = [
 
 export default function MaterialsPage() {
   const [selectedWorksheet, setSelectedWorksheet] = useState<Worksheet | null>(null);
-  const [activeTab, setActiveTab] = useState<'worksheets' | 'sessions' | 'scenarios'>('worksheets');
+  const [activeTab, setActiveTab] = useState<'sessions' | 'scenarios' | 'worksheets'>('sessions');
 
   const handlePrint = (worksheet: Worksheet) => {
     const printWindow = window.open('', '_blank');
@@ -402,119 +402,318 @@ export default function MaterialsPage() {
 
   return (
     <RequireAuth>
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">교육자료실</h1>
-            <p className="text-gray-600">토론 교육을 위한 활동지, 공유 세션, 토론 주제를 제공합니다.</p>
+          <div className="mb-8 text-center">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+              📚 교육자료실
+            </h1>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              토론 교육을 위한 다양한 자료들을 한곳에서 만나보세요. 검증된 세션부터 창의적인 주제, 체계적인 활동지까지!
+            </p>
           </div>
 
-          {/* 탭 네비게이션 */}
+          {/* 개선된 탭 네비게이션 */}
           <div className="mb-8">
-            <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <button
-                  onClick={() => setActiveTab('worksheets')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === 'worksheets'
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  📝 활동지
-                </button>
+            <div className="bg-white rounded-xl shadow-lg p-2">
+              <nav className="flex space-x-1">
                 <button
                   onClick={() => setActiveTab('sessions')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex-1 py-4 px-6 rounded-lg font-semibold text-sm transition-all duration-300 transform ${
                     activeTab === 'sessions'
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg scale-105'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:scale-102'
                   }`}
                 >
-                  🎯 토론 세션 공유
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-xl">🎯</span>
+                    <span>토론 세션 공유</span>
+                  </div>
+                  <div className="text-xs mt-1 opacity-80">
+                    {activeTab === 'sessions' ? '완성된 세션을 바로 활용하세요' : '즉시 사용 가능한 세션'}
+                  </div>
                 </button>
+                
                 <button
                   onClick={() => setActiveTab('scenarios')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  className={`flex-1 py-4 px-6 rounded-lg font-semibold text-sm transition-all duration-300 transform ${
                     activeTab === 'scenarios'
-                      ? 'border-purple-500 text-purple-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg scale-105'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:scale-102'
                   }`}
                 >
-                  💡 토론 주제 공유
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-xl">💡</span>
+                    <span>토론 주제 공유</span>
+                  </div>
+                  <div className="text-xs mt-1 opacity-80">
+                    {activeTab === 'scenarios' ? '창의적인 주제로 새로운 토론을' : '다양한 토론 주제'}
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveTab('worksheets')}
+                  className={`flex-1 py-4 px-6 rounded-lg font-semibold text-sm transition-all duration-300 transform ${
+                    activeTab === 'worksheets'
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg scale-105'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:scale-102'
+                  }`}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <span className="text-xl">📝</span>
+                    <span>활동지</span>
+                  </div>
+                  <div className="text-xs mt-1 opacity-80">
+                    {activeTab === 'worksheets' ? '체계적인 토론 준비 도구' : '인쇄용 활동지'}
+                  </div>
                 </button>
               </nav>
             </div>
           </div>
 
+          {/* 토론 세션 공유 탭 */}
+          {activeTab === 'sessions' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-8 border border-blue-200">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-2xl">🎯</span>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-blue-900 mb-1">공유된 토론 세션</h2>
+                    <p className="text-blue-700 text-lg">검증된 학습 자료와 함께 완성된 토론 세션을 바로 활용하세요</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-blue-900">즉시 활용 가능</div>
+                      <div className="text-sm text-blue-700">세션 코드로 바로 시작</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-blue-900">교사 추천</div>
+                      <div className="text-sm text-blue-700">검증된 양질의 세션</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-blue-900">학습 자료 포함</div>
+                      <div className="text-sm text-blue-700">완전한 교육 패키지</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <SharedSessionsList />
+            </div>
+          )}
+
+          {/* 토론 주제 공유 탭 */}
+          {activeTab === 'scenarios' && (
+            <div className="space-y-6">
+              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-xl p-8 border border-green-200">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                    <span className="text-2xl">💡</span>
+                  </div>
+                  <div>
+                    <h2 className="text-3xl font-bold text-green-900 mb-1">공유된 토론 주제</h2>
+                    <p className="text-green-700 text-lg">창의적이고 흥미진진한 토론 주제로 학생들의 참여를 이끌어내세요</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-green-900">창의적 주제</div>
+                      <div className="text-sm text-green-700">새로운 관점의 토론</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-green-900">참여도 UP</div>
+                      <div className="text-sm text-green-700">학생 관심사 반영</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                    <div className="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-green-900">다양한 난이도</div>
+                      <div className="text-sm text-green-700">수준별 맞춤 주제</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <SharedScenariosList />
+            </div>
+          )}
+
           {/* 활동지 탭 */}
           {activeTab === 'worksheets' && (
             !selectedWorksheet ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {worksheets.map((worksheet) => (
-                  <Card key={worksheet.id} className="hover:shadow-lg transition-shadow">
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                            {worksheet.title}
-                          </h3>
-                          <p className="text-gray-600 text-sm">
-                            {worksheet.description}
-                          </p>
-                        </div>
-                        <div className="ml-4">
-                          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl p-8 border border-purple-200">
+                  <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4">
+                      <span className="text-2xl">📝</span>
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-purple-900 mb-1">토론 활동지</h2>
+                      <p className="text-purple-700 text-lg">체계적인 토론 준비를 위한 단계별 활동지를 제공합니다</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                    <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V8zm0 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1v-2z" clipRule="evenodd"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-purple-900">체계적 구성</div>
+                        <div className="text-sm text-purple-700">단계별 학습 가이드</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                      <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm3 2h6v4H7V4zm8 6v6h-2v-6h2zm-4 6v-6H7v6h4z" clipRule="evenodd"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-purple-900">즉시 인쇄</div>
+                        <div className="text-sm text-purple-700">바로 사용 가능</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-3 bg-white/60 rounded-lg p-3">
+                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1zM3 7a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V7zM4 2a1 1 0 000 2h12a1 1 0 100-2H4z" clipRule="evenodd"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-purple-900">HTML 다운로드</div>
+                        <div className="text-sm text-purple-700">디지털 활용 가능</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {worksheets.map((worksheet, index) => (
+                    <Card key={worksheet.id} className="group hover:shadow-2xl transition-all duration-500 hover:scale-105 border-0 shadow-lg overflow-hidden bg-white">
+                      <div className="p-8">
+                        <div className="mb-6 text-center">
+                          <div className={`w-20 h-20 mx-auto mb-4 rounded-2xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 ${
+                            index === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' :
+                            index === 1 ? 'bg-gradient-to-br from-blue-400 to-blue-600' :
+                            'bg-gradient-to-br from-purple-400 to-purple-600'
+                          }`}>
+                            <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                             </svg>
                           </div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-purple-700 transition-colors duration-300">
+                            {worksheet.title}
+                          </h3>
+                          <p className="text-gray-600 leading-relaxed">
+                            {worksheet.description}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <Button
+                            onClick={() => setSelectedWorksheet(worksheet)}
+                            variant="primary"
+                            size="sm"
+                            className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
+                          >
+                            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            미리보기
+                          </Button>
+                          
+                          <div className="flex space-x-2">
+                            <Button
+                              onClick={() => handlePrint(worksheet)}
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 border-2 border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 font-medium"
+                            >
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                              </svg>
+                              인쇄
+                            </Button>
+                            <Button
+                              onClick={() => handleDownload(worksheet)}
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 border-2 border-gray-300 text-gray-700 hover:border-green-400 hover:bg-green-50 hover:text-green-700 transition-all duration-200 font-medium"
+                            >
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                              </svg>
+                              다운로드
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="flex space-x-2">
-                        <Button
-                          onClick={() => setSelectedWorksheet(worksheet)}
-                          variant="primary"
-                          size="sm"
-                          className="flex-1"
-                        >
-                          미리보기
-                        </Button>
-                        <Button
-                          onClick={() => handlePrint(worksheet)}
-                          variant="outline"
-                          size="sm"
-                          className="px-3"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                          </svg>
-                        </Button>
-                        <Button
-                          onClick={() => handleDownload(worksheet)}
-                          variant="outline"
-                          size="sm"
-                          className="px-3"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  ))}
+                </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm">
-                <div className="p-6 border-b border-gray-200">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-6 text-white">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">
+                      <h2 className="text-2xl font-bold mb-2">
                         {selectedWorksheet.title}
                       </h2>
-                      <p className="text-gray-600 mt-1">
+                      <p className="text-purple-100">
                         {selectedWorksheet.description}
                       </p>
                     </div>
@@ -523,6 +722,7 @@ export default function MaterialsPage() {
                         onClick={() => handlePrint(selectedWorksheet)}
                         variant="outline"
                         size="sm"
+                        className="border-white text-white hover:bg-white hover:text-purple-600 transition-colors"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
@@ -533,6 +733,7 @@ export default function MaterialsPage() {
                         onClick={() => handleDownload(selectedWorksheet)}
                         variant="outline"
                         size="sm"
+                        className="border-white text-white hover:bg-white hover:text-purple-600 transition-colors"
                       >
                         <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -543,6 +744,7 @@ export default function MaterialsPage() {
                         onClick={() => setSelectedWorksheet(null)}
                         variant="secondary"
                         size="sm"
+                        className="bg-white text-purple-600 hover:bg-purple-50"
                       >
                         목록으로
                       </Button>
@@ -550,7 +752,7 @@ export default function MaterialsPage() {
                   </div>
                 </div>
                 
-                <div className="p-6">
+                <div className="p-8">
                   <div 
                     className="prose max-w-none"
                     dangerouslySetInnerHTML={{ __html: selectedWorksheet.content }}
@@ -558,30 +760,6 @@ export default function MaterialsPage() {
                 </div>
               </div>
             )
-          )}
-
-          {/* 토론 세션 공유 탭 */}
-          {activeTab === 'sessions' && (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">공유된 토론 세션</h2>
-                <p className="text-gray-600">다른 선생님들이 공유한 토론 세션을 활용해보세요.</p>
-              </div>
-              
-              <SharedSessionsList />
-            </div>
-          )}
-
-          {/* 토론 주제 공유 탭 */}
-          {activeTab === 'scenarios' && (
-            <div>
-              <div className="mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">공유된 토론 주제</h2>
-                <p className="text-gray-600">다른 선생님들이 공유한 토론 주제를 활용해보세요.</p>
-              </div>
-              
-              <SharedScenariosList />
-            </div>
           )}
         </div>
       </div>
