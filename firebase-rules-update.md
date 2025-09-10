@@ -17,29 +17,62 @@
 ```json
 {
   "rules": {
-    ".read": "auth != null",
-    ".write": "auth != null",
     "teachers": {
       "$userId": {
-        ".write": "$userId === auth.uid"
+        ".read": "auth != null",
+        ".write": "auth != null && $userId === auth.uid"
       }
     },
     "sessions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
       "$sessionId": {
-        ".write": "root.child('teachers').child(auth.uid).exists()"
+        "aiAnalysisResult": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
       }
     },
-    "sharedSessions": {
-      ".read": "auth != null",
-      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    "session_participants": {
+      "$sessionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     },
-    "sharedScenarios": {
-      ".read": "auth != null",
-      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    "session_opinions": {
+      "$sessionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "questions": {
+      "$sessionId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$questionId": {
+          ".validate": "newData.hasChildren(['author', 'content', 'createdAt', 'sessionId'])"
+        }
+      }
     },
     "debate_opinions": {
-      ".write": true,
-      ".read": true
+      "$sessionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "shared-sessions": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "shared-scenarios": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null && $uid === auth.uid",
+        ".write": "auth != null && $uid === auth.uid"
+      }
     }
   }
 }
