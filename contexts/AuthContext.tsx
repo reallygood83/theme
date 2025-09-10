@@ -122,87 +122,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               provider: 'google'
             });
             
-            // Fetch teacher data with timeout to prevent hanging
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
-
-            try {
-              // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
-              const response = await fetch('/api/debate/teachers', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  firebaseUid: firebaseUser.uid,
-                  email: firebaseUser.email!,
-                  name: name,
-                  provider: 'google'
-                }),
-                signal: controller.signal
-              });
-
-              clearTimeout(timeoutId);
-
-              if (response.ok) {
-                const data = await response.json();
-                console.log('Teacher API response:', data); // 디버그용 로그
-                if (data.success) {
-                  // API에서 teacher를 반환하므로 data.teacher 사용하되 안전한 데이터 보장
-                  const teacherData = data.teacher || data.data;
-                  if (teacherData) {
-                    setTeacher(ensureSafeTeacherData(teacherData));
-                  } else {
-                    console.warn('Teacher API success but no teacher data:', data);
-                    // 기본 teacher 객체 생성
-                    setTeacher(ensureSafeTeacherData({
-                      _id: firebaseUser.uid,
-                      email: firebaseUser.email!,
-                      name: name,
-                      provider: 'google',
-                      createdAt: new Date().toISOString()
-                    }));
-                  }
-                } else {
-                  console.warn('Teacher API success but no data:', data);
-                  // 기본 teacher 객체 생성
-                  setTeacher(ensureSafeTeacherData({
-                    _id: firebaseUser.uid,
-                    email: firebaseUser.email!,
-                    name: name,
-                    provider: 'google',
-                    createdAt: new Date().toISOString()
-                  }));
-                }
-              } else {
-                const errorText = await response.text();
-                console.error('Teacher API returned non-OK status:', response.status, response.statusText, errorText);
-                // API 실패 시에도 기본 teacher 객체 생성하여 무한 로딩 방지
-                setTeacher(ensureSafeTeacherData({
-                  _id: firebaseUser.uid,
-                  email: firebaseUser.email!,
-                  name: name,
-                  provider: 'google',
-                  createdAt: new Date().toISOString()
-                }));
-              }
-            } catch (apiError: any) {
-              clearTimeout(timeoutId);
-              if (apiError.name === 'AbortError') {
-                console.error('Teacher API call timed out after 15s');
-              } else {
-                console.error('Teacher API call failed:', apiError);
-              }
-              // API 호출 실패 시에도 기본 teacher 객체 생성
-              setTeacher(ensureSafeTeacherData({
-                _id: firebaseUser.uid,
+            // Firebase 인증만으로 기본 teacher 객체 생성 (API 호출 제거)
+            console.log('Firebase 인증 성공, 기본 teacher 객체 생성');
+            setTeacher(ensureSafeTeacherData({
+              _id: firebaseUser.uid,
+              email: firebaseUser.email!,
+              name: name,
+              provider: 'google',
+              createdAt: new Date().toISOString()
+            }));
+            setLoading(false);
+            
+            // 백그라운드에서 teacher 정보 저장 시도 (비동기, 실패해도 무시)
+            fetch('/api/debate/teachers', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                firebaseUid: firebaseUser.uid,
                 email: firebaseUser.email!,
                 name: name,
-                provider: 'google',
-                createdAt: new Date().toISOString()
-              }));
-            } finally {
-              // API 호출 완료 후 로딩 상태 해제
-              setLoading(false);
-            }
+                provider: 'google'
+              }),
+            })
+            .then(response => {
+              if (response.ok) {
+                console.log('Background teacher API call successful');
+              } else {
+                console.warn('Background teacher API call failed, but continuing with local auth');
+              }
+            })
+            .catch(error => {
+              console.warn('Background teacher API call error, but continuing with local auth:', error);
+            });
           } else {
             console.warn('Skipping teacher API call due to missing required fields:', {
               hasUid: !!firebaseUser.uid,
@@ -288,11 +239,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // JWT 로그인 (더 이상 지원하지 않음 - Firebase 전용)
   const signInWithCredentials = async (
-    email: string, 
-    password: string, 
-    name?: string, 
-    school?: string, 
-    position?: string
+    _email: string, 
+    _password: string, 
+    _name?: string, 
+    _school?: string, 
+    _position?: string
   ) => {
     throw new Error('JWT 로그인은 더 이상 지원되지 않습니다. Google 로그인을 사용해주세요.');
   };
