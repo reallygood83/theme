@@ -103,10 +103,10 @@ export async function POST(request: NextRequest) {
     console.log('토론 의견 제출 요청:', { topic, content, studentName, studentId, classId, sessionCode })
 
     // 필수 필드 검증
-    if (!topic || !content || !studentName || !studentId) {
-      console.log('필수 필드 누락:', { topic: !!topic, content: !!content, studentName: !!studentName, studentId: !!studentId })
+    if (!topic || !content || !studentName || !studentId || !sessionCode) {
+      console.log('필수 필드 누락:', { topic: !!topic, content: !!content, studentName: !!studentName, studentId: !!studentId, sessionCode: !!sessionCode })
       return NextResponse.json(
-        { success: false, error: '필수 정보가 누락되었습니다.' },
+        { success: false, error: '필수 정보(토론 주제, 내용, 학생명, 학생ID, 세션코드)가 누락되었습니다.' },
         { status: 400 }
       )
     }
@@ -123,14 +123,56 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       )
     }
+
+    // 🔥 핵심: sessionCode → sessionId, teacherId 변환
+    console.log('🔍 세션 코드로 세션 및 교사 정보 조회 중:', sessionCode)
     
-    // 기존 session_participants와 동일한 패턴 사용
-    let targetPath = 'session_opinions' // 기본 경로
+    const sessionsRef = ref(db, 'sessions')
+    const sessionsSnapshot = await get(sessionsRef)
     
-    if (classId) {
-      // 세션ID(classId)별로 의견 저장 - session_participants와 동일한 구조
-      targetPath = `session_opinions/${classId}`
+    if (!sessionsSnapshot.exists()) {
+      console.log('❌ 세션 데이터가 존재하지 않음')
+      return NextResponse.json(
+        { success: false, error: '세션을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
     }
+
+    const sessions = sessionsSnapshot.val()
+    let targetSession = null
+    let sessionId = null
+    let teacherId = null
+
+    // sessionCode 또는 accessCode로 세션 찾기
+    console.log(`🔍 ${sessionCode} 코드로 세션 검색 중...`)
+    for (const [id, session] of Object.entries(sessions)) {
+      const currentSessionCode = (session as any).sessionCode
+      const currentAccessCode = (session as any).accessCode
+      const sessionTitle = (session as any).title
+      const sessionTeacherId = (session as any).teacherId
+      
+      console.log(`세션 ${id}: 제목="${sessionTitle}", sessionCode=${currentSessionCode || 'undefined'}, accessCode=${currentAccessCode || 'undefined'}, teacherId=${sessionTeacherId || 'undefined'}`)
+      
+      // sessionCode 또는 accessCode 중 하나라도 일치하면 찾은 것으로 간주
+      if (currentSessionCode === sessionCode || currentAccessCode === sessionCode) {
+        targetSession = session
+        sessionId = id
+        teacherId = sessionTeacherId
+        console.log(`✅ 매칭된 세션 발견: ${id} (teacherId: ${teacherId})`)
+        break
+      }
+    }
+
+    if (!targetSession || !sessionId || !teacherId) {
+      console.log(`❌ ${sessionCode} 코드에 해당하는 세션 또는 교사 정보 없음`)
+      return NextResponse.json(
+        { success: false, error: '잘못된 세션 코드이거나 교사 정보가 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    // 🔥 핵심: debate_opinions/${sessionId} 경로에 저장 (교사가 조회하는 경로와 동일)
+    const targetPath = `debate_opinions/${sessionId}`
     
     console.log('🔥 Firebase 레퍼런스 생성 중...', targetPath)
     let opinionsRef, newOpinionRef
@@ -152,9 +194,12 @@ export async function POST(request: NextRequest) {
       studentName,
       studentId,
       classId: classId || '',
-      sessionCode: sessionCode || '',
+      sessionCode: sessionCode,
+      sessionId: sessionId,          // 🔥 추가: 세션 ID
+      teacherId: teacherId,          // 🔥 추가: 교사 ID (핵심!)
       status: 'pending',
       submittedAt: new Date().toISOString(),
+      createdAt: new Date().toISOString(),  // teacher API가 기대하는 필드
       referenceCode: `DEBATE_${Date.now()}_${studentId.slice(-4)}`
     }
 

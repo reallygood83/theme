@@ -65,10 +65,33 @@ export async function GET(request: NextRequest) {
 
     console.log(`토론 의견 ${allOpinions.length}개 조회 완료`)
 
+    // 통계 계산
+    const stats = {
+      total: allOpinions.length,
+      pending: allOpinions.filter(op => op.status === 'pending').length,
+      feedback_given: allOpinions.filter(op => op.status === 'feedback_given').length,
+      reviewed: allOpinions.filter(op => op.status === 'reviewed').length
+    }
+
+    // 프론트엔드가 기대하는 형식으로 응답
     return NextResponse.json({
       success: true,
-      data: allOpinions,
-      count: allOpinions.length
+      data: {
+        opinions: allOpinions.map(opinion => ({
+          _id: opinion.id,
+          topic: opinion.topic,
+          content: opinion.content,
+          studentName: opinion.studentName,
+          studentClass: opinion.classId || '',
+          status: opinion.status || 'pending',
+          submittedAt: opinion.submittedAt || opinion.createdAt,
+          aiFeedback: opinion.aiFeedback,
+          teacherFeedback: opinion.teacherFeedback,
+          teacherFeedbackAt: opinion.teacherFeedbackAt,
+          referenceCode: opinion.referenceCode
+        })),
+        stats: stats
+      }
     })
     
   } catch (error) {
