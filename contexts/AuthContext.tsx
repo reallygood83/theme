@@ -122,28 +122,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               provider: 'google'
             });
             
-            // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
-            const response = await fetch('/api/debate/teachers', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                firebaseUid: firebaseUser.uid,
-                email: firebaseUser.email,
-                name: name,
-                provider: 'google'
-              })
-            });
+            try {
+              // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
+              const response = await fetch('/api/debate/teachers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  firebaseUid: firebaseUser.uid,
+                  email: firebaseUser.email,
+                  name: name,
+                  provider: 'google'
+                })
+              });
 
-            if (response.ok) {
-              const data = await response.json();
-              console.log('Teacher API response:', data); // 디버그용 로그
-              if (data.success) {
-                // API에서 teacher를 반환하므로 data.teacher 사용하되 안전한 데이터 보장
-                const teacherData = data.teacher || data.data;
-                if (teacherData) {
-                  setTeacher(ensureSafeTeacherData(teacherData));
+              if (response.ok) {
+                const data = await response.json();
+                console.log('Teacher API response:', data); // 디버그용 로그
+                if (data.success) {
+                  // API에서 teacher를 반환하므로 data.teacher 사용하되 안전한 데이터 보장
+                  const teacherData = data.teacher || data.data;
+                  if (teacherData) {
+                    setTeacher(ensureSafeTeacherData(teacherData));
+                  } else {
+                    console.warn('Teacher API success but no teacher data:', data);
+                    // 기본 teacher 객체 생성
+                    setTeacher(ensureSafeTeacherData({
+                      _id: firebaseUser.uid,
+                      email: firebaseUser.email,
+                      name: name,
+                      provider: 'google',
+                      createdAt: new Date().toISOString()
+                    }));
+                  }
                 } else {
-                  console.warn('Teacher API success but no teacher data:', data);
+                  console.warn('Teacher API success but no data:', data);
                   // 기본 teacher 객체 생성
                   setTeacher(ensureSafeTeacherData({
                     _id: firebaseUser.uid,
@@ -154,8 +166,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   }));
                 }
               } else {
-                console.warn('Teacher API success but no data:', data);
-                // 기본 teacher 객체 생성
+                const errorText = await response.text();
+                console.error('Teacher API returned non-OK status:', response.status, response.statusText, errorText);
+                // API 실패 시에도 기본 teacher 객체 생성하여 무한 로딩 방지
                 setTeacher(ensureSafeTeacherData({
                   _id: firebaseUser.uid,
                   email: firebaseUser.email,
@@ -164,10 +177,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   createdAt: new Date().toISOString()
                 }));
               }
-            } else {
-              const errorText = await response.text();
-              console.error('Teacher API returned non-OK status:', response.status, response.statusText, errorText);
-              // API 실패 시에도 기본 teacher 객체 생성하여 무한 로딩 방지
+            } catch (apiError) {
+              console.error('Teacher API call failed:', apiError);
+              // API 호출 실패 시에도 기본 teacher 객체 생성
               setTeacher(ensureSafeTeacherData({
                 _id: firebaseUser.uid,
                 email: firebaseUser.email,
@@ -175,6 +187,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 provider: 'google',
                 createdAt: new Date().toISOString()
               }));
+            } finally {
+              // 모든 경우에 로딩 상태 해제
+              setLoading(false);
             }
           } else {
             console.warn('Skipping teacher API call due to missing required fields:', {
@@ -182,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               hasEmail: !!firebaseUser.email,
               hasName: !!firebaseUser.displayName
             });
+            setLoading(false);
           }
         } else {
           // JWT 토큰이 있다면 제거 (Firebase 인증으로 통일)
@@ -192,6 +208,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setUser(null);
           setTeacher(null);
+          setLoading(false);
           setAuthMethod(null);
         }
       } catch (error) {
