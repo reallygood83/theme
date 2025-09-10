@@ -3,8 +3,23 @@ import { database } from '@/lib/firebase'
 import { ref, get, getDatabase, Database } from 'firebase/database'
 import { initializeApp } from 'firebase/app'
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // URL 매개변수에서 teacherId 추출
+    const { searchParams } = new URL(request.url)
+    const teacherId = searchParams.get('teacherId')
+    
+    console.log('요청된 teacherId:', teacherId)
+    
+    // teacherId가 없으면 에러 반환
+    if (!teacherId) {
+      console.log('teacherId가 제공되지 않음')
+      return NextResponse.json(
+        { error: '교사 ID가 필요합니다.' }, 
+        { status: 400 }
+      )
+    }
+    
     // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
     let db: Database | null = database;
     
@@ -51,20 +66,30 @@ export async function GET() {
     console.log('세션 키 목록:', Object.keys(sessionsData))
     
     // 세션 데이터 형식화 및 배열로 변환
-    const sessions = Object.entries(sessionsData).map(([sessionId, data]) => ({
+    const allSessions = Object.entries(sessionsData).map(([sessionId, data]) => ({
       sessionId,
       ...(data as any)
     }))
     
-    console.log('변환된 세션 배열:', sessions)
-    console.log('세션 배열 길이:', sessions.length)
+    // 관리자 계정 체크 (judge@questiontalk.demo)
+    const isAdmin = teacherId === 'MSMk1a3iHBfbLzLwwnwpFnwJjS63' // 관리자 UID
+    
+    console.log('관리자 여부:', isAdmin)
+    
+    // 관리자면 모든 세션 반환, 일반 교사면 자신의 세션만 반환
+    const filteredSessions = isAdmin 
+      ? allSessions 
+      : allSessions.filter(session => session.teacherId === teacherId)
+    
+    console.log('필터링된 세션 배열:', filteredSessions)
+    console.log('필터링된 세션 배열 길이:', filteredSessions.length)
     
     // 세션 정렬 (최신순)
-    sessions.sort((a, b) => b.createdAt - a.createdAt)
+    filteredSessions.sort((a, b) => b.createdAt - a.createdAt)
     
-    console.log('정렬된 세션 배열:', sessions)
+    console.log('정렬된 세션 배열:', filteredSessions)
     
-    return NextResponse.json({ sessions })
+    return NextResponse.json({ sessions: filteredSessions })
   } catch (error) {
     console.error('세션 목록 조회 오류:', error)
     return NextResponse.json(

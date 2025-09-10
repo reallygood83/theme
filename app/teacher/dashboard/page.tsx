@@ -15,8 +15,6 @@ import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchMo
 import DebateStatsCard from '@/components/teacher/DebateStatsCard'
 import NotificationCenter from '@/components/teacher/NotificationCenter'
 import { Session } from '@/lib/utils'
-import { database } from '@/lib/firebase'
-import { ref, onValue, off } from 'firebase/database'
 import { useAuth } from '@/contexts/AuthContext'
 
 function TeacherDashboardContent() {
@@ -32,7 +30,6 @@ function TeacherDashboardContent() {
   const viewAsUid = searchParams.get('viewAs')
   const isJudgeMode = !!viewAsUid
   const isAdmin = isAdminAccount()
-  const effectiveUserId = viewAsUid || getCurrentUserId()
 
   const fetchSessions = async () => {
     try {
@@ -40,7 +37,18 @@ function TeacherDashboardContent() {
       setError(null)
       console.log('세션 목록 조회 시작...')
       
-      const response = await fetch('/api/sessions/list', {
+      // 현재 사용자의 ID 가져오기
+      const currentUserId = getCurrentUserId()
+      if (!currentUserId) {
+        console.log('사용자 ID가 없어서 세션 조회 중단')
+        setSessions([])
+        setLoading(false)
+        return
+      }
+      
+      console.log('API로 전송할 teacherId:', currentUserId)
+      
+      const response = await fetch(`/api/sessions/list?teacherId=${encodeURIComponent(currentUserId)}`, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -93,95 +101,22 @@ function TeacherDashboardContent() {
       return
     }
     
-    if (!database) {
-      console.error('Firebase database가 초기화되지 않음')
-      fetchSessions() // 폴백으로 API 호출
-      return
-    }
-
-    console.log('Firebase 실시간 리스너 설정 중... 교사 ID:', user.uid)
-    const sessionsRef = ref(database, 'sessions')
+    // 보안을 위해 API 호출로만 세션 데이터 가져오기
+    console.log('보안 강화된 API 호출로 세션 목록 조회 중... 교사 ID:', getCurrentUserId())
+    fetchSessions()
     
-    // Firebase 실시간 리스너 설정
-    const unsubscribe = onValue(sessionsRef, (snapshot) => {
-      setLoading(true)
-      console.log('Firebase 실시간 데이터 변화 감지됨')
-      
-      if (snapshot.exists()) {
-        const sessionsData = snapshot.val()
-        console.log('실시간으로 받은 세션 데이터:', sessionsData)
-        
-        // 세션 데이터를 배열로 변환
-        // Ensure sessionsData exists and is object
-        if (!sessionsData || typeof sessionsData !== 'object') {
-          console.log('Invalid sessionsData, setting empty array')
-          setSessions([])
-          setLoading(false)
-          return
-        }
-        
-        const sessionsArray = Object.entries(sessionsData).map(([sessionId, data]) => ({
-          sessionId,
-          ...(data as any)
-        })).filter(session => session && session.sessionId) // Filter invalid entries
-        
-        // 현재 로그인한 교사의 세션만 필터링 (심사위원 모드 시 특정 UID 필터링)
-        const mySessionsArray = sessionsArray.filter(session => {
-          if (!session) return false
-          return session.teacherId === effectiveUserId || (!session.teacherId && !isJudgeMode)
-        })
-        
-        console.log('전체 세션:', sessionsArray.length, '개')
-        console.log('내 세션:', mySessionsArray.length, '개')
-        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s?.sessionId || 'unknown'))
-        
-        // Ensure mySessionsArray is always an array
-        setSessions(Array.isArray(mySessionsArray) ? mySessionsArray : [])
-        setError(null)
-        
-        console.log('=== 세션 필터링 디버깅 ===')
-        console.log('현재 User UID:', user.uid)
-        console.log('심사위원 모드:', isJudgeMode)
-        console.log('유효 사용자 ID:', effectiveUserId)
-        console.log('전체 세션 정보:')
-        sessionsArray.forEach(s => {
-          console.log(`- 세션 ID: ${s.sessionId}, teacherId: ${s.teacherId}, 일치: ${s.teacherId === effectiveUserId}`)
-        })
-        
-        // 최신순으로 정렬
-        mySessionsArray.sort((a, b) => {
-          const aTime = a?.createdAt || 0
-          const bTime = b?.createdAt || 0
-          return bTime - aTime
-        })
-        
-        console.log('전체 세션:', sessionsArray.length, '개')
-        console.log('내 세션:', mySessionsArray.length, '개')
-        console.log('내 세션 ID 목록:', mySessionsArray.map((s: Session) => s?.sessionId || 'unknown'))
-        
-        setSessions(mySessionsArray)
-        setError(null)
-      } else {
-        console.log('Firebase에 세션 데이터 없음')
-        // Ensure empty state is array
-        setSessions([])
+    // 실시간 업데이트를 위한 주기적 갱신 (선택사항)
+    const intervalId = setInterval(() => {
+      if (user && getCurrentUserId()) {
+        fetchSessions()
       }
-      
-      setLoading(false)
-    }, (error) => {
-      console.error('Firebase 실시간 리스너 오류:', error)
-      setError('실시간 데이터 연결에 문제가 발생했습니다.')
-      setLoading(false)
-      
-      // 실시간 연결 실패 시 폴백으로 API 호출
-      fetchSessions()
-    })
-
+    }, 30000) // 30초마다 갱신
+    
     return () => {
-      console.log('Firebase 실시간 리스너 해제')
-      unsubscribe()
+      console.log('주기적 갱신 해제')
+      clearInterval(intervalId)
     }
-  }, [user, authLoading, effectiveUserId, isJudgeMode])
+  }, [user, authLoading])
 
   return (
     <RequireAuth>
