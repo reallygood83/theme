@@ -95,6 +95,14 @@ npm run dev
         ".write": "root.child('teachers').child(auth.uid).exists()"
       }
     },
+    "sharedSessions": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    },
+    "sharedScenarios": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
+    },
     "debate_opinions": {
       ".write": true,
       ".read": true
