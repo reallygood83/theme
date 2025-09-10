@@ -31,16 +31,39 @@ export default function DebateOpinionManager({ sessionId, sessionCode }: DebateO
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'group'>('newest')
 
   useEffect(() => {
+    console.log('🚀 DebateOpinionManager 컴포넌트 시작:', {
+      sessionId: sessionId,
+      sessionCode: sessionCode,
+      sessionId타입: typeof sessionId,
+      sessionId길이: sessionId ? sessionId.length : 'null',
+      sessionCode타입: typeof sessionCode,
+      sessionCode길이: sessionCode ? sessionCode.length : 'null'
+    });
+
     const db = getFirebaseDatabase()
     if (!db) {
-      console.error('Firebase 데이터베이스 연결 실패')
+      console.error('❌ Firebase 데이터베이스 연결 실패')
       setLoading(false)
       return
     }
+    console.log('✅ Firebase 데이터베이스 연결 성공');
 
     const opinionsRef = ref(db, `sessions/${sessionId}/debateOpinions`)
     
+    console.log('🔍 토론 의견 데이터 조회 시작:', {
+      path: `sessions/${sessionId}/debateOpinions`,
+      sessionId,
+      sessionCode,
+      Firebase경로: `sessions/${sessionId}/debateOpinions`
+    });
+    
     const unsubscribe = onValue(opinionsRef, (snapshot) => {
+      console.log('📡 Firebase 실시간 업데이트:', {
+        exists: snapshot.exists(),
+        hasData: snapshot.val() !== null,
+        dataSize: snapshot.exists() ? Object.keys(snapshot.val()).length : 0
+      });
+      
       if (snapshot.exists()) {
         const opinionsData = snapshot.val()
         const opinionsList = Object.entries(opinionsData).map(([key, value]) => ({
@@ -48,13 +71,24 @@ export default function DebateOpinionManager({ sessionId, sessionCode }: DebateO
           ...(value as Omit<DebateOpinion, 'id'>)
         }))
         
+        console.log('✅ 토론 의견 데이터 로드 완료:', {
+          총개수: opinionsList.length,
+          데이터: opinionsList.map(o => ({
+            학생명: o.studentName,
+            모둠: o.studentGroup,
+            논제: o.selectedAgenda,
+            입장: o.position
+          }))
+        });
+        
         setOpinions(opinionsList)
       } else {
+        console.log('❌ 토론 의견 데이터 없음 - 아직 학생이 의견을 제출하지 않았습니다.');
         setOpinions([])
       }
       setLoading(false)
     }, (error) => {
-      console.error('토론 의견 조회 오류:', error)
+      console.error('❌ 토론 의견 조회 오류:', error)
       setLoading(false)
     })
 
