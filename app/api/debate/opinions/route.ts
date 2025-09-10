@@ -140,8 +140,9 @@ export async function POST(request: NextRequest) {
     const sessionsRef = ref(db, 'sessions')
     console.log('🔍 세션 데이터 조회 중:', 'sessions')
     
+    let sessionsSnapshot
     try {
-      const sessionsSnapshot = await get(sessionsRef)
+      sessionsSnapshot = await get(sessionsRef)
       
       if (!sessionsSnapshot.exists()) {
         console.log('❌ 세션 데이터가 존재하지 않음')
