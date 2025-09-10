@@ -113,15 +113,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           // Required fields validation before API call
           if (firebaseUser.uid && firebaseUser.email && (firebaseUser.displayName || true)) {
-            const name = firebaseUser.displayName || firebaseUser.email.split('@')[0];
+            const name = firebaseUser.displayName || firebaseUser.email!.split('@')[0];
             
             console.log('Creating/updating teacher with:', {
               firebaseUid: firebaseUser.uid,
-              email: firebaseUser.email,
+              email: firebaseUser.email!,
               name: name,
               provider: 'google'
             });
             
+            // Fetch teacher data with timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
             try {
               // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
               const response = await fetch('/api/debate/teachers', {
@@ -129,11 +133,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   firebaseUid: firebaseUser.uid,
-                  email: firebaseUser.email,
+                  email: firebaseUser.email!,
                   name: name,
                   provider: 'google'
-                })
+                }),
+                signal: controller.signal
               });
+
+              clearTimeout(timeoutId);
 
               if (response.ok) {
                 const data = await response.json();
@@ -148,7 +155,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // 기본 teacher 객체 생성
                     setTeacher(ensureSafeTeacherData({
                       _id: firebaseUser.uid,
-                      email: firebaseUser.email,
+                      email: firebaseUser.email!,
                       name: name,
                       provider: 'google',
                       createdAt: new Date().toISOString()
@@ -159,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   // 기본 teacher 객체 생성
                   setTeacher(ensureSafeTeacherData({
                     _id: firebaseUser.uid,
-                    email: firebaseUser.email,
+                    email: firebaseUser.email!,
                     name: name,
                     provider: 'google',
                     createdAt: new Date().toISOString()
@@ -171,24 +178,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // API 실패 시에도 기본 teacher 객체 생성하여 무한 로딩 방지
                 setTeacher(ensureSafeTeacherData({
                   _id: firebaseUser.uid,
-                  email: firebaseUser.email,
+                  email: firebaseUser.email!,
                   name: name,
                   provider: 'google',
                   createdAt: new Date().toISOString()
                 }));
               }
-            } catch (apiError) {
-              console.error('Teacher API call failed:', apiError);
+            } catch (apiError: any) {
+              clearTimeout(timeoutId);
+              if (apiError.name === 'AbortError') {
+                console.error('Teacher API call timed out after 10s');
+              } else {
+                console.error('Teacher API call failed:', apiError);
+              }
               // API 호출 실패 시에도 기본 teacher 객체 생성
               setTeacher(ensureSafeTeacherData({
                 _id: firebaseUser.uid,
-                email: firebaseUser.email,
+                email: firebaseUser.email!,
                 name: name,
                 provider: 'google',
                 createdAt: new Date().toISOString()
               }));
             } finally {
-              // 모든 경우에 로딩 상태 해제
+              // API 호출 완료 후 로딩 상태 해제
               setLoading(false);
             }
           } else {
@@ -197,6 +209,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               hasEmail: !!firebaseUser.email,
               hasName: !!firebaseUser.displayName
             });
+            // Set basic teacher data even without API call
+            const name = firebaseUser.displayName || firebaseUser.email!.split('@')[0];
+            setTeacher(ensureSafeTeacherData({
+              _id: firebaseUser.uid,
+              email: firebaseUser.email!,
+              name: name,
+              provider: 'google',
+              createdAt: new Date().toISOString()
+            }));
             setLoading(false);
           }
         } else {
@@ -208,18 +229,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           
           setUser(null);
           setTeacher(null);
-          setLoading(false);
           setAuthMethod(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error('Auth state change error:', error);
+        setLoading(false);
         // Don't crash the entire auth context; continue with basic user state
         if (firebaseUser) {
           setUser(firebaseUser);
           setAuthMethod('firebase');
+          // 에러 발생 시에도 기본 teacher 객체 생성
+          const name = firebaseUser.displayName || firebaseUser.email!.split('@')[0];
+          setTeacher(ensureSafeTeacherData({
+            _id: firebaseUser.uid,
+            email: firebaseUser.email!,
+            name: name,
+            provider: 'google',
+            createdAt: new Date().toISOString()
+          }));
         }
-      } finally {
-        setLoading(false);
       }
     });
 
