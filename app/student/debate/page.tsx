@@ -52,6 +52,7 @@ function StudentDebateContent() {
   useEffect(() => {
     if (sessionCode) {
       setStudentForm(prev => ({ ...prev, classCode: sessionCode }));
+      setSessionCodeInput(sessionCode); // 세션 코드 입력 필드에도 자동 설정
     }
   }, [sessionCode]);
 
@@ -76,6 +77,8 @@ function StudentDebateContent() {
         const data = await response.json();
         console.log('🔍 학생 로그인 응답:', data);
         setStudent(data.data);
+        // 세션 코드를 sessionCodeInput에도 저장하여 submit 단계에서 재사용
+        setSessionCodeInput(studentForm.classCode);
         await fetchStudentOpinions(data.data._id);
         setStep('submit');
       } else {
@@ -283,8 +286,8 @@ function StudentDebateContent() {
             </div>
           </div>
 
-          {/* 세션 코드 입력 폼 */}
-          {!sessionCode && (
+          {/* 세션 코드 입력 폼 - 이미 세션 코드가 있으면 표시하지 않음 */}
+          {!sessionCode && !sessionCodeInput && (
             <div className="mb-6 p-6 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="text-center">
                 <div className="text-blue-600 mb-3">
@@ -323,12 +326,12 @@ function StudentDebateContent() {
             </div>
           )}
 
-          {/* OpinionManager 컴포넌트 */}
+          {/* OpinionManager 컴포넌트 - 세션 코드를 확실하게 전달 */}
           <OpinionManager
             studentName={student?.name || ''}
             studentClass={student?.classId || ''}
             studentId={student?._id || ''}
-            sessionCode={sessionCode || undefined}
+            sessionCode={sessionCode || sessionCodeInput || studentForm.classCode || undefined}
             onOpinionSubmitted={() => {
               // 의견 제출 후 목록 새로고침
               if (student) {
