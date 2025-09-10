@@ -5,22 +5,29 @@ import { ref, get, set, update } from 'firebase/database'
 // Firebase 기반 교사 관리 API
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔥 교사 API POST 시작')
     const { firebaseUid, email, name, provider } = await request.json()
     
+    console.log('📝 교사 데이터:', { firebaseUid, email, name, provider })
+    
     if (!firebaseUid || !email) {
+      console.log('❌ 필수 데이터 누락')
       return NextResponse.json(
         { success: false, error: 'Firebase UID와 이메일이 필요합니다.' },
         { status: 400 }
       )
     }
 
+    console.log('🔍 Firebase 데이터베이스 연결 시도')
     const database = getFirebaseDatabase()
     if (!database) {
+      console.log('❌ Firebase 데이터베이스 연결 실패')
       return NextResponse.json(
         { success: false, error: 'Firebase 데이터베이스 연결 실패' },
         { status: 500 }
       )
     }
+    console.log('✅ Firebase 데이터베이스 연결 성공')
 
     // 교사 정보 저장/업데이트
     const teacherData = {
@@ -33,21 +40,35 @@ export async function POST(request: NextRequest) {
     }
 
     const teacherRef = ref(database, `teachers/${firebaseUid}`)
-    const existingTeacher = await get(teacherRef)
+    console.log('🔍 기존 교사 정보 확인 중:', `teachers/${firebaseUid}`)
     
-    if (existingTeacher.exists()) {
-      // 기존 교사의 마지막 로그인 시간만 업데이트
-      await update(teacherRef, {
-        lastLoginAt: new Date().toISOString(),
-        email: email,  // 이메일도 업데이트 (변경될 수 있음)
-        name: name || existingTeacher.val().name
-      })
-    } else {
-      // 새로운 교사 생성
-      await set(teacherRef, teacherData)
-    }
+    try {
+      const existingTeacher = await get(teacherRef)
+      
+      if (existingTeacher.exists()) {
+        console.log('✅ 기존 교사 정보 발견, 업데이트 중')
+        // 기존 교사의 마지막 로그인 시간만 업데이트
+        await update(teacherRef, {
+          lastLoginAt: new Date().toISOString(),
+          email: email,  // 이메일도 업데이트 (변경될 수 있음)
+          name: name || existingTeacher.val().name
+        })
+        console.log('✅ 기존 교사 정보 업데이트 완료')
+      } else {
+        console.log('🆕 새로운 교사 정보 생성 중')
+        // 새로운 교사 생성
+        await set(teacherRef, teacherData)
+        console.log('✅ 새로운 교사 정보 생성 완료')
+      }
 
-    console.log(`교사 정보 저장/업데이트: ${email} (${firebaseUid})`)
+      console.log(`✅ 교사 정보 저장/업데이트 성공: ${email} (${firebaseUid})`)
+    } catch (teacherError) {
+      console.error('❌ 교사 정보 처리 실패:', teacherError)
+      return NextResponse.json(
+        { success: false, error: '교사 정보 처리 중 오류가 발생했습니다.', details: teacherError instanceof Error ? teacherError.message : String(teacherError) },
+        { status: 500 }
+      )
+    }
 
     return NextResponse.json({
       success: true,

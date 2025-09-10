@@ -1,23 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDatabase, ref, push, set, get, query, orderByChild, equalTo } from 'firebase/database'
-import { initializeApp, getApps } from 'firebase/app'
+import { ref, push, set, get, query, orderByChild, equalTo } from 'firebase/database'
+import { getFirebaseDatabase } from '@/lib/firebase'
 import { realtimeNotificationService } from '@/lib/firebase/realtime-services'
-
-// Firebase 설정
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-}
-
-// Firebase 앱 초기화
-if (!getApps().length) {
-  initializeApp(firebaseConfig)
-}
 
 // 토론 의견 조회 (GET)
 export async function GET(request: NextRequest) {
@@ -35,7 +19,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const db = getDatabase()
+    const db = getFirebaseDatabase()
+    if (!db) {
+      return NextResponse.json(
+        { success: false, error: 'Firebase 데이터베이스 연결 실패' },
+        { status: 500 }
+      )
+    }
+    
     const opinions: any[] = []
 
     try {
@@ -129,29 +120,43 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('🔥 Firebase 연결 시도 중...')
-    let db
-    try {
-      db = getDatabase()
-      console.log('✅ Firebase 데이터베이스 연결 성공')
-    } catch (dbError) {
-      console.error('❌ Firebase 데이터베이스 연결 실패:', dbError)
+    const db = getFirebaseDatabase()
+    if (!db) {
+      console.error('❌ Firebase 데이터베이스 연결 실패')
       return NextResponse.json(
         { success: false, error: 'Firebase 데이터베이스 연결에 실패했습니다.' },
         { status: 500 }
       )
     }
+    console.log('✅ Firebase 데이터베이스 연결 성공')
+    
+    // 연결 테스트
+    const testRef = ref(db, '.info/connected')
+    console.log('Firebase 연결 상태 테스트:', testRef ? '성공' : '실패')
 
     // 🔥 핵심: sessionCode → sessionId, teacherId 변환
     console.log('🔍 세션 코드로 세션 및 교사 정보 조회 중:', sessionCode)
     
     const sessionsRef = ref(db, 'sessions')
-    const sessionsSnapshot = await get(sessionsRef)
+    console.log('🔍 세션 데이터 조회 중:', 'sessions')
     
-    if (!sessionsSnapshot.exists()) {
-      console.log('❌ 세션 데이터가 존재하지 않음')
+    try {
+      const sessionsSnapshot = await get(sessionsRef)
+      
+      if (!sessionsSnapshot.exists()) {
+        console.log('❌ 세션 데이터가 존재하지 않음')
+        return NextResponse.json(
+          { success: false, error: '세션을 찾을 수 없습니다.' },
+          { status: 404 }
+        )
+      }
+      
+      console.log('✅ 세션 데이터 조회 성공, 세션 수:', Object.keys(sessionsSnapshot.val() || {}).length)
+    } catch (sessionError) {
+      console.error('❌ 세션 데이터 조회 실패:', sessionError)
       return NextResponse.json(
-        { success: false, error: '세션을 찾을 수 없습니다.' },
-        { status: 404 }
+        { success: false, error: '세션 데이터 조회에 실패했습니다.', details: sessionError instanceof Error ? sessionError.message : String(sessionError) },
+        { status: 500 }
       )
     }
 
@@ -222,8 +227,21 @@ export async function POST(request: NextRequest) {
 
     console.log('🔥 의견 저장 시도:', { path: targetPath, data: opinionData })
 
-    await set(newOpinionRef, opinionData)
-    console.log('✅ 의견 저장 성공')
+    try {
+      await set(newOpinionRef, opinionData)
+      console.log('✅ 의견 저장 성공, 경로:', targetPath, '키:', newOpinionRef.key)
+      
+      // 저장 확인
+      const verifyRef = ref(db, `${targetPath}/${newOpinionRef.key}`)
+      const verifySnapshot = await get(verifyRef)
+      console.log('✅ 저장 검증:', verifySnapshot.exists() ? '성공' : '실패')
+    } catch (saveError) {
+      console.error('❌ 의견 저장 실패:', saveError)
+      return NextResponse.json(
+        { success: false, error: '의견 저장에 실패했습니다.', details: saveError instanceof Error ? saveError.message : String(saveError) },
+        { status: 500 }
+      )
+    }
 
     // 🔥 실시간 알림 생성 - 교사에게 새 토론 의견 알림
     try {
