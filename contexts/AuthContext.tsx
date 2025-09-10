@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Fetch teacher data with timeout to prevent hanging
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
             try {
               // Firebase 사용자에 대응하는 MongoDB 교사 정보 조회/생성
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } catch (apiError: any) {
               clearTimeout(timeoutId);
               if (apiError.name === 'AbortError') {
-                console.error('Teacher API call timed out after 10s');
+                console.error('Teacher API call timed out after 15s');
               } else {
                 console.error('Teacher API call failed:', apiError);
               }

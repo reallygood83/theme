@@ -103,9 +103,21 @@ npm run dev
       ".read": "auth != null",
       ".write": "auth != null && root.child('teachers').child(auth.uid).exists()"
     },
+    "notifications": {
+      ".read": "auth != null",
+      ".write": "auth != null && root.child('teachers').child(auth.uid).exists()",
+      "$notificationId": {
+        ".read": "auth != null && (data.child('teacherId').val() === auth.uid || root.child('teachers').child(auth.uid).child('permissions').child('isAdmin').val() === true)",
+        ".write": "auth != null && (data.child('teacherId').val() === auth.uid || root.child('teachers').child(auth.uid).child('permissions').child('isAdmin').val() === true)"
+      }
+    },
     "debate_opinions": {
-      ".write": true,
-      ".read": true
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$opinionId": {
+        ".read": "auth != null && (data.child('teacherId').val() === auth.uid || root.child('teachers').child(auth.uid).child('permissions').child('isAdmin').val() === true)",
+        ".write": "auth != null"
+      }
     }
   }
 }

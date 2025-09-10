@@ -47,9 +47,8 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       return []
     }
     
-    return [...safeSessions]
-    // 검색어로 필터링
-    .filter(session => {
+    // 세션을 필터링하고 정렬
+    const filteredSessions = safeSessions.filter(session => {
       if (!searchTerm) return true
       
       const searchLower = searchTerm.toLowerCase()
@@ -70,8 +69,9 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       
       return titleMatch || keywordsMatch || textMatch || codeMatch
     })
+    
     // 정렬
-    .sort((a, b) => {
+    filteredSessions.sort((a, b) => {
       if (sortBy === 'date') {
         return sortOrder === 'asc' 
           ? a.createdAt - b.createdAt 
@@ -84,7 +84,10 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
           : bQuestions - aQuestions
       }
     })
-  }, [sessions, searchTerm, sortBy, sortOrder]) || []
+    
+    console.log('필터링된 세션 수:', filteredSessions.length)
+    return filteredSessions
+  }, [sessions, searchTerm, sortBy, sortOrder])
   
   // 날짜 형식화 함수
   const formatDate = (timestamp: number) => {

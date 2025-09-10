@@ -19,7 +19,7 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const redirect = searchParams.get('redirect') || '/teacher/dashboard'
   
-  // 로그인 상태라면 리디렉션
+  // 로그인 상태라면 리디렉션 (한 번만 실행)
   useEffect(() => {
     if (user && !authLoading) {
       // 심사위원 이메일인지 확인
@@ -29,7 +29,7 @@ function LoginForm() {
         router.push(redirect)
       }
     }
-  }, [user, authLoading, router, redirect])
+  }, [user?.uid, authLoading, router, redirect]) // user 대신 user.uid 사용하여 불필요한 재실행 방지
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()

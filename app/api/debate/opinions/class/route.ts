@@ -30,24 +30,29 @@ export async function GET(request: NextRequest) {
     }
     console.log('✅ Firebase 데이터베이스 연결 성공')
 
-    // 해당 교사의 세션들을 먼저 조회
-    console.log('🔍 교사 세션 조회 중:', firebaseUid)
-    const sessionsRef = ref(database, 'sessions')
-    const sessionsQuery = query(sessionsRef, orderByChild('teacherId'), equalTo(firebaseUid))
-    
-    // 각 세션의 토론 의견들을 수집
-    const allOpinions: any[] = []
-    
-    try {
+    // 타임아웃 설정 (10초)
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('Debate opinions API timeout')), 10000)
+    })
+
+    const queryPromise = (async () => {
+      // 해당 교사의 세션들을 먼저 조회
+      console.log('🔍 교사 세션 조회 중:', firebaseUid)
+      const sessionsRef = ref(database, 'sessions')
+      const sessionsQuery = query(sessionsRef, orderByChild('teacherId'), equalTo(firebaseUid))
+      
+      // 각 세션의 토론 의견들을 수집
+      const allOpinions: any[] = []
+      
       const sessionsSnapshot = await get(sessionsQuery)
       
       if (!sessionsSnapshot.exists()) {
         console.log('❌ 교사의 세션이 없음')
-        return NextResponse.json({
+        return {
           success: true,
           data: [],
           message: '등록된 세션이 없습니다.'
-        })
+        }
       }
 
       const teacherSessions = Object.keys(sessionsSnapshot.val())
@@ -78,47 +83,45 @@ export async function GET(request: NextRequest) {
       }
 
       console.log(`✅ 전체 의견 수집 완료: ${allOpinions.length}개`)
-    } catch (sessionError) {
-      console.error('❌ 세션 조회 실패:', sessionError)
-      return NextResponse.json(
-        { success: false, error: '세션 조회 중 오류가 발생했습니다.', details: sessionError instanceof Error ? sessionError.message : String(sessionError) },
-        { status: 500 }
-      )
-    }
 
-    // 최신순 정렬
-    allOpinions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      // 최신순 정렬
+      allOpinions.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
-    console.log(`토론 의견 ${allOpinions.length}개 조회 완료`)
+      console.log(`토론 의견 ${allOpinions.length}개 조회 완료`)
 
-    // 통계 계산
-    const stats = {
-      total: allOpinions.length,
-      pending: allOpinions.filter(op => op.status === 'pending').length,
-      feedback_given: allOpinions.filter(op => op.status === 'feedback_given').length,
-      reviewed: allOpinions.filter(op => op.status === 'reviewed').length
-    }
-
-    // 프론트엔드가 기대하는 형식으로 응답
-    return NextResponse.json({
-      success: true,
-      data: {
-        opinions: allOpinions.map(opinion => ({
-          _id: opinion.id,
-          topic: opinion.topic,
-          content: opinion.content,
-          studentName: opinion.studentName,
-          studentClass: opinion.classId || '',
-          status: opinion.status || 'pending',
-          submittedAt: opinion.submittedAt || opinion.createdAt,
-          aiFeedback: opinion.aiFeedback,
-          teacherFeedback: opinion.teacherFeedback,
-          teacherFeedbackAt: opinion.teacherFeedbackAt,
-          referenceCode: opinion.referenceCode
-        })),
-        stats: stats
+      // 통계 계산
+      const stats = {
+        total: allOpinions.length,
+        pending: allOpinions.filter(op => op.status === 'pending').length,
+        feedback_given: allOpinions.filter(op => op.status === 'feedback_given').length,
+        reviewed: allOpinions.filter(op => op.status === 'reviewed').length
       }
-    })
+
+      // 프론트엔드가 기대하는 형식으로 응답
+      return {
+        success: true,
+        data: {
+          opinions: allOpinions.map(opinion => ({
+            _id: opinion.id,
+            topic: opinion.topic,
+            content: opinion.content,
+            studentName: opinion.studentName,
+            studentClass: opinion.classId || '',
+            status: opinion.status || 'pending',
+            submittedAt: opinion.submittedAt || opinion.createdAt,
+            aiFeedback: opinion.aiFeedback,
+            teacherFeedback: opinion.teacherFeedback,
+            teacherFeedbackAt: opinion.teacherFeedbackAt,
+            referenceCode: opinion.referenceCode
+          })),
+          stats: stats
+        }
+      }
+    })()
+
+    // Promise.race로 타임아웃 처리
+    const result = await Promise.race([queryPromise, timeoutPromise])
+    return NextResponse.json(result)
     
   } catch (error) {
     console.error('토론 의견 조회 오류:', error)
