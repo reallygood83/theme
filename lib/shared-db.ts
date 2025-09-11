@@ -162,7 +162,15 @@ function checkSharingEnabled(): boolean {
   const enabled = process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
   const debug = process.env.NEXT_PUBLIC_SHARING_DEBUG === 'true';
   
-  if (debug && !enabled) {
+  // 디버깅: 환경변수 값 확인
+  console.log('🔍 환경변수 디버깅:', {
+    NEXT_PUBLIC_ENABLE_SHARING: process.env.NEXT_PUBLIC_ENABLE_SHARING,
+    NEXT_PUBLIC_SHARING_DEBUG: process.env.NEXT_PUBLIC_SHARING_DEBUG,
+    enabled,
+    debug
+  });
+  
+  if (!enabled) {
     console.log('📍 공유 기능이 비활성화되어 있습니다. NEXT_PUBLIC_ENABLE_SHARING=true로 설정하세요.');
   }
   
