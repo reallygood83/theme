@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
   console.log('📋 공유 세션 목록 조회 요청');
 
   try {
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     
     // 쿼리 파라미터 파싱
     const page = parseInt(searchParams.get('page') || '1');

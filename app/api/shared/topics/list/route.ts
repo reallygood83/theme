@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     console.log('📚 공유 토론 주제 목록 API 시작');
     
     // URL 쿼리 파라미터 파싱
-    const { searchParams } = new URL(request.url);
+    const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
     const category = searchParams.get('category') || 'all';
