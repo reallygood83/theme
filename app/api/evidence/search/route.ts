@@ -68,24 +68,55 @@ export async function POST(request: NextRequest) {
     const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
-    // 병렬 검색 실행 (원본과 동일)
+    // 병렬 검색 실행 + 타임아웃 방지 (Always Works™)
     console.log('🔄 Perplexity API 및 YouTube API 병렬 호출 시작...')
     
-    const [perplexityData, youtubeVideos] = await Promise.all([
-      callPerplexityAPI(prompt).catch(error => {
-        console.error('❌ Perplexity API 오류:', error)
-        return null
-      }),
-      searchYouTubeVideos(topic, 50, selectedStance).catch(error => { // maxResults 증가
-        console.error('❌ YouTube API 오류:', error)
-        if (error instanceof Error && error.message.includes('quotaExceeded')) {
-          console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
-        } else if (error instanceof Error && error.message.includes('invalid key')) {
-          console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
+    // 25초 타임아웃 설정 (Vercel 30초 제한 대비)
+    const searchWithTimeout = async () => {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('SEARCH_TIMEOUT')), 25000)
+      )
+      
+      const searchPromise = Promise.all([
+        callPerplexityAPI(prompt).catch(error => {
+          console.error('❌ Perplexity API 오류:', error)
+          return null
+        }),
+        searchYouTubeVideos(topic, 50, selectedStance).catch(error => {
+          console.error('❌ YouTube API 오류:', error)
+          if (error instanceof Error && error.message.includes('quotaExceeded')) {
+            console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
+          } else if (error instanceof Error && error.message.includes('invalid key')) {
+            console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
+          }
+          return []
+        })
+      ])
+      
+      return Promise.race([searchPromise, timeoutPromise])
+    }
+    
+    let perplexityData = null
+    let youtubeVideos: any[] = []
+    
+    try {
+      const results = await searchWithTimeout() as [any, any[]]
+      perplexityData = results[0]
+      youtubeVideos = results[1] || []
+    } catch (error) {
+      if (error instanceof Error && error.message === 'SEARCH_TIMEOUT') {
+        console.log('⏰ API 검색 타임아웃 - 기본 결과 제공')
+        // 타임아웃 시 기본 결과 제공
+        perplexityData = {
+          related_questions: [`${topic}에 대한 다양한 의견`],
+          answer: `${topic}는 현재 교육계에서 중요하게 논의되고 있는 주제입니다.`,
+          citations: []
         }
-        return []
-      })
-    ])
+        youtubeVideos = []
+      } else {
+        throw error
+      }
+    }
     
     console.log('📊 검색 결과 수집 완료:')
     console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
@@ -113,13 +144,13 @@ export async function POST(request: NextRequest) {
     const validatedResults = validateEvidenceResults(safeResults)
     console.log('✅ 검증 완료:', validatedResults.length + '개 유효한 결과')
     
-    // 결과가 없는 경우 처리
+    // 결과가 없는 경우 처리 - 신뢰성 우선 (Always Works™)
     if (validatedResults.length === 0) {
       // 필터링으로 인한 결과 부족인지 확인
       const wasFiltered = evidenceResults.length > safeResults.length
       const message = wasFiltered 
         ? '교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적인 키워드로 검색해보세요.' 
-        : '검색 결과가 없습니다. 다른 키워드로 다시 검색해보세요.'
+        : '현재 신뢰할 수 있는 검색 결과를 찾을 수 없습니다. 잠시 후 다시 시도하거나 다른 키워드로 검색해보세요.'
       
       return NextResponse.json({
         evidences: [],
