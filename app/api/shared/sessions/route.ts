@@ -36,7 +36,7 @@ async function getCurrentUser(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Feature Flag 확인
-    if (process.env.NEXT_PUBLIC_ENABLE_SHARING !== 'true') {
+    if (process.env.ENABLE_SHARING !== 'true') {
       return NextResponse.json(
         { error: '공유 기능이 비활성화되어 있습니다.' },
         { status: 503 }
@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     // Feature Flag 확인
-    if (process.env.NEXT_PUBLIC_ENABLE_SHARING !== 'true') {
+    if (process.env.ENABLE_SHARING !== 'true') {
       return NextResponse.json(
         { error: '공유 기능이 비활성화되어 있습니다.' },
         { status: 503 }

@@ -159,11 +159,15 @@ function initializeAdminSDK() {
  * Feature Flag 확인 (개발 단계에서만 사용)
  */
 function checkSharingEnabled(): boolean {
-  const enabled = process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
-  const debug = process.env.NEXT_PUBLIC_SHARING_DEBUG === 'true';
+  // 서버사이드에서는 NEXT_PUBLIC_ 접두사 없이 사용
+  const enabled = process.env.ENABLE_SHARING === 'true';
+  const debug = process.env.SHARING_DEBUG === 'true';
   
-  // 디버깅: 환경변수 값 확인
-  console.log('🔍 환경변수 디버깅:', {
+  console.log('🔍 shared-db.ts 환경변수 디버깅 (Always Works™):', {
+    // 서버사이드 환경변수 (올바른 방법)
+    ENABLE_SHARING: process.env.ENABLE_SHARING,
+    SHARING_DEBUG: process.env.SHARING_DEBUG,
+    // 클라이언트사이드 환경변수 (참고용)
     NEXT_PUBLIC_ENABLE_SHARING: process.env.NEXT_PUBLIC_ENABLE_SHARING,
     NEXT_PUBLIC_SHARING_DEBUG: process.env.NEXT_PUBLIC_SHARING_DEBUG,
     enabled,
@@ -171,7 +175,7 @@ function checkSharingEnabled(): boolean {
   });
   
   if (!enabled) {
-    console.log('📍 공유 기능이 비활성화되어 있습니다. NEXT_PUBLIC_ENABLE_SHARING=true로 설정하세요.');
+    console.log('📍 shared-db.ts: 공유 기능이 비활성화되어 있습니다. 서버사이드 ENABLE_SHARING=true로 설정하세요.');
   }
   
   return enabled;
