@@ -192,7 +192,7 @@ export async function createSharedSession(sessionData: Omit<SharedSession, 'id' 
   console.log('📤 Admin SDK로 공유 세션 생성 시작');
   const database = initializeAdminSDK();
   
-  const sharedSessionsRef = database.ref('shared-sessions');
+  const sharedSessionsRef = database.ref('sharedSessions');
   const newSessionRef = sharedSessionsRef.push();
   
   const newSession: SharedSession = {
@@ -241,7 +241,7 @@ export async function getSharedSessions(params: PaginationParams): Promise<Pagin
   try {
     const database = initializeAdminSDK();
     
-    const sharedSessionsRef = database.ref('shared-sessions');
+    const sharedSessionsRef = database.ref('sharedSessions');
     
     // Admin SDK는 다른 문법 사용
     const snapshot = await sharedSessionsRef.once('value');
@@ -357,7 +357,7 @@ export async function getSharedSession(sessionId: string): Promise<SharedSession
   
   try {
     const database = initializeAdminSDK();
-    const sessionRef = database.ref(`shared-sessions/${sessionId}`);
+    const sessionRef = database.ref(`sharedSessions/${sessionId}`);
     const snapshot = await sessionRef.once('value');
     
     if (!snapshot.exists()) {
@@ -612,7 +612,7 @@ export async function incrementImportCount(sessionId: string, importInfo: { teac
   
   try {
     const database = initializeAdminSDK();
-    const sessionRef = database.ref(`shared-sessions/${sessionId}`);
+    const sessionRef = database.ref(`sharedSessions/${sessionId}`);
     const snapshot = await sessionRef.once('value');
     
     if (snapshot.exists()) {
