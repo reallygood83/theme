@@ -157,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ 공유 토론 주제 조회 성공:', {
       title: sharedTopic.title,
-      category: sharedTopic.category,
+      category: sharedTopic.subject,
       originalTeacher: sharedTopic.teacherName
     });
 
@@ -169,11 +169,11 @@ export async function POST(request: NextRequest) {
 ${sharedTopic.description}
 
 🤔 **토론 포인트**
-${sharedTopic.content || '이 주제에 대해 다양한 관점에서 토론해보세요.'}
+${sharedTopic.description || '이 주제에 대해 다양한 관점에서 토론해보세요.'}
 
 📊 **토론 정보**
-• 카테고리: ${sharedTopic.category}
-• 학년: ${sharedTopic.targetGrade}
+• 카테고리: ${sharedTopic.subject}
+• 학년: ${sharedTopic.grade}
 • 예상 소요시간: ${sharedTopic.estimatedTime}분
 • 난이도: ${sharedTopic.difficulty}
 
