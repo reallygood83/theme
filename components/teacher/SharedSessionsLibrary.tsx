@@ -481,7 +481,8 @@ export default function SharedSessionsLibrary() {
       }
       
       const data = await response.json();
-      setSessions(data.sessions || []);
+      console.log('📊 SharedSessions API 응답:', data);
+      setSessions(data.data || []);
     } catch (error) {
       console.error('공유 세션 로드 오류:', error);
       alert('공유 세션 목록을 불러오는데 실패했습니다.');
