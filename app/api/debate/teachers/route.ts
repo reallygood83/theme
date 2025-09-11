@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const teacherData = {
       firebaseUid,
       email,
-      name: name || email.split('@')[0],
+      name: name || (email ? email.split('@')[0] : 'Unknown'),
       provider: provider || 'google',
       permissions: {
         canCreateSession: true,

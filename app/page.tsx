@@ -11,8 +11,7 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const navigationLinks = [
-    { name: "이용 가이드", url: "/guide", target: "_self" },
-    { name: "교육자료실", url: "/materials", target: "_self" }
+    { name: "이용 가이드", url: "/guide", target: "_self" }
   ]
 
   return (
@@ -44,9 +43,6 @@ export default function Home() {
               target={link.target}
               className="relative text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 group px-3 py-1"
             >
-              {link.name === "교육자료실" && (
-                <span className="mr-1">📚</span>
-              )}
               {link.name === "이용 가이드" && (
                 <span className="mr-1">📖</span>
               )}
@@ -68,9 +64,6 @@ export default function Home() {
                   className="text-gray-700 hover:text-purple-600 font-medium transition-colors duration-200 px-3 py-2 hover:bg-purple-50 rounded-lg flex items-center"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {link.name === "교육자료실" && (
-                    <span className="mr-2">📚</span>
-                  )}
                   {link.name === "이용 가이드" && (
                     <span className="mr-2">📖</span>
                   )}

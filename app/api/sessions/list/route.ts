@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
-import { ref, query, orderByChild, equalTo, limitToLast, get } from 'firebase/database'
-import { initializeApp, getApps } from 'firebase/app'
-import { getDatabase } from 'firebase/database'
+import { getAdminDatabase } from '@/lib/firebase-admin'
 
 // API route는 동적으로 처리 필요
 export const dynamic = 'force-dynamic'
@@ -27,48 +25,16 @@ export async function GET(request: Request) {
       setTimeout(() => reject(new Error('Sessions list API timeout')), 10000)
     })
     
-    // Firebase 쿼리 실행 - Client SDK 사용 (create API와 동일한 방식)
+    // Firebase 쿼리 실행 - Admin SDK 사용 (연결 제한 문제 해결)
     const queryPromise = (async () => {
-      console.log('🔥 Firebase Client SDK 연결 시도...')
+      console.log('🔥 Firebase Admin SDK 연결 시도...')
       
-      // 환경 변수 확인
-      const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+      // Admin SDK 데이터베이스 가져오기
+      const db = getAdminDatabase()
+      if (!db) {
+        throw new Error('Firebase Admin Database 연결 실패')
       }
-      
-      console.log('환경변수 확인:', {
-        FIREBASE_API_KEY: !!firebaseConfig.apiKey,
-        FIREBASE_PROJECT_ID: firebaseConfig.projectId,
-        FIREBASE_DATABASE_URL: firebaseConfig.databaseURL
-      })
-      
-      // 필수 환경 변수 검증
-      if (!firebaseConfig.apiKey || !firebaseConfig.projectId || !firebaseConfig.databaseURL) {
-        throw new Error('Firebase 환경 변수 누락: API key, Project ID, Database URL이 필요합니다.')
-      }
-      
-      // Firebase 앱 초기화
-      let app
-      let db
-      try {
-        if (getApps().length === 0) {
-          app = initializeApp(firebaseConfig)
-        } else {
-          app = getApps()[0]
-        }
-        
-        db = getDatabase(app)
-        console.log('✅ Firebase Client SDK 연결 성공')
-      } catch (initError) {
-        console.error('❌ Firebase 초기화 실패:', initError)
-        throw new Error(`Firebase 초기화 실패: ${initError instanceof Error ? initError.message : String(initError)}`)
-      }
+      console.log('✅ Firebase Admin SDK 연결 성공')
       
       // 관리자 계정 체크 (judge@questiontalk.demo)
       const isAdmin = teacherId === 'MSMk1a3iHBfbLzLwwnwpFnwJjS63' // 관리자 UID
@@ -78,22 +44,13 @@ export async function GET(request: Request) {
       if (isAdmin) {
         // 관리자: 최신 생성 순으로 최대 100개만 조회
         console.log('Firebase 세션 데이터 조회 중... (admin latest 100 by createdAt)')
-        const sessionQuery = query(
-          ref(db, 'sessions'),
-          orderByChild('createdAt'),
-          limitToLast(100)
-        )
-        snapshot = await get(sessionQuery)
+        const sessionQuery = db.ref('sessions').orderByChild('createdAt').limitToLast(100)
+        snapshot = await sessionQuery.once('value')
       } else {
         // 일반 교사: 본인 세션만 조회 (teacherId 인덱스 기반)
         console.log('Firebase 세션 데이터 조회 중... (by teacherId)')
-        const sessionQuery = query(
-          ref(db, 'sessions'),
-          orderByChild('teacherId'),
-          equalTo(teacherId),
-          limitToLast(100)
-        )
-        snapshot = await get(sessionQuery)
+        const sessionQuery = db.ref('sessions').orderByChild('teacherId').equalTo(teacherId).limitToLast(100)
+        snapshot = await sessionQuery.once('value')
       }
       
       console.log('Firebase 스냅샷 존재 여부:', snapshot.exists())

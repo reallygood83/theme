@@ -182,18 +182,7 @@ export default function Header() {
 
               <Button
                 asChild
-                variant={pathname === '/materials' ? 'secondary' : 'ghost'}
-                size="sm"
-                className="text-sm font-medium"
-              >
-                <Link href="/materials">
-                  📚 교육자료실
-                </Link>
-              </Button>
-              
-              <Button
-                asChild
-                variant={pathname === '/guide' ? 'fun' : 'ghost'}
+                variant={pathname === '/guide' ? 'secondary' : 'ghost'}
                 size="sm"
                 className="text-sm font-medium"
               >
@@ -373,7 +362,7 @@ export default function Header() {
               
               <Button
                 asChild
-                variant={pathname === '/guide' ? 'fun' : 'ghost'}
+                variant={pathname === '/guide' ? 'secondary' : 'ghost'}
                 size="lg"
                 className="justify-start text-lg font-medium w-full"
               >

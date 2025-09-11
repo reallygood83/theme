@@ -1,16 +1,28 @@
 import { NextResponse } from 'next/server'
-import { ref, push, set } from 'firebase/database'
-import { initializeApp, getApps } from 'firebase/app'
-import { getDatabase } from 'firebase/database'
-// Firebase 마이그레이션: NotificationService 제거됨
+import admin from 'firebase-admin'
+
+// Firebase Admin SDK 초기화
+if (!admin.apps.length) {
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: privateKey,
+    }),
+    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+  })
+}
 
 export async function POST(request: Request) {
   try {
-    console.log('=== 세션 생성 API 시작 ===')
+    console.log('=== 세션 생성 API 시작 (Admin SDK) ===')
     console.log('환경변수 확인:', {
-      FIREBASE_API_KEY: !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
       FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      FIREBASE_DATABASE_URL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+      FIREBASE_DATABASE_URL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+      FIREBASE_CLIENT_EMAIL: !!process.env.FIREBASE_CLIENT_EMAIL,
+      FIREBASE_PRIVATE_KEY: !!process.env.FIREBASE_PRIVATE_KEY
     })
     
     const data = await request.json()
@@ -38,33 +50,14 @@ export async function POST(request: Request) {
       materialUrl: data.materials?.[0]?.type === 'youtube' ? data.materials[0].url : ''
     }
     
-    // Firebase Client SDK로 간단하게 처리
-    console.log('Firebase 연결 중...')
-    
-    const firebaseConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-    };
-    
-    // Firebase 앱 초기화
-    let app;
-    if (getApps().length === 0) {
-      app = initializeApp(firebaseConfig);
-    } else {
-      app = getApps()[0];
-    }
-    
-    const db = getDatabase(app);
-    console.log('✅ Firebase 연결 완료')
+    // Firebase Admin SDK로 데이터베이스 접근
+    console.log('Firebase Admin SDK로 연결 중...')
+    const db = admin.database()
+    console.log('✅ Firebase Admin SDK 연결 완료')
     
     // 세션 생성
-    const sessionsRef = ref(db, 'sessions')
-    const newSessionRef = push(sessionsRef)
+    const sessionsRef = db.ref('sessions')
+    const newSessionRef = sessionsRef.push()
     
     console.log('세션 생성 시도:', {
       sessionId: newSessionRef.key,
@@ -72,7 +65,7 @@ export async function POST(request: Request) {
       title: sessionData.title
     })
     
-    await set(newSessionRef, sessionData)
+    await newSessionRef.set(sessionData)
     console.log('✅ 세션 생성 완료:', newSessionRef.key)
     
     // Firebase 마이그레이션: 알림 시스템은 향후 Firebase 기반으로 재구현 예정

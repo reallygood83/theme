@@ -99,30 +99,35 @@ export default function DebateScenarioGenerator() {
       setGeneratedTopic(analysisResult)
       setLoading(false)
       setCurrentStep(3)
-    }, 1500)
+    }, 2000)
   }
 
+  // 간단한 찬반 의견 생성 함수
   const generateProsAndCons = (topic: string, type: 'pros' | 'cons') => {
-    // 간단한 키워드 기반 찬반 의견 생성
-    const commonPros = ["효율성 증대", "경제적 이익", "사회적 발전", "개인의 자유 확대"]
-    const commonCons = ["부작용 우려", "전통적 가치 훼손", "경제적 부담", "사회적 갈등"]
+    const prosTemplates = ["효율성 향상", "비용 절약", "접근성 개선", "혁신 촉진", "편의성 증대"]
+    const consTemplates = ["부작용 우려", "비용 부담", "형평성 문제", "전통 가치 훼손", "의존성 증가"]
     
-    return type === 'pros' ? commonPros.slice(0, 3) : commonCons.slice(0, 3)
+    const templates = type === 'pros' ? prosTemplates : consTemplates
+    return templates.slice(0, 3).map(template => `${topic}의 ${template}`)
   }
 
+  // 키워드 생성 함수
   const generateKeyTerms = (topic: string) => {
-    return ["사회적 합의", "이해관계자", "공익과 사익"]
+    const commonTerms = ["사회적 합의", "정책적 고려", "윤리적 판단"]
+    return [topic.split(' ')[0], ...commonTerms].slice(0, 3)
   }
 
+  // 적합 학년 결정 함수
   const determineTargetGrade = (score: number) => {
-    if (score >= 80) return "고등학교 1-3학년"
-    if (score >= 60) return "중학교 1-3학년"
+    if (score >= 75) return "고등학교 1-3학년"
+    if (score >= 50) return "중학교 1-3학년"
     return "초등학교 5-6학년"
   }
 
+  // 난이도 결정 함수
   const determineDifficulty = (score: number) => {
-    if (score >= 80) return "고급"
-    if (score >= 60) return "중급"
+    if (score >= 75) return "고급"
+    if (score >= 50) return "중급"
     return "초급"
   }
 
@@ -131,169 +136,221 @@ export default function DebateScenarioGenerator() {
     setCurrentStep(3)
   }
 
-  const resetGenerator = () => {
+  const handleReset = () => {
     setCurrentStep(1)
     setTopicInput('')
     setCheckedItems({})
     setGeneratedTopic(null)
+    setLoading(false)
   }
 
   return (
-    <Card title="🎯 토론 시나리오 생성기">
+    <div className="max-w-4xl mx-auto p-6">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">🎯 AI 토론 시나리오 생성기</h1>
+        <p className="text-gray-600">
+          단계별로 토론 주제를 분석하고 완전한 토론 시나리오를 생성해보세요.
+        </p>
+      </div>
+
+      {/* 진행 단계 표시 */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          {[1, 2, 3].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                currentStep >= step ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {step}
+              </div>
+              <div className={`ml-2 text-sm ${
+                currentStep >= step ? 'text-blue-600 font-medium' : 'text-gray-500'
+              }`}>
+                {step === 1 && '주제 입력'}
+                {step === 2 && '적합성 검토'}
+                {step === 3 && '시나리오 생성'}
+              </div>
+              {step < 3 && (
+                <div className={`w-16 h-1 mx-4 ${
+                  currentStep > step ? 'bg-blue-500' : 'bg-gray-200'
+                }`} />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 1단계: 주제 입력 */}
       {currentStep === 1 && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">토론 시나리오를 생성해보세요</h3>
-            <p className="text-gray-600 text-sm">직접 주제를 입력하거나 샘플 주제를 선택할 수 있습니다</p>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                토론 주제 입력
-              </label>
-              <textarea
-                value={topicInput}
-                onChange={(e) => setTopicInput(e.target.value)}
-                placeholder="예: 학교에서 휴대폰 사용을 허용해야 한다"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                rows={3}
-              />
-            </div>
-
-            <div className="flex justify-center space-x-3">
-              <Button 
-                onClick={() => setCurrentStep(2)} 
-                variant="primary"
-                disabled={!topicInput.trim()}
-              >
-                주제 분석하기
-              </Button>
-            </div>
-          </div>
-
-          <div className="border-t pt-6">
-            <h4 className="font-medium mb-4">또는 샘플 주제 선택</h4>
-            <div className="space-y-3">
-              {sampleTopics.map((topic, index) => (
-                <div 
-                  key={index}
-                  className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
-                  onClick={() => handleSampleTopicSelect(topic)}
+        <Card className="mb-6">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">1단계: 토론 주제 입력</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  토론하고 싶은 주제를 입력하세요
+                </label>
+                <input
+                  type="text"
+                  value={topicInput}
+                  onChange={(e) => setTopicInput(e.target.value)}
+                  placeholder="예: 학교에서 휴대폰 사용을 허용해야 할까?"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+              <div className="flex justify-between">
+                <div></div>
+                <Button
+                  onClick={() => setCurrentStep(2)}
+                  disabled={!topicInput.trim()}
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
                 >
-                  <h5 className="font-medium text-gray-900">{topic.title}</h5>
-                  <p className="text-sm text-gray-600 mt-1">{topic.description}</p>
-                  <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
-                    <span>{topic.targetGrade}</span>
-                    <span>{topic.difficulty}</span>
-                  </div>
+                  다음 단계
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* 2단계: 적합성 검토 */}
+      {currentStep === 2 && (
+        <Card className="mb-6">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">2단계: 토론 주제 적합성 검토</h2>
+            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>검토할 주제:</strong> {topicInput}
+              </p>
+            </div>
+            
+            <div className="space-y-3 mb-6">
+              {checklistItems.map((item) => (
+                <div key={item.id} className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id={item.id}
+                    checked={checkedItems[item.id] || false}
+                    onChange={() => handleCheckboxChange(item.id)}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor={item.id} className="text-sm text-gray-700">
+                    {item.label}
+                  </label>
                 </div>
               ))}
             </div>
+
+            <div className="flex justify-between">
+              <Button
+                onClick={() => setCurrentStep(1)}
+                variant="outline"
+              >
+                이전 단계
+              </Button>
+              <Button
+                onClick={handleTopicAnalysis}
+                disabled={loading}
+                className="bg-green-500 hover:bg-green-600 text-white"
+              >
+                {loading ? '분석 중...' : 'AI 시나리오 생성'}
+              </Button>
+            </div>
           </div>
-        </div>
+        </Card>
       )}
 
-      {currentStep === 2 && (
-        <div className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">토론 주제 적합성 체크리스트</h3>
-            <p className="text-gray-600 text-sm mb-4">
-              "{topicInput}"이 토론 주제로 적합한지 체크해보세요
-            </p>
-          </div>
+      {/* 3단계: 생성된 시나리오 */}
+      {currentStep === 3 && generatedTopic && (
+        <Card className="mb-6">
+          <div className="p-6">
+            <h2 className="text-lg font-semibold mb-4">3단계: 생성된 토론 시나리오</h2>
+            
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 p-6 rounded-lg mb-6">
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{generatedTopic.title}</h3>
+              <p className="text-gray-600 mb-4">{generatedTopic.description}</p>
+              
+              <div className="grid md:grid-cols-2 gap-6 mb-4">
+                <div>
+                  <h4 className="font-semibold text-green-700 mb-2">👍 찬성 의견</h4>
+                  <ul className="space-y-1">
+                    {generatedTopic.pros.map((pro, index) => (
+                      <li key={index} className="text-sm text-gray-700">• {pro}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-red-700 mb-2">👎 반대 의견</h4>
+                  <ul className="space-y-1">
+                    {generatedTopic.cons.map((con, index) => (
+                      <li key={index} className="text-sm text-gray-700">• {con}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
 
-          <div className="space-y-4">
-            {checklistItems.map((item) => (
-              <div key={item.id} className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  id={item.id}
-                  checked={checkedItems[item.id] || false}
-                  onChange={() => handleCheckboxChange(item.id)}
-                  className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor={item.id} className="text-sm text-gray-700 cursor-pointer">
-                  {item.label}
-                </label>
+              <div className="grid md:grid-cols-3 gap-4 text-sm">
+                <div>
+                  <span className="font-medium text-gray-600">핵심 용어:</span>
+                  <p className="text-gray-700">{generatedTopic.keyTerms.join(', ')}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">적합 학년:</span>
+                  <p className="text-gray-700">{generatedTopic.targetGrade}</p>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-600">난이도:</span>
+                  <p className="text-gray-700">{generatedTopic.difficulty}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-between">
+              <Button
+                onClick={handleReset}
+                variant="outline"
+              >
+                새로 시작
+              </Button>
+              <Button
+                onClick={() => {
+                  alert('토론 시나리오가 클립보드에 복사되었습니다!')
+                  // 실제로는 클립보드 복사 기능 구현
+                }}
+                className="bg-blue-500 hover:bg-blue-600 text-white"
+              >
+                시나리오 복사
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {/* 샘플 주제 선택 */}
+      <Card>
+        <div className="p-6">
+          <h3 className="text-lg font-semibold mb-4">📚 샘플 토론 주제</h3>
+          <p className="text-sm text-gray-600 mb-4">
+            다음 주제들을 참고하여 토론 시나리오를 바로 확인해보세요.
+          </p>
+          <div className="grid md:grid-cols-3 gap-4">
+            {sampleTopics.map((topic, index) => (
+              <div
+                key={index}
+                className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 cursor-pointer transition-colors"
+                onClick={() => handleSampleTopicSelect(topic)}
+              >
+                <h4 className="font-medium text-gray-800 mb-2">{topic.title}</h4>
+                <p className="text-xs text-gray-600 mb-2">{topic.description}</p>
+                <div className="flex justify-between text-xs text-gray-500">
+                  <span>{topic.targetGrade}</span>
+                  <span>{topic.difficulty}</span>
+                </div>
               </div>
             ))}
           </div>
-
-          <div className="flex justify-center space-x-3">
-            <Button onClick={() => setCurrentStep(1)} variant="secondary">
-              이전으로
-            </Button>
-            <Button onClick={handleTopicAnalysis} variant="primary" disabled={loading}>
-              {loading ? '분석 중...' : '시나리오 생성'}
-            </Button>
-          </div>
         </div>
-      )}
-
-      {currentStep === 3 && generatedTopic && (
-        <div className="space-y-6">
-          <div className="text-center">
-            <h3 className="text-lg font-semibold mb-2">생성된 토론 시나리오</h3>
-          </div>
-
-          <div className="bg-blue-50 p-6 rounded-lg">
-            <h4 className="text-xl font-bold text-blue-800 mb-2">{generatedTopic.title}</h4>
-            <p className="text-blue-700 mb-4">{generatedTopic.description}</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-green-700 mb-2">찬성 논거</h5>
-                <ul className="space-y-1">
-                  {generatedTopic.pros.map((pro, index) => (
-                    <li key={index} className="text-sm text-green-600">• {pro}</li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div className="bg-white p-4 rounded-lg">
-                <h5 className="font-semibold text-red-700 mb-2">반대 논거</h5>
-                <ul className="space-y-1">
-                  {generatedTopic.cons.map((con, index) => (
-                    <li key={index} className="text-sm text-red-600">• {con}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            <div className="bg-white p-4 rounded-lg">
-              <h5 className="font-semibold text-gray-700 mb-2">핵심 용어</h5>
-              <div className="flex flex-wrap gap-2">
-                {generatedTopic.keyTerms.map((term, index) => (
-                  <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded">
-                    {term}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between text-sm text-gray-600 mt-4">
-              <span>권장 학년: {generatedTopic.targetGrade}</span>
-              <span>난이도: {generatedTopic.difficulty}</span>
-            </div>
-          </div>
-
-          <div className="flex justify-center space-x-3">
-            <Button onClick={resetGenerator} variant="secondary">
-              새 시나리오 생성
-            </Button>
-            <Button 
-              onClick={() => {
-                // 나중에 세션 생성 페이지로 이동하는 기능 추가 가능
-                alert('이 시나리오로 토론 세션을 생성하는 기능은 추후 추가될 예정입니다.')
-              }} 
-              variant="primary"
-            >
-              이 주제로 세션 생성
-            </Button>
-          </div>
-        </div>
-      )}
-    </Card>
+      </Card>
+    </div>
   )
 }

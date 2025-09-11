@@ -1,48 +1,67 @@
-import { initializeApp, getApps, cert, ServiceAccount } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, ServiceAccount, getApp } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
 import { getAuth } from 'firebase-admin/auth';
 
-// Firebase Admin 앱 초기화 (service account 없이도 작동하도록 수정)
+// Firebase Admin 앱 초기화 (중복 방지)
 let adminApp: any = null;
 let adminDB: any = null;
 let adminAuth: any = null;
 
 function initializeFirebaseAdmin() {
-  // 이미 초기화되었으면 반환
-  if (adminApp) return adminApp;
-
   try {
-    // Service account가 설정된 경우
-    if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
-      const serviceAccount: ServiceAccount = {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      };
+    // 이미 앱이 초기화되어 있는지 확인
+    const existingApps = getApps();
+    
+    if (existingApps.length > 0) {
+      console.log('✅ 기존 Firebase Admin 앱 사용');
+      adminApp = existingApps[0];
+    } else {
+      // 새로운 앱 초기화
+      if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+        const serviceAccount: ServiceAccount = {
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        };
 
-      adminApp = initializeApp({
-        credential: cert(serviceAccount),
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-      });
-      console.log('✅ Firebase Admin (Service Account) 초기화 성공');
-    } 
-    // Development/Emulator 모드: service account 없이 초기화
-    else {
-      adminApp = initializeApp({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-      });
-      console.log('✅ Firebase Admin (Default) 초기화 성공');
+        adminApp = initializeApp({
+          credential: cert(serviceAccount),
+          databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+        });
+        console.log('✅ Firebase Admin (Service Account) 초기화 성공');
+      } else {
+        // Development 모드: 기본 자격 증명 사용
+        adminApp = initializeApp({
+          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+          databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
+        });
+        console.log('✅ Firebase Admin (Default) 초기화 성공');
+      }
     }
 
-    adminDB = getDatabase(adminApp);
-    adminAuth = getAuth(adminApp);
+    // 데이터베이스와 Auth 초기화
+    if (!adminDB) {
+      adminDB = getDatabase(adminApp);
+    }
+    if (!adminAuth) {
+      adminAuth = getAuth(adminApp);
+    }
     
   } catch (error) {
     console.error('❌ Firebase Admin 초기화 실패:', error);
-    adminApp = null;
-    adminDB = null;
-    adminAuth = null;
+    
+    // 이미 초기화된 앱이 있는 경우 그것을 사용
+    try {
+      adminApp = getApp();
+      adminDB = getDatabase(adminApp);
+      adminAuth = getAuth(adminApp);
+      console.log('✅ 기존 Firebase Admin 앱으로 복구 성공');
+    } catch (fallbackError) {
+      console.error('❌ Firebase Admin 복구 실패:', fallbackError);
+      adminApp = null;
+      adminDB = null;
+      adminAuth = null;
+    }
   }
 
   return adminApp;
@@ -65,9 +84,6 @@ export const getAdminAuth = () => {
   }
   return adminAuth;
 };
-
-// 초기 초기화
-initializeFirebaseAdmin();
 
 export { adminDB, adminAuth };
 export default adminApp;

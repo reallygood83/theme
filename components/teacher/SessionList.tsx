@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Session } from '@/lib/utils'
 import EditSessionModal from './EditSessionModal'
+import ShareSessionAdapter from './ShareSessionAdapter'
 
 interface SessionListProps {
   sessions: Session[]
@@ -18,6 +19,7 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
   const [editingSession, setEditingSession] = useState<Session | null>(null)
   const [deletingSessionId, setDeletingSessionId] = useState<string | null>(null)
+  const [sharingSession, setSharingSession] = useState<Session | null>(null)
 
   // sessions prop 변화 감지 (디버깅용)
   useEffect(() => {
@@ -121,12 +123,60 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     try {
       setDeletingSessionId(sessionId)
       
-      console.log('세션 삭제 요청 시작:', sessionId)
+      console.log('=== 세션 삭제 디버깅 시작 ===', sessionId)
+      
+      // Firebase 인증 토큰 가져오기
+      console.log('1. Firebase Auth 모듈 import 중...')
+      const { getAuth } = await import('firebase/auth')
+      console.log('2. getAuth() 호출 중...')
+      const auth = getAuth()
+      console.log('3. auth.currentUser 확인 중...')
+      const user = auth.currentUser
+      
+      console.log('4. 현재 사용자 상태:', {
+        isLoggedIn: !!user,
+        uid: user?.uid,
+        email: user?.email,
+        displayName: user?.displayName
+      })
+      
+      if (!user) {
+        console.error('5. 사용자가 로그인되지 않음 - 로그인 페이지로 리다이렉트')
+        throw new Error('인증 토큰이 필요합니다.')
+      }
+      
+      console.log('5. 사용자 인증 상태 재확인 중...')
+      try {
+        await user.reload()
+        console.log('6. user.reload() 성공')
+      } catch (reloadError) {
+        console.error('6. user.reload() 실패:', reloadError)
+        throw new Error('인증 토큰이 필요합니다.')
+      }
+      
+      console.log('7. 토큰 가져오기 시도 중...')
+      let token: string
+      try {
+        token = await user.getIdToken(true) // 강제로 새 토큰 가져오기
+        console.log('8. 토큰 가져오기 성공:', {
+          tokenLength: token ? token.length : 0,
+          tokenStart: token ? token.substring(0, 20) + '...' : 'null'
+        })
+      } catch (tokenError) {
+        console.error('8. getIdToken() 실패:', tokenError)
+        throw new Error('인증 토큰이 필요합니다.')
+      }
+      
+      if (!token) {
+        console.error('9. 토큰이 null 또는 빈 문자열')
+        throw new Error('인증 토큰이 필요합니다.')
+      }
       
       const response = await fetch('/api/sessions/delete', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ sessionId }),
       })
@@ -137,7 +187,18 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
       console.log('삭제 API 응답 데이터:', responseData)
       
       if (!response.ok) {
-        throw new Error(responseData.error || '세션 삭제에 실패했습니다.')
+        const errorMessage = responseData.error || '세션 삭제에 실패했습니다.'
+        const errorDetails = responseData.details || ''
+        const timestamp = responseData.timestamp || ''
+        
+        console.error('API 에러 상세:', {
+          status: response.status,
+          message: errorMessage,
+          details: errorDetails,
+          timestamp: timestamp
+        })
+        
+        throw new Error(errorMessage)
       }
       
       console.log('세션 삭제 성공!')
@@ -163,6 +224,13 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
     e.preventDefault()
     e.stopPropagation()
     setEditingSession(session)
+  }
+
+  // 세션 공유 모달 열기
+  const handleShareSession = (session: Session, e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setSharingSession(session)
   }
 
   // 세션 수정 완료 후 처리
@@ -384,6 +452,17 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
                   <div className="absolute top-4 right-4 opacity-0 hover:opacity-100 transition-opacity group-hover:opacity-100">
                     <div className="flex gap-2">
 
+                      {/* 공유 버튼 */}
+                      <button
+                        className="p-2 bg-white rounded-full shadow hover:bg-gray-50"
+                        onClick={(e) => handleShareSession(session, e)}
+                        title="세션 공유"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                      </button>
+
                       {/* 수정 버튼 */}
                       <button
                         className="p-2 bg-white rounded-full shadow hover:bg-gray-50"
@@ -432,6 +511,17 @@ export default function SessionList({ sessions, loading, error, onRefresh }: Ses
         isOpen={!!editingSession}
         onClose={() => setEditingSession(null)}
         onUpdate={handleUpdateComplete}
+      />
+
+      {/* 세션 공유 모달 */}
+      <ShareSessionAdapter
+        session={sharingSession}
+        isOpen={!!sharingSession}
+        onClose={() => setSharingSession(null)}
+        onShareSuccess={() => {
+          // 공유 성공 시 필요한 추가 작업 (선택사항)
+          onRefresh?.();
+        }}
       />
     </div>
   )

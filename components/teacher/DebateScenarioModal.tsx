@@ -71,6 +71,7 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
   const [recommendedTopics, setRecommendedTopics] = useState<TopicRecommendation[]>([])
   const [generatedScenario, setGeneratedScenario] = useState<DebateScenario | null>(null)
   const [loading, setLoading] = useState(false)
+  const [sharing, setSharing] = useState(false)
 
   // 교육 목적 옵션
   const purposes = [
@@ -246,6 +247,70 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
       alert(`❌ ${errorMessage}\n\n🔧 해결: 인터넷 연결 확인 후 재시도`)
     } finally {
       setLoading(false)
+    }
+  }
+
+  // 공유하기 함수 구현
+  const handleShareToLibrary = async () => {
+    if (!generatedScenario) {
+      alert('공유할 토론 시나리오가 없습니다.')
+      return
+    }
+
+    setSharing(true)
+    
+    try {
+      // 공유 세션 생성 API 호출
+      const response = await fetch('/api/shared/sessions/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          originalSessionId: `scenario_${Date.now()}`, // 임시 세션 ID
+          title: generatedScenario.title || generatedScenario.topic,
+          description: generatedScenario.background || '토론 시나리오',
+          materials: [{
+            id: 'scenario_material',
+            type: 'text',
+            title: '토론 시나리오',
+            content: `
+**토론 주제**: ${generatedScenario.title || generatedScenario.topic}
+
+**배경**: ${generatedScenario.background || ''}
+
+**찬성 논거**:
+${(generatedScenario.proArguments || []).map((arg, i) => `${i+1}. ${arg}`).join('\n')}
+
+**반대 논거**:
+${(generatedScenario.conArguments || []).map((arg, i) => `${i+1}. ${arg}`).join('\n')}
+
+**핵심 질문**:
+${(generatedScenario.keyQuestions || []).map((q, i) => `Q${i+1}. ${q}`).join('\n')}
+
+**키워드**: ${(generatedScenario.keywords || []).join(', ')}
+            `.trim()
+          }],
+          shareType: 'public',
+          tags: ['AI생성', '토론시나리오', ...(generatedScenario.keywords || [])],
+          category: 'general',
+          targetGrade: selectedGrade ? `${selectedGrade}학년` : '3-4학년'
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || '공유에 실패했습니다.')
+      }
+
+      alert('✅ 토론 시나리오가 교육자료실에 성공적으로 공유되었습니다!')
+      
+    } catch (error) {
+      console.error('토론 시나리오 공유 오류:', error)
+      alert(`❌ 공유에 실패했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`)
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -590,8 +655,19 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
                 )}
               </div>
 
-              <div className="flex justify-center">
-                <Button onClick={handleClose} variant="primary">
+              <div className="flex justify-center space-x-3 flex-wrap gap-y-2">
+                <Button onClick={() => setCurrentStep(1)} variant="secondary">
+                  새 시나리오 생성
+                </Button>
+                <Button 
+                  onClick={handleShareToLibrary}
+                  disabled={sharing}
+                  variant="primary"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  {sharing ? '공유 중...' : '📚 교육자료실에 공유하기'}
+                </Button>
+                <Button onClick={handleClose} variant="secondary">
                   완료
                 </Button>
               </div>
