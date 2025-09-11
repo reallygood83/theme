@@ -13,7 +13,7 @@ import SharedSessionsLibrary from '@/components/teacher/SharedSessionsLibrary'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
-import DebateScenarioGenerator from '@/components/teacher/DebateScenarioGenerator'
+
 import EvidenceSearchModalContainer from '@/components/evidence/EvidenceSearchModalContainer'
 import DebateStatsCard from '@/components/teacher/DebateStatsCard'
 import NotificationCenter from '@/components/teacher/NotificationCenter'
@@ -26,7 +26,7 @@ function TeacherDashboardContent() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isDebateScenarioModalOpen, setIsDebateScenarioModalOpen] = useState(false)
+
   const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
   
   // 관리자 모드 확인 (기존 심사위원 모드와 새로운 관리자 계정 모드 모두 지원)
@@ -210,22 +210,24 @@ function TeacherDashboardContent() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* AI 토론 시나리오 생성기 - 컴팩트 카드 */}
-                  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50" onClick={() => setIsDebateScenarioModalOpen(true)}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center mb-4">
-                        <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-full mr-4 shadow-md">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
+                  {/* 토론 주제 생성 - 컴팩트 카드 */}
+                  <Link href="/teacher/session/create" className="block">
+                    <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50">
+                      <CardContent className="p-6">
+                        <div className="flex items-center mb-4">
+                          <div className="bg-gradient-to-br from-blue-500 to-cyan-500 p-3 rounded-full mr-4 shadow-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-blue-800">📝 토론 주제 생성</h4>
+                            <p className="text-sm text-blue-600">새로운 토론 세션 만들기</p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-blue-800">🤖 AI 시나리오 생성</h4>
-                          <p className="text-sm text-blue-600">교육용 토론 주제 자동 생성</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
+                      </CardContent>
+                    </Card>
+                  </Link>
 
                   {/* 근거자료 검색 - 컴팩트 카드 */}
                   <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer border-green-200 bg-gradient-to-br from-green-50 to-emerald-50" onClick={() => setIsEvidenceSearchModalOpen(true)}>
@@ -581,38 +583,7 @@ function TeacherDashboardContent() {
           </Card>
         </div>
         
-        {/* AI 토론 시나리오 생성기 모달 */}
-        {isDebateScenarioModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-              {/* 모달 헤더 */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <div className="flex items-center">
-                  <div className="bg-blue-500 rounded-full p-2 mr-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900">🎯 AI 토론 시나리오 생성기</h2>
-                    <p className="text-sm text-gray-600">학생들의 사고력 향상을 위한 전문적인 토론 시나리오를 생성해보세요</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsDebateScenarioModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-              
-              {/* 생성기 콘텐츠 */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-                <DebateScenarioGenerator />
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* 근거자료 검색 모달 */}
         <EvidenceSearchModalContainer
@@ -625,19 +596,20 @@ function TeacherDashboardContent() {
       {/* 플로팅 액션 버튼 - 데스크톱용 */}
       <div className="hidden lg:block fixed right-6 top-1/2 -translate-y-1/2 z-50">
         <div className="flex flex-col gap-4">
-          {/* 토론 시나리오 생성기 (Primary FAB) */}
-          <Button
-            onClick={() => setIsDebateScenarioModalOpen(true)}
-            className="group relative bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-2xl hover:shadow-blue-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
-            aria-label="AI 토론 시나리오 생성"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-              🎯 AI 토론 시나리오 생성
-            </span>
-          </Button>
+          {/* 토론 주제 생성 (Primary FAB) */}
+          <Link href="/teacher/session/create">
+            <Button
+              className="group relative bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-2xl hover:shadow-blue-500/25 rounded-full p-4 transition-all duration-300 transform hover:scale-110"
+              aria-label="토론 주제 생성"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 px-3 py-2 text-sm font-medium text-white bg-gray-900 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
+                📝 토론 주제 생성
+              </span>
+            </Button>
+          </Link>
 
           {/* 근거자료 검색 */}
           <Button
@@ -691,19 +663,17 @@ function TeacherDashboardContent() {
       {/* 플로팅 버튼 - 모바일용 (주요 기능 2개만) */}
       <div className="lg:hidden fixed bottom-6 right-4 z-40">
         <div className="flex flex-col gap-3">
-          {/* 토론 시나리오 생성기 - 모바일 */}
-          <Button
-            onClick={() => setIsDebateScenarioModalOpen(true)}
-            className="group relative bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-2xl rounded-full p-3 transition-all duration-300 transform hover:scale-110"
-            aria-label="AI 토론 시나리오 생성"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
-              AI
-            </span>
-          </Button>
+          {/* 토론 주제 생성 - 모바일 */}
+          <Link href="/teacher/session/create">
+            <Button
+              className="group relative bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-2xl rounded-full p-3 transition-all duration-300 transform hover:scale-110"
+              aria-label="토론 주제 생성"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </Button>
+          </Link>
           
           {/* 근거자료 검색 - 모바일 */}
           <Button
