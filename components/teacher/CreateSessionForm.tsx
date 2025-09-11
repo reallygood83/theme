@@ -242,11 +242,42 @@ export default function CreateSessionForm() {
           <h2 className="text-xl font-semibold text-green-800 mb-2">
             세션이 성공적으로 생성되었습니다!
           </h2>
-          <p className="text-green-700 mb-4">
-            세션 코드: <span className="font-mono font-bold text-lg">{createdSessionCode}</span>
-          </p>
+          <div className="mb-4">
+            <p className="text-green-700 mb-3">
+              세션 코드: <span className="font-mono font-bold text-lg">{createdSessionCode}</span>
+            </p>
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                className="inline-flex items-center text-sm bg-green-100 hover:bg-green-200 text-green-700 px-3 py-2 rounded-md border border-green-200 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(createdSessionCode);
+                  alert('세션 코드가 복사되었습니다!');
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                코드 복사
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 rounded-md border border-blue-200 transition-colors"
+                onClick={() => {
+                  const participationUrl = `${window.location.origin}/student/session/${createdSessionCode}`;
+                  navigator.clipboard.writeText(participationUrl);
+                  alert('참여 링크가 복사되었습니다!');
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                링크 복사
+              </button>
+            </div>
+          </div>
           <p className="text-sm text-green-600">
-            학생들에게 위 세션 코드를 공유하여 질문 작성에 참여하도록 안내하세요.
+            학생들에게 세션 코드 또는 참여 링크를 공유하여 질문 작성에 참여하도록 안내하세요.
           </p>
         </div>
 

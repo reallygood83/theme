@@ -36,6 +36,7 @@ export default function SessionManager({
   
   // 토스트 메시지 상태
   const [showToast, setShowToast] = useState(false)
+  const [showUrlToast, setShowUrlToast] = useState(false)
   
   // 논제 편집 상태
   const [isEditingAgendas, setIsEditingAgendas] = useState(false)
@@ -467,27 +468,52 @@ export default function SessionManager({
           세션 코드가 클립보드에 복사되었습니다
         </div>
       )}
+      {showUrlToast && (
+        <div className="fixed bottom-4 right-4 bg-blue-100 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg shadow-lg flex items-center z-50 animate-fade-in-out">
+          <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M5 13l4 4L19 7"></path>
+          </svg>
+          참여 링크가 클립보드에 복사되었습니다
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">토론 세션 관리</h1>
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex items-center gap-2 flex-wrap">
             <p className="text-gray-600">
               세션 코드: <span className="font-medium">{sessionCode}</span>
             </p>
-            <button
-              type="button"
-              className="inline-flex items-center text-sm bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-md border border-primary/20"
-              onClick={() => {
-                navigator.clipboard.writeText(sessionCode);
-                setShowToast(true);
-                setTimeout(() => setShowToast(false), 2000);
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-              복사하기
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="inline-flex items-center text-sm bg-primary/10 hover:bg-primary/20 text-primary px-3 py-1.5 rounded-md border border-primary/20 transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(sessionCode);
+                  setShowToast(true);
+                  setTimeout(() => setShowToast(false), 2000);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                코드 복사
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center text-sm bg-blue-50 hover:bg-blue-100 text-blue-600 px-3 py-1.5 rounded-md border border-blue-200 transition-colors"
+                onClick={() => {
+                  const participationUrl = `${window.location.origin}/student/session/${sessionCode}`;
+                  navigator.clipboard.writeText(participationUrl);
+                  setShowUrlToast(true);
+                  setTimeout(() => setShowUrlToast(false), 2000);
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                링크 복사
+              </button>
+            </div>
           </div>
         </div>
         

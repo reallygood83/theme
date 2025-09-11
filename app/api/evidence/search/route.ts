@@ -24,12 +24,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2단계: 콘텐츠 적절성 검사 (교육용 필터링)
+    // 2단계: 극단적인 경우만 사전 차단 (원본 프로그램 방식)
     const contentCheck = checkTopicAppropriateness(topic)
-    console.log('🛡️ 콘텐츠 필터링 결과:', contentCheck)
+    console.log('🛡️ 간단한 적절성 검사:', contentCheck.severity)
 
-    if (!contentCheck.isAppropriate) {
-      console.warn('🚫 부적절한 주제 차단:', topic, '- 이유:', contentCheck.reason)
+    // 'blocked' 수준만 사전 차단, 'warning'은 검색 허용
+    if (contentCheck.severity === 'blocked') {
+      console.warn('🚫 극단적 주제 사전 차단:', topic, '- 이유:', contentCheck.reason)
       return NextResponse.json(
         { 
           error: generateStudentMessage(contentCheck),
@@ -41,9 +42,11 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 경고 수준의 민감한 주제인 경우 로깅
+    // 경고나 일반 주제는 모두 검색 진행
     if (contentCheck.severity === 'warning') {
-      console.warn('⚠️ 민감한 주제 검색:', topic, '- 사유:', contentCheck.reason)
+      console.log('⚠️ 민감한 주제이지만 검색 진행:', topic)
+    } else {
+      console.log('✅ 일반 주제 검색 진행:', topic)
     }
     
     // API 키 검증
@@ -68,55 +71,20 @@ export async function POST(request: NextRequest) {
     const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
-    // 병렬 검색 실행 + 타임아웃 방지 (Always Works™)
-    console.log('🔄 Perplexity API 및 YouTube API 병렬 호출 시작...')
+    // 🚀 원본 프로그램과 동일한 병렬 검색 (Promise.all)
+    console.log('⚡ 병렬 검색 시작: Perplexity + YouTube 동시 호출')
     
-    // 25초 타임아웃 설정 (Vercel 30초 제한 대비)
-    const searchWithTimeout = async () => {
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('SEARCH_TIMEOUT')), 25000)
-      )
-      
-      const searchPromise = Promise.all([
-        callPerplexityAPI(prompt).catch(error => {
-          console.error('❌ Perplexity API 오류:', error)
-          return null
-        }),
-        searchYouTubeVideos(topic, 50, selectedStance).catch(error => {
-          console.error('❌ YouTube API 오류:', error)
-          if (error instanceof Error && error.message.includes('quotaExceeded')) {
-            console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
-          } else if (error instanceof Error && error.message.includes('invalid key')) {
-            console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
-          }
-          return []
-        })
-      ])
-      
-      return Promise.race([searchPromise, timeoutPromise])
-    }
-    
-    let perplexityData = null
-    let youtubeVideos: any[] = []
-    
-    try {
-      const results = await searchWithTimeout() as [any, any[]]
-      perplexityData = results[0]
-      youtubeVideos = results[1] || []
-    } catch (error) {
-      if (error instanceof Error && error.message === 'SEARCH_TIMEOUT') {
-        console.log('⏰ API 검색 타임아웃 - 기본 결과 제공')
-        // 타임아웃 시 기본 결과 제공
-        perplexityData = {
-          related_questions: [`${topic}에 대한 다양한 의견`],
-          answer: `${topic}는 현재 교육계에서 중요하게 논의되고 있는 주제입니다.`,
-          citations: []
-        }
-        youtubeVideos = []
-      } else {
-        throw error
-      }
-    }
+    // 병렬로 Perplexity API와 YouTube API 호출 (원본과 동일)
+    const [perplexityData, youtubeVideos] = await Promise.all([
+      callPerplexityAPI(prompt).catch(error => {
+        console.error('❌ Perplexity API 오류:', error)
+        return null
+      }),
+      searchYouTubeVideos(topic, 30, selectedStance).catch(error => {
+        console.error('❌ YouTube API 오류:', error)
+        return []
+      })
+    ])
     
     console.log('📊 검색 결과 수집 완료:')
     console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
@@ -132,17 +100,17 @@ export async function POST(request: NextRequest) {
       console.log('❌ YouTube 검색 실패 또는 결과 없음')
     }
     
-    // 결과 처리 및 합성
+    // 결과 처리 및 합성 (원본 프로그램 방식)
     const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
     console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')
     
-    // 3단계: 콘텐츠 안전성 필터링 (교육용 후처리)
-    const safeResults = filterSearchResults(evidenceResults)
-    console.log('🛡️ 콘텐츠 필터링 적용:', evidenceResults.length, '→', safeResults.length, '개')
+    // 검증만 수행 (기본적인 데이터 구조 검증)
+    const validatedResults = validateEvidenceResults(evidenceResults)
+    console.log('✅ 기본 검증 완료:', validatedResults.length + '개 유효한 결과')
     
-    // 결과 검증 및 필터링
-    const validatedResults = validateEvidenceResults(safeResults)
-    console.log('✅ 검증 완료:', validatedResults.length + '개 유효한 결과')
+    // 3단계: 최종 결과에만 완화된 콘텐츠 필터링 적용 (시간 효율성)
+    const safeResults = filterSearchResults(validatedResults)
+    console.log('🛡️ 완화된 콘텐츠 필터링 적용:', validatedResults.length, '→', safeResults.length, '개')
     
     // 결과가 없는 경우 처리 - 신뢰성 우선 (Always Works™)
     if (validatedResults.length === 0) {

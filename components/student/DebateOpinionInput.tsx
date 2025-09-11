@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, FormEvent, useEffect } from 'react'
-import { ref, push, set, get, getDatabase, Database, onValue } from 'firebase/database'
+import { useState, FormEvent } from 'react'
+import { ref, push, set, get, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
 import { Button } from '../ui/button'
@@ -26,85 +26,7 @@ export default function DebateOpinionInput({
   const [selectedAgenda, setSelectedAgenda] = useState('')
   const [position, setPosition] = useState<'agree' | 'disagree' | ''>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [sessionAgendas, setSessionAgendas] = useState<string[]>([])
-  const [loadingAgendas, setLoadingAgendas] = useState(true)
-  
-  // 세션의 실제 논제들 가져오기
-  useEffect(() => {
-    const loadSessionAgendas = async () => {
-      try {
-        let db: Database | null = database;
-        
-        if (!db) {
-          const firebaseConfig = {
-            apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-            authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-            projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-            messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-            appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-            databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
-              (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-                ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
-                : undefined)
-          };
-          
-          if (!firebaseConfig.databaseURL) {
-            throw new Error('Firebase 설정이 완료되지 않았습니다.');
-          }
-          
-          const app = initializeApp(firebaseConfig);
-          db = getDatabase(app);
-        }
-        
-        // 세션의 논제들 가져오기
-        const agendasRef = ref(db, `sessions/${sessionId}/agendas`);
-        
-        console.log('📋 세션 논제 조회 시작:', {
-          sessionId,
-          path: `sessions/${sessionId}/agendas`
-        });
-        
-        const unsubscribe = onValue(agendasRef, (snapshot) => {
-          if (snapshot.exists()) {
-            const agendasData = snapshot.val();
-            const agendaTexts = Object.values(agendasData).map((agenda: any) => agenda.agendaText);
-            
-            console.log('✅ 세션 논제 로드 완료:', {
-              총개수: agendaTexts.length,
-              논제들: agendaTexts
-            });
-            
-            setSessionAgendas(agendaTexts);
-          } else {
-            console.log('❌ 세션에 논제가 없습니다. 기본 논제를 사용합니다.');
-            // 기본 논제 사용
-            setSessionAgendas([
-              "환경보호를 위해 일회용품 사용을 전면 금지해야 한다",
-              "학교에서 스마트폰 사용을 허용해야 한다", 
-              "온라인 수업이 오프라인 수업보다 효과적이다",
-              "AI 기술 발전이 인간에게 도움이 된다"
-            ]);
-          }
-          setLoadingAgendas(false);
-        });
-        
-        return () => unsubscribe();
-      } catch (error) {
-        console.error('❌ 논제 조회 중 오류:', error);
-        // 오류 발생시 기본 논제 사용
-        setSessionAgendas([
-          "환경보호를 위해 일회용품 사용을 전면 금지해야 한다",
-          "학교에서 스마트폰 사용을 허용해야 한다",
-          "온라인 수업이 오프라인 수업보다 효과적이다", 
-          "AI 기술 발전이 인간에게 도움이 된다"
-        ]);
-        setLoadingAgendas(false);
-      }
-    };
-    
-    loadSessionAgendas();
-  }, [sessionId]);
+  // 논제는 이제 사용자가 직접 입력하므로 불러올 필요 없음
   
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -246,38 +168,23 @@ export default function DebateOpinionInput({
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 논제 선택 */}
+          {/* 논제 직접 입력 */}
           <div>
             <label htmlFor="selectedAgenda" className="block text-sm font-bold text-emerald-800 mb-2 flex items-center">
-              🎯 토론 논제 선택
+              🎯 토론 논제 입력
             </label>
-            <select
+            <input
+              type="text"
               id="selectedAgenda"
-              className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl bg-gradient-to-r from-emerald-50 to-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-gray-800"
+              className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl bg-gradient-to-r from-emerald-50 to-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-gray-800 placeholder-gray-500"
+              placeholder="토론할 논제를 직접 입력하세요 (예: 환경보호를 위해 일회용품 사용을 전면 금지해야 한다)"
               value={selectedAgenda}
               onChange={(e) => setSelectedAgenda(e.target.value)}
               required
-              disabled={loadingAgendas}
-            >
-              <option value="">
-                {loadingAgendas ? '논제를 불러오는 중...' : '논제를 선택하세요'}
-              </option>
-              {sessionAgendas.map((agenda, index) => (
-                <option key={index} value={agenda}>
-                  {agenda}
-                </option>
-              ))}
-            </select>
-            {loadingAgendas && (
-              <div className="text-sm text-emerald-600 mt-2">
-                📋 세션의 논제를 불러오고 있습니다...
-              </div>
-            )}
-            {!loadingAgendas && sessionAgendas.length === 0 && (
-              <div className="text-sm text-orange-600 mt-2">
-                ⚠️ 아직 생성된 논제가 없습니다. AI 논제 추천을 이용해보세요!
-              </div>
-            )}
+            />
+            <div className="text-sm text-emerald-600 mt-2">
+              💡 팁: 토론하기 좋은 논제는 찬성과 반대 의견이 모두 나올 수 있는 주제입니다
+            </div>
           </div>
 
           {/* 찬성/반대 입장 선택 */}

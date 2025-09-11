@@ -4,7 +4,7 @@ import { EvidenceResult, YouTubeVideoData, PerplexityResponse, YouTubeSearchResp
 
 // 원본 프로그램과 동일한 설정
 const PERPLEXITY_CONFIG = {
-  model: 'sonar-pro',
+  model: 'llama-3.1-sonar-large-128k-online', // 최고 성능 모델로 변경
   baseUrl: 'https://api.perplexity.ai/chat/completions'
 }
 
@@ -21,204 +21,157 @@ const corsProxies = [
   'https://thingproxy.freeboard.io/fetch/'
 ]
 
-// Perplexity API 호출 함수 (원본 완전 복제)
+// Perplexity API 호출 함수 (단순화된 고속 처리)
 export async function callPerplexityAPI(prompt: string): Promise<any> {
-  // 직접 호출 시도
+  // 1단계: 직접 API 호출 시도 (가장 빠름)
   try {
-    const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: PERPLEXITY_CONFIG.model,
-        messages: [
-          {
-            role: 'system',
-            content: `당신은 한국의 초등교육 전문가이자 신뢰할 수 있는 정보 검색 전문가입니다. 초등학생(8-12세) 토론 교육을 위한 근거자료를 제공합니다.
-      
-      **📚 초등학생 적합성 원칙**:
-      - 내용은 초등학생이 이해할 수 있는 쉬운 언어로 설명
-      - 복잡한 용어나 전문 용어는 피하고, 일상생활 예시로 대체
-      - 교육적 가치가 높고, 학교 수업에서 바로 활용 가능한 자료만
-      
-      **🔍 자료 유형 지침**:
-      - 뉴스 기사: 2020년 이후 주요 언론사(KBS, MBC, SBS, 조선일보, 중앙일보, 한겨레, YTN 등) 실제 기사
-      - 유튜브 영상: EBS, KBS 교육, 학교 채널 등 교육적 콘텐츠 (5-15분 길이, 엔터테인먼트/광고 제외)
-      
-      **🚨 URL 및 내용 엄격 규칙**:
-      - 뉴스: 실제 접근 가능한 전체 기사 URL만 (https://news.naver.com/... 형식). "원문 보기"나 요약 링크 금지. 기사 본문에서 핵심 2-3문단을 직접 인용 ( "...라고 기사에 쓰여있다" 형식 ).
-      - 유튜브: https://www.youtube.com/watch?v=VIDEO_ID 직접 링크. 영상 설명이나 자막에서 초등학생 수준의 100-150자 핵심 내용 요약.
-      - 불확실한 URL/내용은 절대 제공하지 말고 빈 문자열("")로 설정. 가짜/추측 정보 완전 금지.
-      - 신뢰도 낮은 자료(블로그, SNS, 확인 불가 출처)는 제외.
-      
-      **📊 신뢰도 평가**:
-      - 1등급 (90+): 공영방송(KBS,MBC,EBS), 정부기관(교육부), 주요 종합지(조중동, 한경)
-      - 2등급 (70-89): 경제지(MK, 헤럴드), 전문지(교육전문지), 신뢰할 수 있는 유튜브 교육채널
-      - 3등급 (50-69): 지역신문, 시민단체 자료 (확인된 경우만)
-      
-      응답 형식 (JSON만, 마크다운 없음):
-      {
-        "evidences": [
-          {
-            "type": "뉴스 기사" | "유튜브 영상",
-            "title": "실제 자료 제목 (전체)",
-            "content": "자료 본문 핵심 내용 직접 인용 또는 상세 요약 (150-200자, 초등학생 이해 가능)",
-            "source": "정확한 출처명 (KBS 뉴스, EBS 교육 등)",
-            "url": "실제 직접 접근 URL (확실하지 않으면 \"\" )",
-            "summary": "한 줄 요약 (20-30자)",
-            "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 \"\" )",
-            "author": "기자명 또는 채널명 (모르면 \"\" )",
-            "reliability": 50-100 (신뢰도 점수),
-            "keyPoints": ["핵심 논점 1 (쉬운 설명)", "핵심 논점 2", "핵심 논점 3"],
-            "education_level": "초등 저학년" | "초등 고학년" | "모든 학년"
-          }
-        ]
-      }
-      
-      **⚠️ 출력 규칙**:
-      - 총 4-6개 자료 (뉴스 2-3개 + 유튜브 2-3개 균형)
-      - 실제 존재하는 자료만 (가상 생성 금지)
-      - 초등학생 토론에 직접 활용 가능한 구체적 사례 포함
-      - 각 자료에 "이 자료가 토론에서 어떻게 도움이 될지" 간단 설명 추가 가능`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 4000,
-        temperature: 0.1
-      })
-    })
-
-    if (response.ok) {
-      const data: PerplexityResponse = await response.json()
-      const content = data.choices[0]?.message?.content
-      
-      try {
-        // JSON 응답에서 코드 블록 제거
-        let cleanContent = content
-        if (cleanContent.includes('```json')) {
-          cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
-        }
-        if (cleanContent.includes('```')) {
-          cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
-        }
-        
-        const parsed = JSON.parse(cleanContent.trim())
-        console.log('✅ Perplexity JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
-        return parsed
-      } catch (parseError) {
-        console.error('❌ JSON 파싱 오류:', parseError)
-        console.log('원본 응답:', content.substring(0, 500))
-        
-        // 간단한 구조로 대체 응답 생성
-        const fallbackResponse = {
-          evidences: [
-            {
-              type: "뉴스 기사",
-              title: "검색 결과를 찾을 수 없음",
-              content: "현재 해당 주제에 대한 구체적인 근거자료를 찾지 못했습니다. 다른 키워드로 다시 검색해보세요.",
-              source: "시스템",
-              url: "",
-              reliability: 50,
-              publishedDate: new Date().toISOString().split('T')[0],
-              author: "",
-              summary: "검색 결과 없음"
-            }
-          ]
-        }
-        return fallbackResponse
-      }
-    }
+    return await tryDirectAPI(prompt)
   } catch (error) {
-    console.error('직접 API 호출 실패:', error)
   }
+  
+  // 2단계: 한 개의 안정적인 프록시만 사용
+  try {
+    return await tryProxyAPI(prompt, 0) // 첫 번째 프록시만 사용
+  } catch (error) {
+    console.error('Perplexity API 호출 실패')
+    return null
+  }
+}
 
-  // CORS 프록시를 통한 재시도
-  for (let i = 0; i < corsProxies.length; i++) {
-    try {
-      console.log(`프록시 ${i+1} 시도중...`)
-      const proxyUrl = corsProxies[i] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
-      
-      const response = await fetch(proxyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-        },
-        body: JSON.stringify({
-          model: PERPLEXITY_CONFIG.model,
-          messages: [
-            {
-              role: 'system',
-              content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
-
-**🚨 중요**: URL은 반드시 실제로 존재하는 뉴스 기사 링크만 제공하세요. 가짜 URL은 절대 금지입니다. URL이 확실하지 않으면 빈 문자열("")로 설정하세요.
-
-응답 형식:
+// 직접 API 호출 (간소화된 프롬프트)
+async function tryDirectAPI(prompt: string): Promise<any> {
+  const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: PERPLEXITY_CONFIG.model,
+      messages: [
+        {
+          role: 'system',
+          content: `뉴스 기사를 찾아주세요.
 {
   "evidences": [
     {
       "type": "뉴스 기사",
-      "title": "실제 존재하는 뉴스 기사 제목",
-      "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
-      "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
-      "url": "실제 접근 가능한 뉴스 기사 URL (확실하지 않으면 빈 문자열)",
-      "reliability": 85,
-      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 빈 문자열)",
-      "author": "실제 기자명 (모르면 빈 문자열)",
-      "summary": "한 줄 요약"
+      "title": "기사 제목",
+      "content": "내용",
+      "source": "언론사",
+      "url": "",
+      "summary": "요약",
+      "reliability": 80,
+      "keyPoints": ["핵심1", "핵심2"]
     }
   ]
 }
-
-**URL 규칙**: 
-- 확실한 뉴스 URL만 제공
-- 추측이나 가짜 URL 절대 금지
-- 불확실하면 url: "" 로 설정`
-            },
-            {
-              role: 'user',
-              content: prompt
-            }
-          ],
-          max_tokens: 4000,
-          temperature: 0.1
-        })
-      })
-
-      if (response.ok) {
-        const data: PerplexityResponse = await response.json()
-        const content = data.choices[0]?.message?.content
-        
-        try {
-          // JSON 응답에서 코드 블록 제거
-          let cleanContent = content
-          if (cleanContent.includes('```json')) {
-            cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
-          }
-          if (cleanContent.includes('```')) {
-            cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
-          }
-          
-          const parsed = JSON.parse(cleanContent.trim())
-          console.log('✅ 프록시를 통한 JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
-          return parsed
-        } catch (parseError) {
-          console.error('❌ 프록시 JSON 파싱 오류:', parseError)
-          continue
+3개 기사만 빠르게`
+        },
+        {
+          role: 'user',
+          content: prompt
         }
-      }
-    } catch (error) {
-      console.error(`프록시 ${i+1} 실패:`, error)
-      continue
-    }
+      ],
+      max_tokens: 1000, // 토큰 수 절반으로 줄여서 속도 향상
+      temperature: 0.3
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Direct API failed: ${response.status}`)
   }
 
-  return null
+  const data = await response.json()
+  return await parsePerplexityResponse(data)
+}
+
+// 프록시 API 호출
+async function tryProxyAPI(prompt: string, proxyIndex: number): Promise<any> {
+  const proxyUrl = corsProxies[proxyIndex] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
+  
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: PERPLEXITY_CONFIG.model,
+      messages: [
+        {
+          role: 'system',
+          content: `뉴스 기사 검색:
+{
+  "evidences": [
+    {
+      "type": "뉴스 기사",
+      "title": "실제 기사 제목",
+      "content": "기사 핵심 내용 (2-3문장)",
+      "source": "신문사명",
+      "url": "실제 URL (확실하지 않으면 \"\")",
+      "reliability": 85,
+      "summary": "한 줄 요약"
+    }
+  ]
+}`
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 2000,
+      temperature: 0.1
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Proxy ${proxyIndex + 1} failed: ${response.status}`)
+  }
+
+  const data = await response.json()
+  return await parsePerplexityResponse(data)
+}
+
+// JSON 응답 파싱 (공통 함수)
+async function parsePerplexityResponse(data: any): Promise<any> {
+  const content = data.choices[0]?.message?.content
+  
+  if (!content) {
+    throw new Error('No content in response')
+  }
+
+  try {
+    // JSON 응답에서 코드 블록 제거
+    let cleanContent = content
+    if (cleanContent.includes('```json')) {
+      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
+    }
+    if (cleanContent.includes('```')) {
+      cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+    }
+    
+    const parsed = JSON.parse(cleanContent.trim())
+    return parsed
+  } catch (parseError) {
+    console.error('❌ JSON 파싱 오류:', parseError)
+    
+    // 간단한 구조로 대체 응답 생성
+    return {
+      evidences: [
+        {
+          type: "뉴스 기사",
+          title: "검색 결과를 찾을 수 없음",
+          content: "현재 해당 주제에 대한 구체적인 근거자료를 찾지 못했습니다. 다른 키워드로 다시 검색해보세요.",
+          source: "시스템",
+          url: "",
+          reliability: 50,
+          summary: "검색 결과 없음"
+        }
+      ]
+    }
+  }
 }
 
 // YouTube 검색 함수 (원본 완전 복제)
@@ -228,14 +181,12 @@ export async function searchYouTubeVideos(
   stance?: string
 ): Promise<YouTubeVideoData[]> {
   try {
-    console.log('🎬 YouTube 검색 시작:', { query, maxResults, stance })
+    // YouTube 검색 시작
     
     // API 키 확인
     if (!process.env.YOUTUBE_API_KEY) {
-      console.error('❌ YouTube API 키가 없습니다! .env에 YOUTUBE_API_KEY 추가 필요.')
       return []
     }
-    console.log('✅ YouTube API 키 확인됨:', process.env.YOUTUBE_API_KEY.substring(0, 10) + '...')
     
     // 검색 쿼리 최적화 및 400 Bad Request 방지
     let searchQuery = query
@@ -262,7 +213,6 @@ export async function searchYouTubeVideos(
       searchQuery = searchQuery.substring(0, 80).trim()
     }
     
-    console.log('🔍 YouTube 검색 쿼리 (안전 처리됨):', searchQuery)
 
     const params = new URLSearchParams({
       part: 'snippet',
@@ -276,7 +226,6 @@ export async function searchYouTubeVideos(
     })
 
     const fullUrl = `${YOUTUBE_CONFIG.baseUrl}?${params}`
-    console.log('📡 YouTube API 호출 URL:', fullUrl.replace(process.env.YOUTUBE_API_KEY || '', '[API_KEY]'))
     
     const response = await fetch(fullUrl)
     
@@ -288,10 +237,8 @@ export async function searchYouTubeVideos(
     }
 
     const data: YouTubeSearchResponse = await response.json()
-    console.log('📊 YouTube API 응답 수신:', data.items ? data.items.length : 0, '개 영상')
     
     if (!data.items || data.items.length === 0) {
-      console.log('❌ YouTube 검색 결과가 없습니다')
       return []
     }
     
@@ -300,7 +247,6 @@ export async function searchYouTubeVideos(
       const title = video.snippet.title.toLowerCase()
       const channelTitle = video.snippet.channelTitle.toLowerCase()
       
-      console.log('🎬 영상 검토:', video.snippet.title.substring(0, 50))
       
       // 교육적 채널 우선 (EBS, KBS, 교육부 등)
       const isEducational = channelTitle.includes('ebs') || 
@@ -327,17 +273,14 @@ export async function searchYouTubeVideos(
     }).filter(video => {
       // 모든 영상 포함 (점수 제한 제거)
       const isValid = true // video.educationScore >= 0 으로 모든 영상 포함
-      console.log('✅', `영상 점수: ${video.educationScore}점`, video.snippet.title.substring(0, 30))
       return isValid
     }).sort((a, b) => {
       // 교육 점수가 높은 순으로 정렬
       return b.educationScore - a.educationScore
     })
 
-    console.log('🎯 필터링 완료:', filteredVideos.length, '개 영상 선별')
     
-    const finalResults = filteredVideos.slice(0, 15) // 최대 15개로 제한
-    console.log('📤 YouTube 검색 결과 반환:', finalResults.length, '개 영상')
+    const finalResults = filteredVideos.slice(0, 10) // 최대 10개로 제한 (성능 최적화)
     
     return finalResults
   } catch (error) {
@@ -514,10 +457,8 @@ export function processEvidenceResults(
             const originalUrl = urlParam.get('url')
             if (originalUrl) {
               cleanUrl = decodeURIComponent(originalUrl)
-              console.log('🔗 CORS proxy URL 처리:', evidence.url, '→', cleanUrl)
-            }
+              }
           } catch (error) {
-            console.warn('⚠️ CORS proxy URL 처리 실패:', evidence.url)
           }
         }
         
@@ -525,22 +466,18 @@ export function processEvidenceResults(
         if (evidence.type === '뉴스 기사') {
           // 네이버 뉴스 URL 정리
           if (cleanUrl.includes('n.news.naver.com') && !cleanUrl.includes('/article/')) {
-            console.warn('⚠️ 네이버 뉴스 메인 URL 발견, 제거:', cleanUrl)
             cleanUrl = ''
           }
           // 다음 뉴스 URL 정리
           else if (cleanUrl.includes('v.daum.net/v/') && cleanUrl.length < 50) {
-            console.warn('⚠️ 다음 뉴스 메인 URL 발견, 제거:', cleanUrl)
             cleanUrl = ''
           }
           // 기타 메인 페이지 URL 필터링
           else if (cleanUrl.match(/\.(com|co\.kr|net)\/?(index\.html?)?$/)) {
-            console.warn('⚠️ 뉴스 사이트 메인 페이지 URL 발견, 제거:', cleanUrl)
             cleanUrl = ''
           }
         }
         
-        console.log(`📰 [${evidence.type}] URL 처리:`, evidence.url, '→', cleanUrl)
       }
       
       results.push({
@@ -607,7 +544,6 @@ function isValidNewsUrl(url: string): boolean {
     
     // 메인 페이지 또는 잘못된 URL 차단
     if (urlObj.pathname === '/' || urlObj.pathname === '/index.html' || urlObj.pathname === '/index.htm') {
-      console.warn('❌ 뉴스 사이트 메인 페이지 URL 차단:', url)
       return false
     }
     
@@ -615,7 +551,6 @@ function isValidNewsUrl(url: string): boolean {
     if (urlObj.hostname.includes('naver.com')) {
       // n.news.naver.com/article/xxx/xxx 형태만 허용
       if (!urlObj.pathname.includes('/article/') || urlObj.pathname.split('/').length < 4) {
-        console.warn('❌ 네이버 뉴스 잘못된 URL 형식:', url)
         return false
       }
     }
@@ -624,7 +559,6 @@ function isValidNewsUrl(url: string): boolean {
     if (urlObj.hostname.includes('daum.net')) {
       // v.daum.net/v/20240101/xxx 형태만 허용
       if (!urlObj.pathname.includes('/v/') || urlObj.pathname.length < 15) {
-        console.warn('❌ 다음 뉴스 잘못된 URL 형식:', url)
         return false
       }
     }
@@ -637,10 +571,8 @@ function isValidNewsUrl(url: string): boolean {
     )
     
     if (isDomainValid) {
-      console.log('✅ 유효한 뉴스 URL:', url)
       return true
     } else {
-      console.warn('❌ 신뢰할 수 없는 뉴스 도메인:', urlObj.hostname)
       return false
     }
     
@@ -652,48 +584,38 @@ function isValidNewsUrl(url: string): boolean {
 // 검색 결과 검증 함수 (강화된 버전)
 export function validateEvidenceResults(results: EvidenceResult[]): EvidenceResult[] {
   return results.filter(result => {
-    console.log('🔍 검증 중:', result.type, result.title)
     
     // 기본 필수 필드 검증
     if (!result.title || !result.content || !result.source) {
-      console.log('❌ 필수 필드 누락:', result.title)
       return false
     }
     
     // 제목 길이 검증
     if (result.title.length < 5) {
-      console.log('❌ 제목 너무 짧음:', result.title)
       return false
     }
     
     // 내용 길이 검증  
     if (result.content.length < 20) {
-      console.log('❌ 내용 너무 짧음:', result.title)
       return false
     }
     
     // URL 검증 (더 관대하게 수정)
     if (result.type === '뉴스 기사') {
       if (result.url && !isValidNewsUrl(result.url)) {
-        console.log('❌ 유효하지 않은 뉴스 URL:', result.url, '→ URL 제거 후 포함')
         result.url = '' // URL 제거하고 결과는 포함
       }
-      console.log('✅ 유효한 뉴스 기사:', result.title)
     } else if (result.type === '유튜브 영상') {
       if (!result.url || !result.url.includes('youtube.com/watch')) {
-        console.log('❌ 유효하지 않은 YouTube URL:', result.url)
         return false
       }
-      console.log('✅ 유효한 YouTube 영상:', result.title)
     } else {
       // 기타 유형은 URL 없어도 포함
       if (result.url && !isValidUrl(result.url)) {
-        console.log('❌ 유효하지 않은 URL:', result.url, '→ URL 제거 후 포함')
         result.url = '' // URL 제거하고 결과는 포함
       }
     }
     
-    console.log('✅ 검증 통과:', result.title)
     return true
   })
 }
