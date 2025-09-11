@@ -9,7 +9,11 @@ import {
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
 import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
 
-// theme-main 검증된 구현 적용 (단순하고 안정적)
+// Vercel 30초 제한 우회 설정
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
+// 빠른 타임아웃으로 API 응답성 향상
 export async function POST(request: NextRequest) {
   try {
     const { topic, stance, selectedTypes }: EvidenceSearchRequest = await request.json()

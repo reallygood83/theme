@@ -21,11 +21,15 @@ const corsProxies = [
   'https://thingproxy.freeboard.io/fetch/'
 ]
 
-// Perplexity API 호출 함수 (theme-main 간단 버전)
+// Perplexity API 호출 함수 (25초 타임아웃 적용)
 export async function callPerplexityAPI(prompt: string): Promise<any> {
-  // 직접 호출 시도
+  // 25초 타임아웃으로 직접 호출
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 25000) // 25초 타임아웃
+    
     const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
+      signal: controller.signal,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -92,6 +96,8 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
         temperature: 0.1
       })
     })
+    
+    clearTimeout(timeoutId)
 
     if (response.ok) {
       const data: PerplexityResponse = await response.json()
@@ -134,6 +140,7 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
       }
     }
   } catch (error) {
+    clearTimeout(timeoutId)
     console.error('직접 API 호출 실패:', error)
   }
 
@@ -406,8 +413,15 @@ export async function searchYouTubeVideos(
 
     const fullUrl = `${YOUTUBE_CONFIG.baseUrl}?${params}`
     
-    // 간단한 직접 호출 (theme-main 방식)
-    const response = await fetch(fullUrl)
+    // 15초 타임아웃으로 YouTube API 호출
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
+    
+    const response = await fetch(fullUrl, {
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
     
     if (!response.ok) {
       console.error('❌ YouTube API 오류:', response.status, response.statusText)
