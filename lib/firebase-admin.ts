@@ -17,11 +17,19 @@ function initializeFirebaseAdmin() {
       adminApp = existingApps[0];
     } else {
       // 새로운 앱 초기화
-      if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY) {
+      if (process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_PRIVATE_KEY.trim() !== '') {
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+        
+        // private_key 유효성 검증
+        if (!privateKey || privateKey.trim() === '' || !privateKey.includes('BEGIN PRIVATE KEY')) {
+          console.warn('⚠️ FIREBASE_PRIVATE_KEY가 유효하지 않습니다. 기본 자격 증명을 사용합니다.');
+          throw new Error('Invalid private key');
+        }
+        
         const serviceAccount: ServiceAccount = {
           projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL!,
-          privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          privateKey: privateKey,
         };
 
         adminApp = initializeApp({
