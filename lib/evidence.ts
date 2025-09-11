@@ -21,157 +21,231 @@ const corsProxies = [
   'https://thingproxy.freeboard.io/fetch/'
 ]
 
-// Perplexity API 호출 함수 (단순화된 고속 처리)
+// Perplexity API 호출 함수 (원본 프로그램 완전 복제)
 export async function callPerplexityAPI(prompt: string): Promise<any> {
-  // 1단계: 직접 API 호출 시도 (가장 빠름)
+  const corsProxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://cors-anywhere.herokuapp.com/',
+    'https://corsproxy.io/?',
+    'https://thingproxy.freeboard.io/fetch/'
+  ]
+
+  // 직접 호출 시도
   try {
-    return await tryDirectAPI(prompt)
+    const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: PERPLEXITY_CONFIG.model,
+        messages: [
+          {
+            role: 'system',
+            content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 가상의 URL이나 존재하지 않는 자료를 만들어내지 마세요. 확실하지 않은 자료는 추천하지 말고, 실제 접근 가능한 자료만 제공하세요.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        temperature: 0.3,
+        max_tokens: 2000
+      })
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      const parsedData = parseEvidenceResponse(data.choices[0].message.content)
+      if (parsedData) {
+        return parsedData
+      } else {
+        throw new Error('JSON 파싱 실패')
+      }
+    }
+    throw new Error(`API Error: ${response.status}`)
   } catch (error) {
-  }
-  
-  // 2단계: 한 개의 안정적인 프록시만 사용
-  try {
-    return await tryProxyAPI(prompt, 0) // 첫 번째 프록시만 사용
-  } catch (error) {
-    console.error('Perplexity API 호출 실패')
+    console.error('직접 API 호출 실패:', error)
+    
+    // CORS 프록시를 통한 재시도
+    for (let i = 0; i < corsProxies.length; i++) {
+      try {
+        console.log(`프록시 ${i+1} 시도중...`)
+        const proxyUrl = corsProxies[i] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
+        
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+          },
+          body: JSON.stringify({
+            model: PERPLEXITY_CONFIG.model,
+            messages: [
+              {
+                role: 'system',
+                content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 가상의 URL이나 존재하지 않는 자료를 만들어내지 마세요.'
+              },
+              {
+                role: 'user',
+                content: prompt
+              }
+            ],
+            temperature: 0.3,
+            max_tokens: 2000
+          })
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const parsedData = parseEvidenceResponse(data.choices[0].message.content)
+          if (parsedData) {
+            console.log(`✅ 프록시 ${i+1} 성공`)
+            return parsedData
+          }
+        }
+      } catch (proxyError) {
+        console.error(`❌ 프록시 ${i+1} 실패:`, proxyError)
+      }
+    }
+    
+    // 모든 시도 실패 시 null 반환
+    console.error('모든 API 호출 방법이 실패했습니다')
     return null
   }
 }
 
-// 직접 API 호출 (간소화된 프롬프트)
-async function tryDirectAPI(prompt: string): Promise<any> {
-  const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: PERPLEXITY_CONFIG.model,
-      messages: [
-        {
-          role: 'system',
-          content: `뉴스 기사를 찾아주세요.
-{
-  "evidences": [
-    {
-      "type": "뉴스 기사",
-      "title": "기사 제목",
-      "content": "내용",
-      "source": "언론사",
-      "url": "",
-      "summary": "요약",
-      "reliability": 80,
-      "keyPoints": ["핵심1", "핵심2"]
-    }
-  ]
-}
-3개 기사만 빠르게`
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      max_tokens: 1000, // 토큰 수 절반으로 줄여서 속도 향상
-      temperature: 0.3
-    })
-  })
-
-  if (!response.ok) {
-    throw new Error(`Direct API failed: ${response.status}`)
-  }
-
-  const data = await response.json()
-  return await parsePerplexityResponse(data)
-}
-
-// 프록시 API 호출
-async function tryProxyAPI(prompt: string, proxyIndex: number): Promise<any> {
-  const proxyUrl = corsProxies[proxyIndex] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
-  
-  const response = await fetch(proxyUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: PERPLEXITY_CONFIG.model,
-      messages: [
-        {
-          role: 'system',
-          content: `뉴스 기사 검색:
-{
-  "evidences": [
-    {
-      "type": "뉴스 기사",
-      "title": "실제 기사 제목",
-      "content": "기사 핵심 내용 (2-3문장)",
-      "source": "신문사명",
-      "url": "실제 URL (확실하지 않으면 \"\")",
-      "reliability": 85,
-      "summary": "한 줄 요약"
-    }
-  ]
-}`
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      max_tokens: 2000,
-      temperature: 0.1
-    })
-  })
-
-  if (!response.ok) {
-    throw new Error(`Proxy ${proxyIndex + 1} failed: ${response.status}`)
-  }
-
-  const data = await response.json()
-  return await parsePerplexityResponse(data)
-}
-
-// JSON 응답 파싱 (공통 함수)
-async function parsePerplexityResponse(data: any): Promise<any> {
-  const content = data.choices[0]?.message?.content
-  
-  if (!content) {
-    throw new Error('No content in response')
-  }
-
+// 원본 프로그램의 JSON 파싱 함수 (완전 복제)
+function parseEvidenceResponse(response: string): any {
   try {
-    // JSON 응답에서 코드 블록 제거
-    let cleanContent = content
-    if (cleanContent.includes('```json')) {
-      cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
-    }
-    if (cleanContent.includes('```')) {
-      cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+    // JSON 응답에서 실제 JSON 부분만 추출
+    let jsonStr = response.trim()
+    
+    // 마크다운 코드 블록 제거
+    if (jsonStr.includes('```')) {
+      const match = jsonStr.match(/```(?:json)?\s*(\[[\s\S]*?\]|\{[\s\S]*?\})\s*```/)
+      if (match) {
+        jsonStr = match[1]
+      }
     }
     
-    const parsed = JSON.parse(cleanContent.trim())
-    return parsed
-  } catch (parseError) {
-    console.error('❌ JSON 파싱 오류:', parseError)
+    // JSON 파싱
+    const parsed = JSON.parse(jsonStr)
     
-    // 간단한 구조로 대체 응답 생성
+    if (parsed && (Array.isArray(parsed.evidences) || Array.isArray(parsed))) {
+      console.log('✅ JSON 파싱 성공:', parsed)
+      return parsed
+    } else {
+      throw new Error('잘못된 JSON 형식')
+    }
+  } catch (error) {
+    console.error('JSON 파싱 실패:', error)
+    console.log('원본 응답:', response)
+    
+    // 파싱 실패 시 기본값 반환
     return {
       evidences: [
         {
-          type: "뉴스 기사",
-          title: "검색 결과를 찾을 수 없음",
-          content: "현재 해당 주제에 대한 구체적인 근거자료를 찾지 못했습니다. 다른 키워드로 다시 검색해보세요.",
-          source: "시스템",
-          url: "",
+          type: '뉴스 기사',
+          title: '검색 결과를 처리할 수 없습니다',
+          content: '현재 검색 결과를 올바르게 처리할 수 없습니다. 다른 키워드로 다시 검색해보세요.',
+          source: '시스템',
+          url: '',
+          summary: '검색 처리 오류',
           reliability: 50,
-          summary: "검색 결과 없음"
+          keyPoints: ['다른 키워드로 재검색 필요']
         }
       ]
     }
   }
+}
+
+// 원본 프로그램의 키워드 생성 함수 (완전 복제)
+function generateSearchKeywords(topic: string, selectedStance: string | null): string {
+  // 기본 키워드 추출
+  const keywords = topic.split(' ').filter(word => word.length > 1)
+  
+  // 교육 관련 키워드
+  const educationKeywords = ['교육', '학습', '초등학교', '학생', '교사', '수업', '교실']
+  
+  // 신뢰성 키워드
+  const sourceKeywords = ['연구', '조사', '통계', '분석', '전문가', '기관', '정부']
+  
+  // 입장별 키워드
+  let stanceKeywords: string[] = []
+  if (selectedStance) {
+    if (selectedStance === 'supporting') {
+      stanceKeywords = ['장점', '효과', '도움', '필요성', '긍정적']
+    } else if (selectedStance === 'opposing') {
+      stanceKeywords = ['단점', '문제점', '위험성', '부작용', '우려']
+    }
+  }
+  
+  const allKeywords = [...keywords, ...stanceKeywords.slice(0, 2)]
+  const selectedKeywords = allKeywords.filter(keyword => keyword.length > 1).slice(0, 8)
+  
+  return `주요 검색어: ${selectedKeywords.join(', ')}
+- 교육 관련: ${educationKeywords.slice(0, 4).join(', ')}
+- 신뢰성 출처: ${sourceKeywords.slice(0, 4).join(', ')}`
+}
+
+// 원본 프로그램의 검색 지시문 생성 함수 (완전 복제)
+function createEvidenceSearchPrompt(topic: string, stance: string, types: string[], selectedStance: string | null = null): string {
+  // 유튜브 영상은 별도 API로 처리하므로 제외
+  const nonYoutubeTypes = types.filter(type => type !== '유튜브 영상')
+  
+  // 입장별 검색 전략 설정
+  const stanceDirection = selectedStance === 'supporting' ? '찬성' : '반대'
+  const oppositeDirection = selectedStance === 'supporting' ? '반대' : '찬성'
+  
+  // 키워드 추출 및 확장
+  const keywordSuggestions = generateSearchKeywords(topic, selectedStance)
+  
+  return `🎯 토론 근거자료 검색 (초등교육 특화)
+
+📋 검색 기본 정보:
+- 토론 주제: ${topic}
+- 사용자 입장: ${stance}
+- 입장 분류: ${stanceDirection} 입장
+- 대상: 초등학생 (8-12세)
+
+🔍 검색 전략:
+- 주요 검색 (70%): ${stanceDirection} 입장을 뒷받침하는 강력한 근거자료
+- 보조 검색 (30%): ${oppositeDirection} 입장 자료 (반박 준비용)
+- 교육적 적합성: 초등학생이 이해 가능한 수준의 자료
+
+📚 검색할 자료 유형: ${nonYoutubeTypes.join(', ')}
+
+🎯 검색 키워드 가이드:
+${keywordSuggestions}
+
+📊 신뢰도 기준:
+- 1등급: 정부기관(교육부, 통계청), 국책연구원
+- 2등급: 대학 연구소, 교육단체, 주요 언론사  
+- 3등급: 전문지, 시민단체, 해외 신뢰기관
+
+다음 JSON 형식으로 응답해주세요:
+
+{
+  "topic": "${topic}",
+  "stance": "${stance}",
+  "evidences": [
+    {
+      "type": "뉴스 기사" | "학술 자료" | "통계 자료",
+      "title": "자료 제목",
+      "content": "핵심 내용 (초등학생 이해 수준)",
+      "source": "출처",
+      "url": "실제 접근 가능한 URL (확실하지 않으면 \"\")" ,
+      "summary": "한 줄 요약",
+      "relevance": "이 자료가 ${stanceDirection} 입장에 어떻게 도움이 되는지",
+      "keyPoints": ["핵심 논점 1", "핵심 논점 2", "핵심 논점 3"],
+      "reliability": 1-100 점수
+    }
+  ]
+}
+
+**중요**: ${stanceDirection} 입장 자료 3-4개, ${oppositeDirection} 입장 자료 1-2개 구성하여 총 4-6개 제공. 초등학생이 이해 가능한 설명으로 구성. 실제 존재하는 자료만 추천.`
 }
 
 // YouTube 검색 함수 (원본 완전 복제)
@@ -314,33 +388,59 @@ function generateSearchInstructions(selectedTypes: string[], stanceText: string)
   return `다음을 중점적으로 찾아주세요:\n${instructions.join('\n')}`
 }
 
-// 키워드 생성 함수 (원본 프로그램과 동일)
-function generateSearchKeywords(topic: string, selectedStance: string | null): string {
-  // 기본 키워드 추출
-  const keywords = topic.split(' ').filter(word => word.length > 1)
+// 메인 검색 함수 - 원본 프로그램의 완전한 병렬 처리 로직
+export async function searchEvidence(
+  topic: string,
+  stance: string,
+  types: string[],
+  selectedStance: string | null = null,
+  onProgress?: (step: number, message: string) => void
+): Promise<EvidenceResult[]> {
+  let results: EvidenceResult[] = []
   
-  // 교육 관련 키워드
-  const educationKeywords = ['교육', '학습', '초등학교', '학생', '교사', '수업', '교실']
-  
-  // 신뢰성 키워드
-  const sourceKeywords = ['연구', '조사', '통계', '분석', '전문가', '기관', '정부']
-  
-  // 입장별 키워드 (의문문 토론 주제 감지)
-  let stanceKeywords: string[] = []
-  if (selectedStance && (topic.includes('?') || topic.includes('할까') || topic.includes('될까'))) {
-    if (selectedStance === 'supporting') {
-      stanceKeywords = ['장점', '효과', '도움', '필요성', '긍정적']
-    } else if (selectedStance === 'opposing') {
-      stanceKeywords = ['단점', '문제점', '위험성', '부작용', '우려']
-    }
+  try {
+    // 1단계: 검색 준비
+    if (onProgress) onProgress(1, '검색 준비 중...')
+    
+    // 검색 쿼리 생성
+    const searchPrompt = generateSearchPrompt(topic, stance, types, selectedStance)
+    const youtubeQuery = topic + (selectedStance === 'supporting' ? ' 장점' : selectedStance === 'opposing' ? ' 단점' : '')
+    
+    // 2단계: Perplexity와 YouTube 병렬 검색
+    if (onProgress) onProgress(2, 'AI 검색 시작...')
+    
+    const [perplexityData, youtubeVideos] = await Promise.all([
+      callPerplexityAPI(searchPrompt).catch(error => {
+        console.error('Perplexity 검색 오류:', error)
+        return null
+      }),
+      types.includes('유튜브 영상') ? 
+        searchYouTubeVideos(youtubeQuery, 10, selectedStance).catch(error => {
+          console.error('YouTube 검색 오류:', error)
+          return []
+        }) : 
+        Promise.resolve([])
+    ])
+    
+    // 3단계: 결과 처리
+    if (onProgress) onProgress(3, '검색 결과 처리 중...')
+    
+    results = processEvidenceResults(perplexityData, youtubeVideos)
+    
+    // 4단계: 결과 검증 및 정리
+    if (onProgress) onProgress(4, '결과 검증 중...')
+    
+    results = validateEvidenceResults(results)
+    
+    // 5단계: 완료
+    if (onProgress) onProgress(5, '검색 완료!')
+    
+    return results.slice(0, 10) // 최대 10개 결과
+    
+  } catch (error) {
+    console.error('근거자료 검색 오류:', error)
+    return []
   }
-  
-  const allKeywords = [...keywords, ...stanceKeywords.slice(0, 2)]
-  const selectedKeywords = allKeywords.filter(keyword => keyword.length > 1).slice(0, 8)
-  
-  return `주요 검색어: ${selectedKeywords.join(', ')}
-- 교육 관련: ${educationKeywords.slice(0, 4).join(', ')}
-- 신뢰성 출처: ${sourceKeywords.slice(0, 4).join(', ')}`
 }
 
 // Perplexity API 프롬프트 생성 (참고 프로그램과 완전 동일)

@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  callPerplexityAPI, 
-  searchYouTubeVideos, 
-  generateSearchPrompt, 
-  processEvidenceResults,
-  validateEvidenceResults 
+  searchEvidence
 } from '@/lib/evidence'
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
 import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
@@ -67,45 +63,18 @@ export async function POST(request: NextRequest) {
     // 입장 정보 변환 (참고 프로그램과 동일)
     const selectedStance = stance === 'positive' ? 'supporting' : 'opposing'
     
-    // 검색 프롬프트 생성 (참고 프로그램과 동일하게 selectedStance 전달)
-    const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
-    console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
+    console.log('⚡ 통합된 검색 시작: 원본 프로그램 완전 복제')
     
-    // 🚀 원본 프로그램과 동일한 병렬 검색 (Promise.all)
-    console.log('⚡ 병렬 검색 시작: Perplexity + YouTube 동시 호출')
-    
-    // 병렬로 Perplexity API와 YouTube API 호출 (원본과 동일)
-    const [perplexityData, youtubeVideos] = await Promise.all([
-      callPerplexityAPI(prompt).catch(error => {
-        console.error('❌ Perplexity API 오류:', error)
-        return null
-      }),
-      searchYouTubeVideos(topic, 30, selectedStance).catch(error => {
-        console.error('❌ YouTube API 오류:', error)
-        return []
-      })
-    ])
-    
-    console.log('📊 검색 결과 수집 완료:')
-    console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
-    console.log('- YouTube 결과 수:', Array.isArray(youtubeVideos) ? youtubeVideos.length : 0)
-    
-    // YouTube 결과 상세 로깅
-    if (Array.isArray(youtubeVideos) && youtubeVideos.length > 0) {
-      console.log('🎬 YouTube 검색 성공! 영상 목록:')
-      youtubeVideos.forEach((video, index) => {
-        console.log(`  ${index + 1}. ${video.snippet.title}`)
-      })
-    } else {
-      console.log('❌ YouTube 검색 실패 또는 결과 없음')
-    }
-    
-    // 결과 처리 및 합성 (원본 프로그램 방식)
-    const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
-    console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')
-    
-    // 검증만 수행 (기본적인 데이터 구조 검증)
-    const validatedResults = validateEvidenceResults(evidenceResults)
+    // 🚀 원본 프로그램 완전 복제된 통합 검색 함수 사용
+    const validatedResults = await searchEvidence(
+      topic,
+      stance,
+      selectedTypes || [],
+      selectedStance,
+      (step: number, message: string) => {
+        console.log(`📊 검색 진행: ${step}/5 - ${message}`)
+      }
+    )
     console.log('✅ 기본 검증 완료:', validatedResults.length + '개 유효한 결과')
     
     // 3단계: 최종 결과에만 완화된 콘텐츠 필터링 적용 (시간 효율성)
@@ -115,7 +84,7 @@ export async function POST(request: NextRequest) {
     // 결과가 없는 경우 처리 - 신뢰성 우선 (Always Works™)
     if (validatedResults.length === 0) {
       // 필터링으로 인한 결과 부족인지 확인
-      const wasFiltered = evidenceResults.length > safeResults.length
+      const wasFiltered = safeResults.length < validatedResults.length
       const message = wasFiltered 
         ? '교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적인 키워드로 검색해보세요.' 
         : '현재 신뢰할 수 있는 검색 결과를 찾을 수 없습니다. 잠시 후 다시 시도하거나 다른 키워드로 검색해보세요.'
@@ -130,10 +99,10 @@ export async function POST(request: NextRequest) {
       })
     }
     
-    // 성공 응답
+    // 성공 응답 (필터링된 결과 사용)
     const response: EvidenceSearchResponse = {
-      evidences: validatedResults,
-      totalCount: validatedResults.length,
+      evidences: safeResults,
+      totalCount: safeResults.length,
       searchQuery: topic,
       timestamp: new Date()
     }
