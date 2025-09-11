@@ -415,7 +415,7 @@ export async function searchEvidence(
         return null
       }),
       types.includes('유튜브 영상') ? 
-        searchYouTubeVideos(youtubeQuery, 10, selectedStance).catch(error => {
+        searchYouTubeVideos(youtubeQuery, 10, selectedStance ?? undefined).catch(error => {
           console.error('YouTube 검색 오류:', error)
           return []
         }) : 
