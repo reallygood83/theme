@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedTopics } from '@/lib/shared-db';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     console.log('📚 공유 토론 주제 목록 API 시작');

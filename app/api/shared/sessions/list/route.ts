@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedSessions, PaginationParams } from '@/lib/shared-db';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   console.log('📋 공유 세션 목록 조회 요청');
 

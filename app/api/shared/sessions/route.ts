@@ -9,6 +9,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedSessions, createSharedSession } from '@/lib/shared-db';
 
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
 /**
  * Phase 1: 간소화된 사용자 검증 (인증은 Phase 2에서 구현)
  */
