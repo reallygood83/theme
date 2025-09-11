@@ -474,7 +474,7 @@ export default function SharedSessionsLibrary() {
 
     try {
       setLoading(true);
-      const response = await fetch('/api/shared/sessions/list');
+      const response = await fetch('/api/shared/sessions');
       
       if (!response.ok) {
         throw new Error('공유 세션 목록을 불러올 수 없습니다.');
