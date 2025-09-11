@@ -24,9 +24,10 @@ const corsProxies = [
 // Perplexity API 호출 함수 (25초 타임아웃 적용)
 export async function callPerplexityAPI(prompt: string): Promise<any> {
   // 25초 타임아웃으로 직접 호출
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 25000) // 25초 타임아웃
+  
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 25000) // 25초 타임아웃
     
     const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
       signal: controller.signal,
