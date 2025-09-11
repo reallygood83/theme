@@ -448,8 +448,22 @@ export default function SharedSessionsLibrary() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [importingSession, setImportingSession] = useState<SharedSession | null>(null);
 
-  // Feature Flag 체크
-  const sharingEnabled = process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
+  // Feature Flag 체크 + 상세 디버깅
+  const envValue = process.env.NEXT_PUBLIC_ENABLE_SHARING;
+  const sharingEnabled = envValue === 'true';
+  
+  // 🔍 실시간 환경변수 디버깅 로그
+  console.group('🔍 SharedSessionsLibrary - 환경변수 디버깅');
+  console.log('⚙️ NEXT_PUBLIC_ENABLE_SHARING 원시값:', envValue);
+  console.log('📊 typeof envValue:', typeof envValue);
+  console.log('✅ sharingEnabled 결과:', sharingEnabled);
+  console.log('🌐 현재 환경:', process.env.NODE_ENV);
+  console.log('📍 현재 도메인:', window.location.hostname);
+  console.log('🔧 전체 NEXT_PUBLIC 환경변수들:');
+  Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')).forEach(key => {
+    console.log(`  - ${key}: ${process.env[key]}`);
+  });
+  console.groupEnd();
 
   const categories = [
     { value: 'all', label: '전체 카테고리', icon: '🔍' },
@@ -467,28 +481,54 @@ export default function SharedSessionsLibrary() {
   ];
 
   const fetchSharedSessions = async () => {
+    console.group('🚀 fetchSharedSessions 실행');
+    console.log('🔍 sharingEnabled 상태:', sharingEnabled);
+    
     if (!sharingEnabled) {
+      console.warn('❌ 공유 기능이 비활성화되어 있어서 API 호출을 건너뜁니다');
+      console.log('🔧 환경변수 다시 확인:', process.env.NEXT_PUBLIC_ENABLE_SHARING);
       setLoading(false);
+      console.groupEnd();
       return;
     }
 
     try {
+      console.log('✅ 공유 기능이 활성화되어 있습니다. API 호출을 시작합니다...');
       setLoading(true);
+      
+      console.log('📡 API 호출: /api/shared/sessions');
+      console.time('API 호출 시간');
       const response = await fetch('/api/shared/sessions');
+      console.timeEnd('API 호출 시간');
+      
+      console.log('📊 응답 상태:', response.status, response.statusText);
+      console.log('📊 응답 헤더:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
-        throw new Error('공유 세션 목록을 불러올 수 없습니다.');
+        console.error('❌ API 응답 실패:', response.status, response.statusText);
+        throw new Error(`공유 세션 목록을 불러올 수 없습니다. (${response.status})`);
       }
       
       const data = await response.json();
-      console.log('📊 SharedSessions API 응답:', data);
-      setSessions(data.data || []);
+      console.log('✅ API 응답 데이터:', data);
+      console.log('📊 세션 개수:', data.data?.length || 0);
+      
+      if (data.data && Array.isArray(data.data)) {
+        setSessions(data.data);
+        console.log('✅ 세션 데이터 setState 완료:', data.data.length + '개');
+      } else {
+        console.warn('⚠️ 데이터 형식이 예상과 다릅니다:', data);
+        setSessions([]);
+      }
     } catch (error) {
-      console.error('공유 세션 로드 오류:', error);
-      alert('공유 세션 목록을 불러오는데 실패했습니다.');
+      console.error('❌ 공유 세션 로드 오류:', error);
+      console.error('📍 오류 스택:', error instanceof Error ? error.stack : 'No stack trace');
+      alert('공유 세션 목록을 불러오는데 실패했습니다: ' + (error instanceof Error ? error.message : 'Unknown error'));
       setSessions([]);
     } finally {
       setLoading(false);
+      console.log('🏁 fetchSharedSessions 완료');
+      console.groupEnd();
     }
   };
 
@@ -561,7 +601,11 @@ export default function SharedSessionsLibrary() {
   };
 
   // Feature Flag가 비활성화된 경우
+  console.log('🎯 렌더링 시점 - sharingEnabled 상태:', sharingEnabled);
+  console.log('🎯 렌더링 시점 - 환경변수 원시값:', process.env.NEXT_PUBLIC_ENABLE_SHARING);
+  
   if (!sharingEnabled) {
+    console.warn('🚧 "교육자료실 준비 중" 메시지를 표시합니다 - sharingEnabled가 false임');
     return (
       <Card className="border-2 border-yellow-100 shadow-lg">
         <CardContent className="p-8 text-center">
@@ -586,6 +630,8 @@ export default function SharedSessionsLibrary() {
     );
   }
 
+  console.log('✅ SharedSessionsLibrary 정상 렌더링 진입 - sharingEnabled: true');
+  
   return (
     <div className="space-y-6">
       {/* 헤더 섹션 - 교사용 가이드 */}
