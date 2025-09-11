@@ -91,8 +91,8 @@ export default function Home() {
           </p>
         </div>
         
-        {/* 메인 카드 그리드 - 3개로 축소 */}
-        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-5xl">
+        {/* 메인 카드 그리드 - 2개 */}
+        <div className="grid sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 w-full max-w-4xl">
           {/* 선생님 카드 */}
           <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-pink-50 hover:from-purple-100 hover:to-pink-100 transition-all duration-300 hover:-translate-y-1">
             <CardHeader className="text-center">
@@ -170,37 +170,6 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-            </CardContent>
-          </Card>
-          
-          {/* 토론 시스템 카드 */}
-          <Card className="border-green-200 bg-gradient-to-br from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 transition-all duration-300 hover:-translate-y-1">
-            <CardHeader className="text-center">
-              <div className="mx-auto bg-gradient-to-br from-green-400 to-emerald-400 p-4 rounded-full mb-3 w-20 h-20 flex items-center justify-center shadow-lg">
-                <span className="text-4xl">💬</span>
-              </div>
-              <CardTitle className="text-2xl text-green-800">토론 시스템</CardTitle>
-              <CardDescription className="text-green-600">
-                AI 피드백과 함께하는<br/>체계적인 토론 의견 관리
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Link href="/teacher/debate" className="block">
-                <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  교사: 토론 관리
-                </Button>
-              </Link>
-              <Link href="/student/debate" className="block">
-                <Button className="w-full" variant="outline">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                  학생: 의견 제출
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         </div>
