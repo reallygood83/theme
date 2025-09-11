@@ -169,13 +169,6 @@ export default function Header() {
                     >
                       🎯 토론 세션 참여
                     </Link>
-                    <Link 
-                      href="/student/debate"
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-blue-50 rounded-lg transition-colors"
-                      onClick={() => setIsStudentMenuOpen(false)}
-                    >
-                      ✍️ 토론 의견 제출
-                    </Link>
                   </div>
                 </div>
               </div>
@@ -335,16 +328,6 @@ export default function Header() {
                 >
                   <Link href="/" onClick={() => setIsMenuOpen(false)}>
                     🎯 토론 세션 참여
-                  </Link>
-                </Button>
-                <Button
-                  asChild
-                  variant={pathname === '/student/debate' ? 'secondary' : 'ghost'}
-                  size="lg"
-                  className="justify-start text-lg font-medium w-full"
-                >
-                  <Link href="/student/debate" onClick={() => setIsMenuOpen(false)}>
-                    ✍️ 토론 의견 제출
                   </Link>
                 </Button>
               </div>
