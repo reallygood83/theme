@@ -17,6 +17,7 @@ export interface SharedSession {
   teacherName: string;
   title: string;
   description: string;
+  content?: string;
   
   // 세션 데이터 (학생 데이터 완전 제외)
   materials: Array<{
@@ -66,6 +67,7 @@ export interface SharedTopic {
   teacherName: string;
   title: string;
   description: string;
+  content?: string;
   
   // AI 관련 정보
   aiGenerated: boolean;
@@ -81,6 +83,7 @@ export interface SharedTopic {
   // 관련 자료
   relatedTopics: string[];
   keywords: string[];
+  agendas?: string[];
   
   // 분류 정보
   subject: '국어' | '사회' | '과학' | '기타';
