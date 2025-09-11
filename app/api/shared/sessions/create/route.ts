@@ -46,12 +46,15 @@ function checkSharingEnabled(): boolean {
 // 교사 인증 확인 (간소화 버전 - Phase 2에서는 기본 구현)
 async function getCurrentTeacher(): Promise<{ id: string; name: string; email: string } | null> {
   try {
-    // Phase 2: 개발 환경에서는 테스트 교사 정보 사용
-    if (process.env.NODE_ENV === 'development') {
+    // Phase 2: 공유 기능이 활성화된 경우 기본 교사 정보 제공 (개발/프로덕션 모두)
+    const sharingEnabled = process.env.ENABLE_SHARING === 'true';
+    
+    if (sharingEnabled) {
+      // 프로덕션에서도 공유 기능 테스트를 위한 기본 교사 정보
       return {
-        id: 'dev_teacher_001',
-        name: '개발용 교사',
-        email: 'dev@teacher.com'
+        id: 'phase2_teacher_001',
+        name: 'Phase 2 교사',
+        email: 'teacher@questiontalk.com'
       };
     }
     
