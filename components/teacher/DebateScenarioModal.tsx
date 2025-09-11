@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/common/Button'
+import { auth } from '@/lib/firebase'
 
 // 타입 정의 (기존 타입 재사용)
 interface DebateScenario {
@@ -260,41 +261,34 @@ export default function DebateScenarioModal({ isOpen, onClose }: DebateScenarioM
     setSharing(true)
     
     try {
-      // 공유 세션 생성 API 호출
-      const response = await fetch('/api/shared/sessions/create', {
+      // 현재 사용자 정보 가져오기
+      const user = auth?.currentUser
+      if (!user) {
+        throw new Error('로그인이 필요합니다.')
+      }
+
+      // 토론 주제 공유 API 호출
+      const response = await fetch('/api/shared/topics/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          originalSessionId: `scenario_${Date.now()}`, // 임시 세션 ID
           title: generatedScenario.title || generatedScenario.topic,
           description: generatedScenario.background || '토론 시나리오',
-          materials: [{
-            id: 'scenario_material',
-            type: 'text',
-            title: '토론 시나리오',
-            content: `
-**토론 주제**: ${generatedScenario.title || generatedScenario.topic}
-
-**배경**: ${generatedScenario.background || ''}
-
-**찬성 논거**:
-${(generatedScenario.proArguments || []).map((arg, i) => `${i+1}. ${arg}`).join('\n')}
-
-**반대 논거**:
-${(generatedScenario.conArguments || []).map((arg, i) => `${i+1}. ${arg}`).join('\n')}
-
-**핵심 질문**:
-${(generatedScenario.keyQuestions || []).map((q, i) => `Q${i+1}. ${q}`).join('\n')}
-
-**키워드**: ${(generatedScenario.keywords || []).join(', ')}
-            `.trim()
-          }],
-          shareType: 'public',
+          teacherId: user.uid,
+          teacherName: user.displayName || user.email || '익명',
+          debateType: '찬반',
+          difficulty: '중급',
+          estimatedTime: generatedScenario.timeLimit || 40,
+          subject: '기타',
+          grade: selectedGrade ? `${selectedGrade}학년` : '3-4학년',
           tags: ['AI생성', '토론시나리오', ...(generatedScenario.keywords || [])],
-          category: 'general',
-          targetGrade: selectedGrade ? `${selectedGrade}학년` : '3-4학년'
+          aiGenerated: true,
+          originalPrompt: `주제: ${generatedScenario.title || generatedScenario.topic}, 학년: ${selectedGrade}학년`,
+          pros: generatedScenario.proArguments || [],
+          cons: generatedScenario.conArguments || [],
+          keyTerms: generatedScenario.keywords || []
         })
       })
 
@@ -304,7 +298,7 @@ ${(generatedScenario.keyQuestions || []).map((q, i) => `Q${i+1}. ${q}`).join('\n
         throw new Error(result.error || '공유에 실패했습니다.')
       }
 
-      alert('✅ 토론 시나리오가 교육자료실에 성공적으로 공유되었습니다!')
+      alert('✅ 토론 주제가 토론 주제 공유 섹션에 성공적으로 공유되었습니다!')
       
     } catch (error) {
       console.error('토론 시나리오 공유 오류:', error)
