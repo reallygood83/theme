@@ -15,9 +15,27 @@ import { createSharedSession, SharedSession } from '@/lib/shared-db';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
-// Feature Flag 확인
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+
+// Feature Flag 확인 (디버깅 로그 포함)
 function checkSharingEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
+  const enabled = process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
+  const debug = process.env.NEXT_PUBLIC_SHARING_DEBUG === 'true';
+  
+  // 디버깅: 환경변수 값 확인
+  console.log('🔍 create/route.ts 환경변수 디버깅:', {
+    NEXT_PUBLIC_ENABLE_SHARING: process.env.NEXT_PUBLIC_ENABLE_SHARING,
+    NEXT_PUBLIC_SHARING_DEBUG: process.env.NEXT_PUBLIC_SHARING_DEBUG,
+    enabled,
+    debug
+  });
+  
+  if (!enabled) {
+    console.log('📍 create/route.ts: 공유 기능이 비활성화되어 있습니다. NEXT_PUBLIC_ENABLE_SHARING=true로 설정하세요.');
+  }
+  
+  return enabled;
 }
 
 // 교사 인증 확인 (간소화 버전 - Phase 2에서는 기본 구현)
