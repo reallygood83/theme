@@ -5,7 +5,11 @@ import {
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
 import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
 
-// 원본 프로그램과 동일한 검색 로직
+// 🚀 Vercel Pro 계정 최적화 설정
+export const runtime = 'nodejs'
+export const maxDuration = 60 // Pro 계정: 60초 최대 실행 시간
+
+// 원본 프로그램과 동일한 검색 로직 + Pro 최적화
 export async function POST(request: NextRequest) {
   try {
     const { topic, stance, selectedTypes }: EvidenceSearchRequest = await request.json()

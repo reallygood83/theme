@@ -30,8 +30,11 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
     'https://thingproxy.freeboard.io/fetch/'
   ]
 
-  // 직접 호출 시도
+  // 🚀 Vercel Pro 60초 타임아웃 최적화: 45초 타임아웃으로 직접 호출 시도
   try {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 45000) // Pro 계정 60초 중 45초 활용
+    
     const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
       method: 'POST',
       headers: {
@@ -43,17 +46,20 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
         messages: [
           {
             role: 'system',
-            content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 가상의 URL이나 존재하지 않는 자료를 만들어내지 마세요. 확실하지 않은 자료는 추천하지 말고, 실제 접근 가능한 자료만 제공하세요.'
+            content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 간결하고 정확한 답변을 해주세요.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
-        max_tokens: 2000
-      })
+        temperature: 0.2, // 응답 속도 향상
+        max_tokens: 1800 // Pro 계정 메모리 최적화
+      }),
+      signal: controller.signal
     })
+    
+    clearTimeout(timeoutId)
 
     if (response.ok) {
       const data = await response.json()
@@ -68,11 +74,14 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
   } catch (error) {
     console.error('직접 API 호출 실패:', error)
     
-    // CORS 프록시를 통한 재시도
-    for (let i = 0; i < corsProxies.length; i++) {
+    // 🚀 Pro 계정 최적화: 빠른 CORS 프록시 재시도 (10초 타임아웃)
+    for (let i = 0; i < corsProxies.length && i < 2; i++) { // 최대 2개 프록시만 시도
       try {
-        console.log(`프록시 ${i+1} 시도중...`)
+        console.log(`⚡ Pro 최적화 프록시 ${i+1} 시도중...`)
         const proxyUrl = corsProxies[i] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
+        
+        const proxyController = new AbortController()
+        const proxyTimeout = setTimeout(() => proxyController.abort(), 10000) // 프록시는 10초만
         
         const response = await fetch(proxyUrl, {
           method: 'POST',
@@ -85,17 +94,20 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
             messages: [
               {
                 role: 'system',
-                content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 가상의 URL이나 존재하지 않는 자료를 만들어내지 마세요.'
+                content: '당신은 교육용 근거 자료 검색 전문가입니다. 간결하고 정확한 자료만 추천하세요.'
               },
               {
                 role: 'user',
                 content: prompt
               }
             ],
-            temperature: 0.3,
-            max_tokens: 2000
-          })
+            temperature: 0.2, // 속도 최적화
+            max_tokens: 1500 // 빠른 응답을 위해 감소
+          }),
+          signal: proxyController.signal
         })
+        
+        clearTimeout(proxyTimeout)
 
         if (response.ok) {
           const data = await response.json()
@@ -106,13 +118,25 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
           }
         }
       } catch (proxyError) {
-        console.error(`❌ 프록시 ${i+1} 실패:`, proxyError)
+        console.error(`❌ Pro 최적화 프록시 ${i+1} 실패:`, proxyError)
+        // Pro 계정: 빠른 실패로 다음 프록시로 즉시 이동
+        continue
       }
     }
     
-    // 모든 시도 실패 시 null 반환
-    console.error('모든 API 호출 방법이 실패했습니다')
-    return null
+    // 🚀 Pro 계정 최종 복구: 기본 응답 제공으로 완전한 실패 방지
+    console.warn('⚠️ 모든 API 호출 실패, Pro 계정 복구 모드 활성화')
+    return {
+      evidences: [{
+        title: '검색 결과를 불러올 수 없습니다',
+        content: '현재 AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        source: 'System',
+        url: '',
+        type: 'system_message',
+        reliability: 0,
+        publishedDate: new Date().toISOString()
+      }]
+    }
   }
 }
 
@@ -301,7 +325,15 @@ export async function searchYouTubeVideos(
 
     const fullUrl = `${YOUTUBE_CONFIG.baseUrl}?${params}`
     
-    const response = await fetch(fullUrl)
+    // 🚀 Pro 계정 최적화: YouTube API 15초 타임아웃
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15000)
+    
+    const response = await fetch(fullUrl, {
+      signal: controller.signal
+    })
+    
+    clearTimeout(timeoutId)
     
     if (!response.ok) {
       console.error('❌ YouTube API 오류:', response.status, response.statusText)
