@@ -20,9 +20,9 @@ export async function GET(request: Request) {
       )
     }
     
-    // 타임아웃 설정 (10초로 단축: 클라이언트 SDK 사용으로 성능 향상)
+    // 타임아웃 설정 (30초로 증가: Vercel 환경에서 Firebase 쿼리 성능 고려)
     const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => reject(new Error('Sessions list API timeout')), 10000)
+      setTimeout(() => reject(new Error('Sessions list API timeout')), 30000)
     })
     
     // Firebase 쿼리 실행 - Admin SDK 사용 (연결 제한 문제 해결)
@@ -42,9 +42,9 @@ export async function GET(request: Request) {
       
       let snapshot
       if (isAdmin) {
-        // 관리자: 최신 생성 순으로 최대 100개만 조회
-        console.log('Firebase 세션 데이터 조회 중... (admin latest 100 by createdAt)')
-        const sessionQuery = db.ref('sessions').orderByChild('createdAt').limitToLast(100)
+        // 관리자: 모든 세션 조회 후 클라이언트에서 정렬 (성능 최적화)
+        console.log('Firebase 세션 데이터 조회 중... (admin all sessions)')
+        const sessionQuery = db.ref('sessions').limitToFirst(200) // 최대 200개로 제한
         snapshot = await sessionQuery.once('value')
       } else {
         // 일반 교사: 본인 세션만 조회 (teacherId 인덱스 기반)
@@ -71,8 +71,11 @@ export async function GET(request: Request) {
       // 정렬 (최신순) 및 안전한 createdAt 처리
       allSessions.sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0))
       
-      console.log('필터링/정렬 후 세션 수:', allSessions.length)
-      return allSessions
+      // 관리자의 경우 최신 100개만 반환
+      const finalSessions = isAdmin ? allSessions.slice(0, 100) : allSessions
+      
+      console.log('필터링/정렬 후 세션 수:', finalSessions.length)
+      return finalSessions
     })()
     
     // 타임아웃과 쿼리 중 먼저 완료되는 것 반환
