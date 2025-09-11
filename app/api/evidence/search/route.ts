@@ -6,6 +6,7 @@ import {
   processEvidenceResults,
   validateEvidenceResults 
 } from '@/lib/evidence'
+import { safeEvidenceSearch } from '@/lib/evidence-naver'
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
 import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
 
@@ -72,58 +73,71 @@ export async function POST(request: NextRequest) {
     const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
     console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
-    // 병렬 검색 실행 (theme-main과 동일)
-    console.log('🔄 Perplexity API 및 YouTube API 병렬 호출 시작...')
+    // 🆕 안전한 교육용 검색 시스템으로 대체
+    console.log('🔄 안전 교육 검색 시스템 시작...')
     
-    const [perplexityData, youtubeVideos] = await Promise.all([
-      callPerplexityAPI(prompt).catch(error => {
-        console.error('❌ Perplexity API 오류:', error)
-        return null
-      }),
-      searchYouTubeVideos(topic, 50, selectedStance).catch(error => { // maxResults 증가
-        console.error('❌ YouTube API 오류:', error)
-        if (error instanceof Error && error.message.includes('quotaExceeded')) {
-          console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
-        } else if (error instanceof Error && error.message.includes('invalid key')) {
-          console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
-        }
-        return []
-      })
-    ])
+    // 1차: 안정적인 네이버+YouTube 검색
+    let evidenceResults = await safeEvidenceSearch(topic, stance, selectedTypes).catch(error => {
+      console.error('❌ 안전 검색 실패:', error)
+      return []
+    })
     
-    console.log('📊 검색 결과 수집 완료:')
-    console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
-    console.log('- YouTube 결과 수:', Array.isArray(youtubeVideos) ? youtubeVideos.length : 0)
-    
-    // YouTube 결과 상세 로깅
-    if (Array.isArray(youtubeVideos) && youtubeVideos.length > 0) {
-      console.log('🎬 YouTube 검색 성공! 영상 목록:')
-      youtubeVideos.forEach((video, index) => {
-        console.log(`  ${index + 1}. ${video.snippet.title}`)
-      })
-    } else {
-      console.log('❌ YouTube 검색 실패 또는 결과 없음')
+    // 2차: 결과 부족 시 Perplexity 백업 시도
+    if (evidenceResults.length < 3) {
+      console.log('⚠️ 결과 부족, Perplexity 백업 검색 시도...')
+      
+      const [perplexityData, youtubeVideos] = await Promise.all([
+        callPerplexityAPI(prompt).catch(error => {
+          console.error('❌ Perplexity API 오류:', error)
+          return null
+        }),
+        searchYouTubeVideos(topic, 20, selectedStance).catch(error => { 
+          console.error('❌ YouTube API 오류:', error)
+          return []
+        })
+      ])
+      
+      // 백업 결과 처리
+      const backupResults = processEvidenceResults(perplexityData, youtubeVideos)
+      evidenceResults = [...evidenceResults, ...backupResults]
     }
     
-    // 결과 처리 및 합성
-    const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
-    console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')
+    console.log('📊 안전 검색 결과 수집 완료:')
+    console.log('- 전체 결과 수:', evidenceResults.length)
+    console.log('- 뉴스 기사:', evidenceResults.filter(r => r.type === '뉴스 기사').length + '개')
+    console.log('- 유튜브 영상:', evidenceResults.filter(r => r.type === '유튜브 영상').length + '개')
     
-    // 3단계: 콘텐츠 안전성 필터링 (교육용 후처리)
+    // 결과 상세 로깅
+    if (evidenceResults.length > 0) {
+      console.log('✅ 안전 검색 성공! 결과 목록:')
+      evidenceResults.forEach((result, index) => {
+        console.log(`  ${index + 1}. [${result.type}] ${result.title}`)
+      })
+    } else {
+      console.log('⚠️ 검색 결과 없음 - 다른 키워드 제안 필요')
+    }
+    
+    // 3단계: 추가 안전성 검증 (이미 안전 검색에서 1차 필터링 완료)
     const safeResults = filterSearchResults(evidenceResults)
-    console.log('🛡️ 콘텐츠 필터링 적용:', evidenceResults.length, '→', safeResults.length, '개')
+    console.log('🛡️ 추가 콘텐츠 필터링:', evidenceResults.length, '→', safeResults.length, '개')
     
-    // 결과 검증 및 필터링
+    // 결과 검증 및 최종 정리
     const validatedResults = validateEvidenceResults(safeResults)
-    console.log('✅ 검증 완료:', validatedResults.length + '개 유효한 결과')
+    console.log('✅ 최종 검증 완료:', validatedResults.length + '개 교육용 자료')
     
-    // 결과가 없는 경우 처리
+    // 결과가 없는 경우 처리 (개선된 메시지)
     if (validatedResults.length === 0) {
-      // 필터링으로 인한 결과 부족인지 확인
       const wasFiltered = evidenceResults.length > safeResults.length
-      const message = wasFiltered 
-        ? '교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적인 키워드로 검색해보세요.' 
-        : '검색 결과가 없습니다. 다른 키워드로 다시 검색해보세요.'
+      const hasOriginalResults = evidenceResults.length > 0
+      
+      let message: string
+      if (wasFiltered) {
+        message = '🛡️ 교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적이고 안전한 키워드로 검색해보세요.'
+      } else if (!hasOriginalResults) {
+        message = '🔍 검색 결과를 찾을 수 없습니다. 다른 키워드나 더 구체적인 주제로 다시 검색해보세요.'
+      } else {
+        message = '📚 교육용 자료가 부족합니다. 좀 더 일반적인 키워드로 검색해보세요.'
+      }
       
       return NextResponse.json({
         evidences: [],
