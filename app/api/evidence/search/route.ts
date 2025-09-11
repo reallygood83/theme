@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { 
-  searchEvidence
+  callPerplexityAPI, 
+  searchYouTubeVideos, 
+  generateSearchPrompt, 
+  processEvidenceResults,
+  validateEvidenceResults 
 } from '@/lib/evidence'
 import { EvidenceSearchRequest, EvidenceSearchResponse } from '@/lib/types/evidence'
 import { checkTopicAppropriateness, filterSearchResults, generateStudentMessage } from '@/lib/content-filter'
 
-// 🚀 Vercel Pro 계정 최적화 설정
-export const runtime = 'nodejs'
-export const maxDuration = 60 // Pro 계정: 60초 최대 실행 시간
-
-// 원본 프로그램과 동일한 검색 로직 + Pro 최적화
+// theme-main 검증된 구현 적용 (단순하고 안정적)
 export async function POST(request: NextRequest) {
   try {
     const { topic, stance, selectedTypes }: EvidenceSearchRequest = await request.json()
@@ -24,13 +24,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 2단계: 극단적인 경우만 사전 차단 (원본 프로그램 방식)
+    // 2단계: 콘텐츠 적절성 검사 (교육용 필터링)
     const contentCheck = checkTopicAppropriateness(topic)
-    console.log('🛡️ 간단한 적절성 검사:', contentCheck.severity)
+    console.log('🛡️ 콘텐츠 필터링 결과:', contentCheck)
 
-    // 'blocked' 수준만 사전 차단, 'warning'은 검색 허용
-    if (contentCheck.severity === 'blocked') {
-      console.warn('🚫 극단적 주제 사전 차단:', topic, '- 이유:', contentCheck.reason)
+    if (!contentCheck.isAppropriate) {
+      console.warn('🚫 부적절한 주제 차단:', topic, '- 이유:', contentCheck.reason)
       return NextResponse.json(
         { 
           error: generateStudentMessage(contentCheck),
@@ -42,11 +41,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 경고나 일반 주제는 모두 검색 진행
+    // 경고 수준의 민감한 주제인 경우 로깅
     if (contentCheck.severity === 'warning') {
-      console.log('⚠️ 민감한 주제이지만 검색 진행:', topic)
-    } else {
-      console.log('✅ 일반 주제 검색 진행:', topic)
+      console.warn('⚠️ 민감한 주제 검색:', topic, '- 사유:', contentCheck.reason)
     }
     
     // API 키 검증
@@ -67,31 +64,62 @@ export async function POST(request: NextRequest) {
     // 입장 정보 변환 (참고 프로그램과 동일)
     const selectedStance = stance === 'positive' ? 'supporting' : 'opposing'
     
-    console.log('⚡ 통합된 검색 시작: 원본 프로그램 완전 복제')
+    // 검색 프롬프트 생성 (참고 프로그램과 동일하게 selectedStance 전달)
+    const prompt = generateSearchPrompt(topic, stance, selectedTypes || [], selectedStance)
+    console.log('📝 생성된 프롬프트:', prompt.substring(0, 200) + '...')
     
-    // 🚀 원본 프로그램 완전 복제된 통합 검색 함수 사용
-    const validatedResults = await searchEvidence(
-      topic,
-      stance,
-      selectedTypes || [],
-      selectedStance,
-      (step: number, message: string) => {
-        console.log(`📊 검색 진행: ${step}/5 - ${message}`)
-      }
-    )
-    console.log('✅ 기본 검증 완료:', validatedResults.length + '개 유효한 결과')
+    // 병렬 검색 실행 (theme-main과 동일)
+    console.log('🔄 Perplexity API 및 YouTube API 병렬 호출 시작...')
     
-    // 3단계: 최종 결과에만 완화된 콘텐츠 필터링 적용 (시간 효율성)
-    const safeResults = filterSearchResults(validatedResults)
-    console.log('🛡️ 완화된 콘텐츠 필터링 적용:', validatedResults.length, '→', safeResults.length, '개')
+    const [perplexityData, youtubeVideos] = await Promise.all([
+      callPerplexityAPI(prompt).catch(error => {
+        console.error('❌ Perplexity API 오류:', error)
+        return null
+      }),
+      searchYouTubeVideos(topic, 50, selectedStance).catch(error => { // maxResults 증가
+        console.error('❌ YouTube API 오류:', error)
+        if (error instanceof Error && error.message.includes('quotaExceeded')) {
+          console.error('⚠️ YouTube API 쿼터 초과! 일일 할당량을 확인하세요.')
+        } else if (error instanceof Error && error.message.includes('invalid key')) {
+          console.error('❌ YouTube API 키가 유효하지 않습니다. .env 확인!')
+        }
+        return []
+      })
+    ])
     
-    // 결과가 없는 경우 처리 - 신뢰성 우선 (Always Works™)
+    console.log('📊 검색 결과 수집 완료:')
+    console.log('- Perplexity 결과:', perplexityData ? 'O' : 'X')
+    console.log('- YouTube 결과 수:', Array.isArray(youtubeVideos) ? youtubeVideos.length : 0)
+    
+    // YouTube 결과 상세 로깅
+    if (Array.isArray(youtubeVideos) && youtubeVideos.length > 0) {
+      console.log('🎬 YouTube 검색 성공! 영상 목록:')
+      youtubeVideos.forEach((video, index) => {
+        console.log(`  ${index + 1}. ${video.snippet.title}`)
+      })
+    } else {
+      console.log('❌ YouTube 검색 실패 또는 결과 없음')
+    }
+    
+    // 결과 처리 및 합성
+    const evidenceResults = processEvidenceResults(perplexityData, youtubeVideos)
+    console.log('🔗 결과 합성 완료:', evidenceResults.length + '개')
+    
+    // 3단계: 콘텐츠 안전성 필터링 (교육용 후처리)
+    const safeResults = filterSearchResults(evidenceResults)
+    console.log('🛡️ 콘텐츠 필터링 적용:', evidenceResults.length, '→', safeResults.length, '개')
+    
+    // 결과 검증 및 필터링
+    const validatedResults = validateEvidenceResults(safeResults)
+    console.log('✅ 검증 완료:', validatedResults.length + '개 유효한 결과')
+    
+    // 결과가 없는 경우 처리
     if (validatedResults.length === 0) {
       // 필터링으로 인한 결과 부족인지 확인
-      const wasFiltered = safeResults.length < validatedResults.length
+      const wasFiltered = evidenceResults.length > safeResults.length
       const message = wasFiltered 
         ? '교육에 적합하지 않은 내용이 필터링되었습니다. 더 교육적인 키워드로 검색해보세요.' 
-        : '현재 신뢰할 수 있는 검색 결과를 찾을 수 없습니다. 잠시 후 다시 시도하거나 다른 키워드로 검색해보세요.'
+        : '검색 결과가 없습니다. 다른 키워드로 다시 검색해보세요.'
       
       return NextResponse.json({
         evidences: [],
@@ -103,10 +131,10 @@ export async function POST(request: NextRequest) {
       })
     }
     
-    // 성공 응답 (필터링된 결과 사용)
+    // 성공 응답
     const response: EvidenceSearchResponse = {
-      evidences: safeResults,
-      totalCount: safeResults.length,
+      evidences: validatedResults,
+      totalCount: validatedResults.length,
       searchQuery: topic,
       timestamp: new Date()
     }

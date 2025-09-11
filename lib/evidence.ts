@@ -21,20 +21,10 @@ const corsProxies = [
   'https://thingproxy.freeboard.io/fetch/'
 ]
 
-// Perplexity API 호출 함수 (원본 프로그램 완전 복제)
+// Perplexity API 호출 함수 (theme-main 간단 버전)
 export async function callPerplexityAPI(prompt: string): Promise<any> {
-  const corsProxies = [
-    'https://api.allorigins.win/raw?url=',
-    'https://cors-anywhere.herokuapp.com/',
-    'https://corsproxy.io/?',
-    'https://thingproxy.freeboard.io/fetch/'
-  ]
-
-  // 🚀 Vercel Pro 60초 타임아웃 최적화: 45초 타임아웃으로 직접 호출 시도
+  // 직접 호출 시도
   try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 45000) // Pro 계정 60초 중 45초 활용
-    
     const response = await fetch(PERPLEXITY_CONFIG.baseUrl, {
       method: 'POST',
       headers: {
@@ -46,98 +36,189 @@ export async function callPerplexityAPI(prompt: string): Promise<any> {
         messages: [
           {
             role: 'system',
-            content: '당신은 교육용 근거 자료 검색 전문가입니다. 반드시 실제로 존재하는 자료만 추천하세요. 간결하고 정확한 답변을 해주세요.'
+            content: `당신은 한국의 초등교육 전문가이자 신뢰할 수 있는 정보 검색 전문가입니다. 초등학생(8-12세) 토론 교육을 위한 근거자료를 제공합니다.
+      
+**📚 초등학생 적합성 원칙**:
+- 내용은 초등학생이 이해할 수 있는 쉬운 언어로 설명
+- 복잡한 용어나 전문 용어는 피하고, 일상생활 예시로 대체
+- 교육적 가치가 높고, 학교 수업에서 바로 활용 가능한 자료만
+
+**🔍 자료 유형 지침**:
+- 뉴스 기사: 2020년 이후 주요 언론사(KBS, MBC, SBS, 조선일보, 중앙일보, 한겨레, YTN 등) 실제 기사
+- 유튜브 영상: EBS, KBS 교육, 학교 채널 등 교육적 콘텐츠 (5-15분 길이, 엔터테인먼트/광고 제외)
+
+**🚨 URL 및 내용 엄격 규칙**:
+- 뉴스: 실제 접근 가능한 전체 기사 URL만 (https://news.naver.com/... 형식). "원문 보기"나 요약 링크 금지. 기사 본문에서 핵심 2-3문단을 직접 인용 ( "...라고 기사에 쓰여있다" 형식 ).
+- 유튜브: https://www.youtube.com/watch?v=VIDEO_ID 직접 링크. 영상 설명이나 자막에서 초등학생 수준의 100-150자 핵심 내용 요약.
+- 불확실한 URL/내용은 절대 제공하지 말고 빈 문자열("")로 설정. 가짜/추측 정보 완전 금지.
+- 신뢰도 낮은 자료(블로그, SNS, 확인 불가 출처)는 제외.
+
+**📊 신뢰도 평가**:
+- 1등급 (90+): 공영방송(KBS,MBC,EBS), 정부기관(교육부), 주요 종합지(조중동, 한경)
+- 2등급 (70-89): 경제지(MK, 헤럴드), 전문지(교육전문지), 신뢰할 수 있는 유튜브 교육채널
+- 3등급 (50-69): 지역신문, 시민단체 자료 (확인된 경우만)
+
+응답 형식 (JSON만, 마크다운 없음):
+{
+  "evidences": [
+    {
+      "type": "뉴스 기사" | "유튜브 영상",
+      "title": "실제 자료 제목 (전체)",
+      "content": "자료 본문 핵심 내용 직접 인용 또는 상세 요약 (150-200자, 초등학생 이해 가능)",
+      "source": "정확한 출처명 (KBS 뉴스, EBS 교육 등)",
+      "url": "실제 직접 접근 URL (확실하지 않으면 \"\" )",
+      "summary": "한 줄 요약 (20-30자)",
+      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 \"\" )",
+      "author": "기자명 또는 채널명 (모르면 \"\" )",
+      "reliability": 50-100 (신뢰도 점수),
+      "keyPoints": ["핵심 논점 1 (쉬운 설명)", "핵심 논점 2", "핵심 논점 3"],
+      "education_level": "초등 저학년" | "초등 고학년" | "모든 학년"
+    }
+  ]
+}
+
+**⚠️ 출력 규칙**:
+- 총 4-6개 자료 (뉴스 2-3개 + 유튜브 2-3개 균형)
+- 실제 존재하는 자료만 (가상 생성 금지)
+- 초등학생 토론에 직접 활용 가능한 구체적 사례 포함
+- 각 자료에 "이 자료가 토론에서 어떻게 도움이 될지" 간단 설명 추가 가능`
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.2, // 응답 속도 향상
-        max_tokens: 1800 // Pro 계정 메모리 최적화
-      }),
-      signal: controller.signal
+        max_tokens: 4000,
+        temperature: 0.1
+      })
     })
-    
-    clearTimeout(timeoutId)
 
     if (response.ok) {
-      const data = await response.json()
-      const parsedData = parseEvidenceResponse(data.choices[0].message.content)
-      if (parsedData) {
-        return parsedData
-      } else {
-        throw new Error('JSON 파싱 실패')
+      const data: PerplexityResponse = await response.json()
+      const content = data.choices[0]?.message?.content
+      
+      try {
+        // JSON 응답에서 코드 블록 제거
+        let cleanContent = content
+        if (cleanContent.includes('```json')) {
+          cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
+        }
+        if (cleanContent.includes('```')) {
+          cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+        }
+        
+        const parsed = JSON.parse(cleanContent.trim())
+        console.log('✅ Perplexity JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
+        return parsed
+      } catch (parseError) {
+        console.error('❌ JSON 파싱 오류:', parseError)
+        console.log('원본 응답:', content.substring(0, 500))
+        
+        // 간단한 구조로 대체 응답 생성
+        const fallbackResponse = {
+          evidences: [
+            {
+              type: "뉴스 기사",
+              title: "검색 결과를 찾을 수 없음",
+              content: "현재 해당 주제에 대한 구체적인 근거자료를 찾지 못했습니다. 다른 키워드로 다시 검색해보세요.",
+              source: "시스템",
+              url: "",
+              reliability: 50,
+              publishedDate: new Date().toISOString().split('T')[0],
+              author: "",
+              summary: "검색 결과 없음"
+            }
+          ]
+        }
+        return fallbackResponse
       }
     }
-    throw new Error(`API Error: ${response.status}`)
   } catch (error) {
     console.error('직접 API 호출 실패:', error)
-    
-    // 🚀 Pro 계정 최적화: 빠른 CORS 프록시 재시도 (10초 타임아웃)
-    for (let i = 0; i < corsProxies.length && i < 2; i++) { // 최대 2개 프록시만 시도
-      try {
-        console.log(`⚡ Pro 최적화 프록시 ${i+1} 시도중...`)
-        const proxyUrl = corsProxies[i] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
-        
-        const proxyController = new AbortController()
-        const proxyTimeout = setTimeout(() => proxyController.abort(), 10000) // 프록시는 10초만
-        
-        const response = await fetch(proxyUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: PERPLEXITY_CONFIG.model,
-            messages: [
-              {
-                role: 'system',
-                content: '당신은 교육용 근거 자료 검색 전문가입니다. 간결하고 정확한 자료만 추천하세요.'
-              },
-              {
-                role: 'user',
-                content: prompt
-              }
-            ],
-            temperature: 0.2, // 속도 최적화
-            max_tokens: 1500 // 빠른 응답을 위해 감소
-          }),
-          signal: proxyController.signal
-        })
-        
-        clearTimeout(proxyTimeout)
+  }
 
-        if (response.ok) {
-          const data = await response.json()
-          const parsedData = parseEvidenceResponse(data.choices[0].message.content)
-          if (parsedData) {
-            console.log(`✅ 프록시 ${i+1} 성공`)
-            return parsedData
-          }
-        }
-      } catch (proxyError) {
-        console.error(`❌ Pro 최적화 프록시 ${i+1} 실패:`, proxyError)
-        // Pro 계정: 빠른 실패로 다음 프록시로 즉시 이동
-        continue
-      }
+  // CORS 프록시를 통한 재시도
+  for (let i = 0; i < corsProxies.length; i++) {
+    try {
+      console.log(`프록시 ${i+1} 시도중...`)
+      const proxyUrl = corsProxies[i] + encodeURIComponent(PERPLEXITY_CONFIG.baseUrl)
+      
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.PERPLEXITY_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: PERPLEXITY_CONFIG.model,
+          messages: [
+            {
+              role: 'system',
+              content: `당신은 한국의 교육 전문가이자 정보 검색 전문가입니다. 주어진 토론 주제에 대해 **뉴스 기사**만 찾아주세요. 학술 자료나 통계 자료는 절대 포함하지 마세요.
+
+**🚨 중요**: URL은 반드시 실제로 존재하는 뉴스 기사 링크만 제공하세요. 가짜 URL은 절대 금지입니다. URL이 확실하지 않으면 빈 문자열("")로 설정하세요.
+
+응답 형식:
+{
+  "evidences": [
+    {
+      "type": "뉴스 기사",
+      "title": "실제 존재하는 뉴스 기사 제목",
+      "content": "뉴스 기사의 핵심 내용 요약 (2-3문장)",
+      "source": "신문사명 (KBS, SBS, MBC, 연합뉴스, 조선일보, 중앙일보 등)",
+      "url": "실제 접근 가능한 뉴스 기사 URL (확실하지 않으면 빈 문자열)",
+      "reliability": 85,
+      "publishedDate": "YYYY-MM-DD (실제 날짜, 모르면 빈 문자열)",
+      "author": "실제 기자명 (모르면 빈 문자열)",
+      "summary": "한 줄 요약"
     }
-    
-    // 🚀 Pro 계정 최종 복구: 기본 응답 제공으로 완전한 실패 방지
-    console.warn('⚠️ 모든 API 호출 실패, Pro 계정 복구 모드 활성화')
-    return {
-      evidences: [{
-        title: '검색 결과를 불러올 수 없습니다',
-        content: '현재 AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.',
-        source: 'System',
-        url: '',
-        type: 'system_message',
-        reliability: 0,
-        publishedDate: new Date().toISOString()
-      }]
+  ]
+}
+
+**URL 규칙**: 
+- 확실한 뉴스 URL만 제공
+- 추측이나 가짜 URL 절대 금지
+- 불확실하면 url: "" 로 설정`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          max_tokens: 4000,
+          temperature: 0.1
+        })
+      })
+
+      if (response.ok) {
+        const data: PerplexityResponse = await response.json()
+        const content = data.choices[0]?.message?.content
+        
+        try {
+          // JSON 응답에서 코드 블록 제거
+          let cleanContent = content
+          if (cleanContent.includes('```json')) {
+            cleanContent = cleanContent.replace(/```json\n?/g, '').replace(/\n?```/g, '')
+          }
+          if (cleanContent.includes('```')) {
+            cleanContent = cleanContent.replace(/```\n?/g, '').replace(/\n?```/g, '')
+          }
+          
+          const parsed = JSON.parse(cleanContent.trim())
+          console.log('✅ 프록시를 통한 JSON 파싱 성공:', parsed.evidences?.length || 0, '개')
+          return parsed
+        } catch (parseError) {
+          console.error('❌ 프록시 JSON 파싱 오류:', parseError)
+          continue
+        }
+      }
+    } catch (error) {
+      console.error(`프록시 ${i+1} 실패:`, error)
+      continue
     }
   }
+
+  return null
 }
 
 // 원본 프로그램의 JSON 파싱 함수 (완전 복제)
@@ -325,15 +406,8 @@ export async function searchYouTubeVideos(
 
     const fullUrl = `${YOUTUBE_CONFIG.baseUrl}?${params}`
     
-    // 🚀 Pro 계정 최적화: YouTube API 15초 타임아웃
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 15000)
-    
-    const response = await fetch(fullUrl, {
-      signal: controller.signal
-    })
-    
-    clearTimeout(timeoutId)
+    // 간단한 직접 호출 (theme-main 방식)
+    const response = await fetch(fullUrl)
     
     if (!response.ok) {
       console.error('❌ YouTube API 오류:', response.status, response.statusText)
