@@ -4,7 +4,7 @@ import { EvidenceResult, YouTubeVideoData, PerplexityResponse, YouTubeSearchResp
 
 // 원본 프로그램과 동일한 설정
 const PERPLEXITY_CONFIG = {
-  model: 'llama-3.1-sonar-large-128k-online', // 최고 성능 모델로 변경
+  model: 'sonar-pro', // Perplexity 표준 모델명
   baseUrl: 'https://api.perplexity.ai/chat/completions'
 }
 
