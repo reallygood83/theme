@@ -450,12 +450,15 @@ export default function SharedSessionsLibrary() {
 
   // Feature Flag 체크 + 상세 디버깅
   const envValue = process.env.NEXT_PUBLIC_ENABLE_SHARING;
-  const sharingEnabled = envValue === 'true';
+  const sharingEnabled = envValue?.trim() === 'true';
   
   // 🔍 실시간 환경변수 디버깅 로그
   console.group('🔍 SharedSessionsLibrary - 환경변수 디버깅');
   console.log('⚙️ NEXT_PUBLIC_ENABLE_SHARING 원시값:', envValue);
   console.log('📊 typeof envValue:', typeof envValue);
+  console.log('🔍 envValue 길이:', envValue?.length);
+  console.log('🔍 envValue 바이트:', JSON.stringify(envValue));
+  console.log('🧽 envValue.trim():', envValue?.trim());
   console.log('✅ sharingEnabled 결과:', sharingEnabled);
   console.log('🌐 현재 환경:', process.env.NODE_ENV);
   console.log('📍 현재 도메인:', window.location.hostname);
