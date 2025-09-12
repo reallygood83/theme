@@ -439,6 +439,8 @@ function SessionCard({ session, onImport }: SessionCardProps) {
 
 
 export default function SharedSessionsLibrary() {
+  console.log('🎯 SharedSessionsLibrary 컴포넌트 렌더링 시작');
+  
   const { user } = useAuth();
   const [sessions, setSessions] = useState<SharedSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -499,9 +501,9 @@ export default function SharedSessionsLibrary() {
       console.log('✅ 공유 기능이 활성화되어 있습니다. API 호출을 시작합니다...');
       setLoading(true);
       
-      console.log('📡 API 호출: /api/shared/sessions');
+      console.log('📡 API 호출: /api/shared/sessions/list');
       console.time('API 호출 시간');
-      const response = await fetch('/api/shared/sessions');
+      const response = await fetch('/api/shared/sessions/list');
       console.timeEnd('API 호출 시간');
       
       console.log('📊 응답 상태:', response.status, response.statusText);
@@ -550,6 +552,7 @@ export default function SharedSessionsLibrary() {
   }
 
   useEffect(() => {
+    console.log('🚀 SharedSessionsLibrary useEffect 실행 - 컴포넌트 마운트됨');
     fetchSharedSessions();
   }, []);
 
