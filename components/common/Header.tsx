@@ -22,7 +22,20 @@ export default function Header() {
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
+    // Prevent body scroll when menu is open
+    if (!isMenuOpen) {
+      document.body.classList.add('mobile-nav-open')
+    } else {
+      document.body.classList.remove('mobile-nav-open')
+    }
   }
+  
+  // Clean up body class on unmount
+  useEffect(() => {
+    return () => {
+      document.body.classList.remove('mobile-nav-open')
+    }
+  }, [])
 
   // 외부 클릭 시 메뉴 닫기
   useEffect(() => {
@@ -55,7 +68,7 @@ export default function Header() {
   }
   
   return (
-    <header className="bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 shadow-lg mb-8 sticky top-0 z-10 backdrop-blur-sm border-b border-purple-100">
+    <header className="bg-gradient-to-r from-purple-50 via-blue-50 to-pink-50 shadow-lg mb-8 sticky top-0 backdrop-blur-sm border-b border-purple-100 header-container">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <Link href="/" className="z-20 hover:scale-105 transition-transform duration-200">
           <h1 className="text-xl md:text-2xl font-bold flex items-center gap-2">
@@ -71,7 +84,7 @@ export default function Header() {
         
         {/* 모바일 햄버거 메뉴 버튼 */}
         <button 
-          className="md:hidden bg-white/90 backdrop-blur-sm p-3 rounded-full shadow-lg z-20 hover:scale-105 transition-all duration-200 border border-purple-100"
+          className="md:hidden mobile-nav-button mobile-hamburger"
           onClick={toggleMenu}
           aria-label="메뉴 열기/닫기"
         >
@@ -132,13 +145,6 @@ export default function Header() {
                       onClick={() => setIsTeacherMenuOpen(false)}
                     >
                       ➕ 세션 생성
-                    </Link>
-                    <Link 
-                      href="/teacher/debate"
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 rounded-lg transition-colors"
-                      onClick={() => setIsTeacherMenuOpen(false)}
-                    >
-                      💬 토론 관리
                     </Link>
                   </div>
                 </div>
@@ -267,30 +273,30 @@ export default function Header() {
         
         {/* 모바일 네비게이션 오버레이 */}
         <div 
-          className={`fixed inset-0 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 z-10 transition-transform duration-300 md:hidden ${
-            isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+          className={`mobile-nav-overlay md:hidden ${
+            isMenuOpen ? 'open' : 'closed'
           }`}
         >
-          <div className="flex flex-col items-center justify-center h-full p-8">
-            <div className="flex flex-col gap-6 w-full max-w-sm">
+          <div className="mobile-nav-content">
+            <div className="mobile-nav-menu">
               <Button
                 asChild
                 variant={pathname === '/' ? 'default' : 'ghost'}
                 size="lg"
-                className="justify-start text-lg font-medium w-full"
+                className="justify-start text-base font-medium w-full"
               >
-                <Link href="/" onClick={() => setIsMenuOpen(false)}>
+                <Link href="/" onClick={() => { setIsMenuOpen(false); document.body.classList.remove('mobile-nav-open'); }}>
                   🏠 홈
                 </Link>
               </Button>
               
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-gray-600 px-4">👩‍🏫 교사 메뉴</div>
+              <div className="mobile-nav-section">
+                <div className="mobile-nav-section-title">👩‍🏫 교사 메뉴</div>
                 <Button
                   asChild
                   variant={pathname === '/teacher/dashboard' ? 'default' : 'ghost'}
                   size="lg"
-                  className="justify-start text-lg font-medium w-full"
+                  className="justify-start text-base font-medium w-full"
                 >
                   <Link href="/teacher/dashboard" onClick={() => setIsMenuOpen(false)}>
                     📊 교사 대시보드
@@ -300,33 +306,23 @@ export default function Header() {
                   asChild
                   variant={pathname === '/teacher/session/create' ? 'default' : 'ghost'}
                   size="lg"
-                  className="justify-start text-lg font-medium w-full"
+                  className="justify-start text-base font-medium w-full"
                 >
                   <Link href="/teacher/session/create" onClick={() => setIsMenuOpen(false)}>
                     ➕ 세션 생성
                   </Link>
                 </Button>
-                <Button
-                  asChild
-                  variant={pathname === '/teacher/debate' ? 'default' : 'ghost'}
-                  size="lg"
-                  className="justify-start text-lg font-medium w-full"
-                >
-                  <Link href="/teacher/debate" onClick={() => setIsMenuOpen(false)}>
-                    💬 토론 관리
-                  </Link>
-                </Button>
               </div>
               
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-gray-600 px-4">🙋‍♂️ 학생 메뉴</div>
+              <div className="mobile-nav-section">
+                <div className="mobile-nav-section-title">🙋‍♂️ 학생 멤뉴</div>
                 <Button
                   asChild
-                  variant="secondary"
+                  variant={pathname === '/' && !pathname.startsWith('/teacher') ? 'secondary' : 'ghost'}
                   size="lg"
-                  className="justify-start text-lg font-medium w-full"
+                  className="justify-start text-base font-medium w-full"
                 >
-                  <Link href="/" onClick={() => setIsMenuOpen(false)}>
+                  <Link href="/" onClick={() => { setIsMenuOpen(false); document.body.classList.remove('mobile-nav-open'); }}>
                     🎯 토론 세션 참여
                   </Link>
                 </Button>
@@ -334,44 +330,34 @@ export default function Header() {
 
               <Button
                 asChild
-                variant={pathname === '/materials' ? 'secondary' : 'ghost'}
-                size="lg"
-                className="justify-start text-lg font-medium w-full"
-              >
-                <Link href="/materials" onClick={() => setIsMenuOpen(false)}>
-                  📚 교육자료실
-                </Link>
-              </Button>
-              
-              <Button
-                asChild
                 variant={pathname === '/guide' ? 'secondary' : 'ghost'}
                 size="lg"
-                className="justify-start text-lg font-medium w-full"
+                className="justify-start text-base font-medium w-full"
               >
                 <Link href="/guide" onClick={() => setIsMenuOpen(false)}>
-                  📖 이용 가이드
+                  📖 가이드
                 </Link>
               </Button>
               
               {/* 모바일 인증 메뉴 */}
               {!loading && (
-                <div className="border-t border-purple-200 pt-6 mt-4 w-full space-y-4">
+                <div className="border-t border-purple-200 pt-4 mt-6 w-full space-y-3">
                   {user ? (
                     <>
-                      <div className="flex items-center justify-center gap-3 p-4 bg-white/70 rounded-xl border border-purple-100">
-                        <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium">
+                      <div className="flex items-center justify-center gap-3 p-3 bg-white/70 rounded-lg border border-purple-100">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
                           {userProfile?.displayName?.charAt(0) || user.email?.charAt(0) || '?'}
                         </div>
-                        <span className="text-lg font-medium text-gray-700">{userProfile?.displayName || '사용자'}</span>
+                        <span className="text-base font-medium text-gray-700">{userProfile?.displayName || '사용자'}</span>
                       </div>
                       <Button
                         variant="outline"
                         size="lg"
-                        className="w-full justify-center text-lg font-medium border-red-200 text-red-600 hover:bg-red-50"
+                        className="w-full justify-center text-base font-medium border-red-200 text-red-600 hover:bg-red-50"
                         onClick={() => {
                           handleLogout();
                           setIsMenuOpen(false);
+                          document.body.classList.remove('mobile-nav-open');
                         }}
                       >
                         🚪 로그아웃
@@ -383,9 +369,9 @@ export default function Header() {
                         asChild
                         variant="ghost"
                         size="lg"
-                        className="w-full justify-center text-lg font-medium"
+                        className="w-full justify-center text-base font-medium"
                       >
-                        <Link href="/auth/login" onClick={() => setIsMenuOpen(false)}>
+                        <Link href="/auth/login" onClick={() => { setIsMenuOpen(false); document.body.classList.remove('mobile-nav-open'); }}>
                           🔑 로그인
                         </Link>
                       </Button>
@@ -393,9 +379,9 @@ export default function Header() {
                         asChild
                         variant="default"
                         size="lg"
-                        className="w-full justify-center text-lg font-medium"
+                        className="w-full justify-center text-base font-medium"
                       >
-                        <Link href="/auth/register" onClick={() => setIsMenuOpen(false)}>
+                        <Link href="/auth/register" onClick={() => { setIsMenuOpen(false); document.body.classList.remove('mobile-nav-open'); }}>
                           ✨ 회원가입
                         </Link>
                       </Button>

@@ -247,25 +247,6 @@ function TeacherDashboardContent() {
                     </CardContent>
                   </Card>
 
-                  {/* 토론 의견 관리 - 컴팩트 카드 */}
-                  <Link href="/teacher/debate" className="block">
-                    <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-orange-200 bg-gradient-to-br from-orange-50 to-yellow-50">
-                      <CardContent className="p-6">
-                        <div className="flex items-center mb-4">
-                          <div className="bg-gradient-to-br from-orange-500 to-yellow-500 p-3 rounded-full mr-4 shadow-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" viewBox="0 0 20 20" fill="currentColor">
-                              <path d="M2 5a2 2 0 012-2h7a2 2 0 012 2v4a2 2 0 01-2 2H9l-3 3v-3H4a2 2 0 01-2-2V5z" />
-                              <path d="M15 7v2a4 4 0 01-4 4H9.828l-1.766 1.767c.28.149.599.233.938.233h2l3 3v-3h2a2 2 0 002-2V9a2 2 0 00-2-2h-1z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-orange-800">💬 토론 의견 관리</h4>
-                            <p className="text-sm text-orange-600">학생 의견 확인 및 피드백</p>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
 
 
                 </div>
@@ -275,48 +256,127 @@ function TeacherDashboardContent() {
         </div>
         
         <Tabs defaultValue="my-sessions" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-12 bg-slate-100 rounded-xl p-1">
-            <TabsTrigger value="my-sessions" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              <span className="font-medium">{isAdmin ? "관리 중인 세션" : isJudgeMode ? "교사의 세션" : "내 세션"}</span>
-            </TabsTrigger>
-            <TabsTrigger value="shared-sessions" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200 relative">
-              <div className="flex items-center gap-2 relative">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                </svg>
-                <span className="font-medium">토론 세션 공유</span>
-                <div className="absolute -top-1 -right-2 w-3 h-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full animate-pulse"></div>
+          <TabsList className="grid w-full grid-cols-3 h-20 bg-gradient-to-r from-slate-50 via-white to-slate-50 rounded-2xl p-2 shadow-lg border border-gray-200">
+            <TabsTrigger 
+              value="my-sessions" 
+              className="flex flex-col items-center justify-center gap-2 
+                data-[state=active]:bg-gradient-to-br data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 
+                data-[state=active]:text-white data-[state=active]:shadow-xl 
+                hover:bg-gradient-to-br hover:from-purple-100 hover:to-pink-100
+                rounded-xl transition-all duration-300 transform hover:scale-[1.02] 
+                data-[state=active]:scale-[1.05] group relative overflow-hidden"
+            >
+              <div className="relative z-10 flex flex-col items-center gap-1">
+                <div className="p-2 rounded-lg bg-white/20 group-data-[state=active]:bg-white/30">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <span className="font-bold text-sm text-center leading-tight">
+                  {isAdmin ? "관리 중인 세션" : isJudgeMode ? "교사의 세션" : "내 세션"}
+                </span>
+                <div className="text-xs opacity-80 font-medium">
+                  {loading ? "-" : `${Array.isArray(sessions) ? sessions.length : 0}개`}
+                </div>
               </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </TabsTrigger>
-            <TabsTrigger value="shared-topics" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-lg transition-all duration-200">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-              </svg>
-              <span className="font-medium">토론 주제 공유</span>
+            
+            <TabsTrigger 
+              value="shared-sessions" 
+              className="flex flex-col items-center justify-center gap-2 
+                data-[state=active]:bg-gradient-to-br data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 
+                data-[state=active]:text-white data-[state=active]:shadow-xl
+                hover:bg-gradient-to-br hover:from-blue-100 hover:to-cyan-100
+                rounded-xl transition-all duration-300 transform hover:scale-[1.02] 
+                data-[state=active]:scale-[1.05] group relative overflow-hidden"
+            >
+              <div className="relative z-10 flex flex-col items-center gap-1">
+                <div className="p-2 rounded-lg bg-white/20 group-data-[state=active]:bg-white/30 relative">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-orange-400 to-red-400 rounded-full animate-pulse shadow-lg">
+                    <div className="w-full h-full bg-gradient-to-r from-orange-500 to-red-500 rounded-full animate-ping"></div>
+                  </div>
+                </div>
+                <span className="font-bold text-sm text-center leading-tight">
+                  토론 세션 공유
+                </span>
+                <div className="text-xs opacity-80 font-medium flex items-center gap-1">
+                  <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                  라이브러리
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-cyan-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </TabsTrigger>
+            
+            <TabsTrigger 
+              value="shared-topics" 
+              className="flex flex-col items-center justify-center gap-2 
+                data-[state=active]:bg-gradient-to-br data-[state=active]:from-orange-500 data-[state=active]:to-yellow-500 
+                data-[state=active]:text-white data-[state=active]:shadow-xl
+                hover:bg-gradient-to-br hover:from-orange-100 hover:to-yellow-100
+                rounded-xl transition-all duration-300 transform hover:scale-[1.02] 
+                data-[state=active]:scale-[1.05] group relative overflow-hidden"
+            >
+              <div className="relative z-10 flex flex-col items-center gap-1">
+                <div className="p-2 rounded-lg bg-white/20 group-data-[state=active]:bg-white/30">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <span className="font-bold text-sm text-center leading-tight">
+                  토론 주제 공유
+                </span>
+                <div className="text-xs opacity-80 font-medium flex items-center gap-1">
+                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                  </svg>
+                  AI 생성
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/10 to-yellow-600/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value="my-sessions" className="mt-6">
-            <Card className="border-2 border-purple-100 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-t-lg">
-                <div className="flex justify-between items-center">
+          <TabsContent value="my-sessions" className="mt-8">
+            <Card className="border-2 border-purple-200 shadow-xl bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50">
+              <CardHeader className="bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-t-lg relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20"></div>
+                <div className="flex justify-between items-center relative z-10">
                   <div>
-                    <CardTitle className="text-2xl text-purple-900 flex items-center gap-3">
-                      <div className="p-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <CardTitle className="text-3xl font-bold flex items-center gap-4 mb-2">
+                      <div className="p-3 bg-white/20 backdrop-blur-sm rounded-xl shadow-lg">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                       </div>
-                      {isAdmin ? "관리 중인 토론 세션" : isJudgeMode ? "교사의 토론 세션" : "내 토론 세션"}
+                      <div>
+                        <div className="text-3xl font-bold">
+                          {isAdmin ? "🔧 관리 중인 토론 세션" : isJudgeMode ? "👨‍🏫 교사의 토론 세션" : "📚 내 토론 세션"}
+                        </div>
+                        <div className="text-lg opacity-90 font-normal mt-1">
+                          토론 교육의 시작점이 되는 나만의 공간
+                        </div>
+                      </div>
                     </CardTitle>
-                    <CardDescription className="text-purple-700 mt-2 flex items-center gap-2">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                      </svg>
-                      총 {sessions?.length || 0}개의 세션 · 언제든지 새로운 세션을 만들어 보세요!
+                    <CardDescription className="text-white/90 text-base flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-lg p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="p-2 bg-green-400 rounded-full shadow-lg">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </div>
+                        <span className="font-semibold text-lg">
+                          총 <span className="text-2xl font-bold text-yellow-200">{sessions?.length || 0}</span>개의 세션
+                        </span>
+                      </div>
+                      <div className="h-6 w-px bg-white/30"></div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        언제든지 새로운 세션을 만들어 보세요!
+                      </div>
                     </CardDescription>
                   </div>
                   <Button
@@ -352,52 +412,67 @@ function TeacherDashboardContent() {
             </Card>
           </TabsContent>
           
-          <TabsContent value="shared-sessions" className="mt-6 space-y-6">
-            {/* 세션 공유 섹션 헤더 */}
-            <Card className="border-2 border-blue-100 shadow-lg bg-gradient-to-r from-blue-50 via-cyan-50 to-blue-50">
-              <CardHeader className="text-center py-8">
-                <div className="mx-auto mb-4 p-4 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <TabsContent value="shared-sessions" className="mt-6 space-y-4">
+            {/* 세션 공유 섹션 헤더 - 축소된 디자인 */}
+            <Card className="border-2 border-blue-200 shadow-lg bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-100/20 to-cyan-100/20"></div>
+              <CardHeader className="text-center py-6 relative z-10">
+                <div className="mx-auto mb-3 p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl w-14 h-14 flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-3">
-                  📚 토론 세션 공유 라이브러리
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2 relative">
+                  🌐 토론 세션 공유 라이브러리
+                  <div className="absolute -top-1 -right-6 px-2 py-0.5 bg-gradient-to-r from-orange-400 to-red-400 text-white text-xs font-bold rounded-full shadow-lg animate-bounce">
+                    HOT
+                  </div>
                 </CardTitle>
-                <CardDescription className="text-blue-700 text-lg max-w-2xl mx-auto">
-                  다른 교사들이 만든 우수한 토론 세션을 탐색하고, 클릭 한 번으로 내 세션으로 가져와 보세요!
-                  검증된 학습 자료와 효과적인 토론 주제를 즉시 활용할 수 있습니다.
+                <CardDescription className="text-blue-800 text-base max-w-2xl mx-auto leading-relaxed bg-white/60 backdrop-blur-sm rounded-lg p-3 border border-blue-200 shadow-md">
+                  🎯 <strong>다른 교사들이 만든 우수한 토론 세션</strong>을 탐색하고, 
+                  <strong className="text-blue-600">클릭 한 번으로 내 세션으로 가져와</strong> 보세요!
+                  <br className="hidden sm:block" />
+                  ✨ 검증된 학습 자료와 효과적인 토론 주제를 즉시 활용할 수 있습니다.
                 </CardDescription>
                 
-                {/* 공유 기능 하이라이트 */}
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-blue-200 text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* 공유 기능 하이라이트 - 축소된 디자인 */}
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-blue-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-blue-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-blue-900 mb-1">🔍 탐색</h3>
-                    <p className="text-sm text-blue-700">카테고리별로 세션을 찾아보세요</p>
+                    <h3 className="font-bold text-lg text-blue-900 mb-1">🔍 스마트 탐색</h3>
+                    <p className="text-sm text-blue-700 leading-relaxed">카테고리와 태그로 분류된 세션을 나만의 기준으로 찾아보세요</p>
+                    <div className="mt-2 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium inline-block">
+                      효율적 검색
+                    </div>
                   </div>
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-blue-200 text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-green-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-green-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-green-900 mb-1">👀 미리보기</h3>
-                    <p className="text-sm text-green-700">자료를 미리 확인하고 선택하세요</p>
+                    <h3 className="font-bold text-lg text-green-900 mb-1">👀 상세 미리보기</h3>
+                    <p className="text-sm text-green-700 leading-relaxed">학습 자료와 세션 내용을 미리 확인하고 신중하게 선택하세요</p>
+                    <div className="mt-2 px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium inline-block">
+                      품질 보장
+                    </div>
                   </div>
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-blue-200 text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-purple-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-purple-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-purple-900 mb-1">💜 가져오기</h3>
-                    <p className="text-sm text-purple-700">원클릭으로 내 세션에 추가하세요</p>
+                    <h3 className="font-bold text-lg text-purple-900 mb-1">✨ 원클릭 가져오기</h3>
+                    <p className="text-sm text-purple-700 leading-relaxed">마음에 드는 세션을 바로 내 계정에 복사해서 활용하세요</p>
+                    <div className="mt-2 px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium inline-block">
+                      간편 활용
+                    </div>
                   </div>
                 </div>
               </CardHeader>
@@ -409,51 +484,67 @@ function TeacherDashboardContent() {
             </FeatureFlag>
           </TabsContent>
           
-          <TabsContent value="shared-topics" className="mt-6 space-y-6">
-            {/* 토론 주제 공유 섹션 헤더 */}
-            <Card className="border-2 border-orange-100 shadow-lg bg-gradient-to-r from-orange-50 via-yellow-50 to-orange-50">
-              <CardHeader className="text-center py-8">
-                <div className="mx-auto mb-4 p-4 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-full w-16 h-16 flex items-center justify-center shadow-lg">
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <TabsContent value="shared-topics" className="mt-6 space-y-4">
+            {/* 토론 주제 공유 섹션 헤더 - 축소된 디자인 */}
+            <Card className="border-2 border-orange-200 shadow-lg bg-gradient-to-br from-orange-50 via-yellow-50 to-orange-50 overflow-hidden relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-100/30 to-yellow-100/30"></div>
+              <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-yellow-300/15 to-orange-300/15 rounded-full -translate-y-8 translate-x-8"></div>
+              <CardHeader className="text-center py-6 relative z-10">
+                <div className="mx-auto mb-3 p-3 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-xl w-14 h-14 flex items-center justify-center shadow-lg transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-                <CardTitle className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent mb-3">
-                  💡 AI 토론 주제 공유 라이브러리
+                <CardTitle className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-yellow-600 bg-clip-text text-transparent mb-2 relative">
+                  🤖 AI 토론 주제 공유 라이브러리
+                  <div className="absolute -top-1 -right-8 px-2 py-0.5 bg-gradient-to-r from-purple-400 to-pink-400 text-white text-xs font-bold rounded-full shadow-lg animate-pulse">
+                    AI POWER
+                  </div>
                 </CardTitle>
-                <CardDescription className="text-orange-700 text-lg max-w-2xl mx-auto">
-                  AI가 생성한 창의적이고 교육적인 토론 주제들을 발견하고 활용해보세요!
-                  다양한 주제로 학생들의 사고력을 키워주는 토론을 시작할 수 있습니다.
+                <CardDescription className="text-orange-800 text-base max-w-2xl mx-auto leading-relaxed bg-white/70 backdrop-blur-sm rounded-lg p-3 border border-orange-200 shadow-md">
+                  🚀 <strong>AI가 생성한 창의적이고 교육적인 토론 주제들</strong>을 발견하고 활용해보세요!
+                  <br className="hidden sm:block" />
+                  🎓 다양한 주제로 <strong className="text-orange-600">학생들의 사고력을 키워주는</strong> 토론을 시작할 수 있습니다.
                 </CardDescription>
                 
-                {/* AI 주제 특징 하이라이트 */}
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-orange-200 text-center">
-                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* AI 주제 특징 하이라이트 - 축소된 디자인 */}
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-orange-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-orange-300 overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-12 h-12 bg-gradient-to-br from-orange-300/15 to-yellow-300/15 rounded-full -translate-y-6 translate-x-6"></div>
+                    <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300 relative z-10">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-orange-900 mb-1">🤖 AI 생성</h3>
-                    <p className="text-sm text-orange-700">창의적이고 교육적인 주제들</p>
+                    <h3 className="font-bold text-lg text-orange-900 mb-1 relative z-10">🤖 차세대 AI 생성</h3>
+                    <p className="text-sm text-orange-700 leading-relaxed relative z-10">최신 AI 기술로 창의적이고 교육적인 주제들을 자동 생성</p>
+                    <div className="mt-2 px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs font-medium inline-block relative z-10">
+                      혁신 기술
+                    </div>
                   </div>
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-orange-200 text-center">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-yellow-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-yellow-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-yellow-900 mb-1">✅ 검증된 품질</h3>
-                    <p className="text-sm text-yellow-700">교육 현장에서 검증된 주제들</p>
+                    <h3 className="font-bold text-lg text-yellow-900 mb-1">✨ 전문가 검증 품질</h3>
+                    <p className="text-sm text-yellow-700 leading-relaxed">교육 전문가와 현장 교사들이 검증하고 인정한 고품질 주제들</p>
+                    <div className="mt-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium inline-block">
+                      품질 인증
+                    </div>
                   </div>
-                  <div className="bg-white/80 backdrop-blur p-4 rounded-xl border border-orange-200 text-center">
-                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="group bg-white/80 backdrop-blur-sm p-4 rounded-xl border border-red-200 text-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:border-red-300">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-500 rounded-xl flex items-center justify-center mx-auto mb-3 shadow-md group-hover:scale-105 transition-transform duration-300">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="font-semibold text-red-900 mb-1">⚡ 즉시 활용</h3>
-                    <p className="text-sm text-red-700">바로 수업에 적용 가능</p>
+                    <h3 className="font-bold text-lg text-red-900 mb-1">⚡ 신속 수업 적용</h3>
+                    <p className="text-sm text-red-700 leading-relaxed">복잡한 준비 없이 바로 오늘 수업에서 활용 가능</p>
+                    <div className="mt-2 px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium inline-block">
+                      즉시 적용
+                    </div>
                   </div>
                 </div>
               </CardHeader>

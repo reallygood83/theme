@@ -33,12 +33,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ko" className={`${inter.variable}`}>
-      <body className="bg-background min-h-screen">
+    <html lang="ko" className={`${inter.variable} h-full`}>
+      <body className="h-full w-full m-0 p-0 overflow-x-hidden overflow-y-auto">
         <AuthProvider>
-          <main className="container mx-auto px-4 py-8">
-            {children}
-          </main>
+          {children}
         </AuthProvider>
       </body>
     </html>
