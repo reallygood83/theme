@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import SessionList from '@/components/teacher/SessionList'
 import SharedTopicsLibrary from '@/components/teacher/SharedTopicsLibrary'
 import SharedSessionsLibrary from '@/components/teacher/SharedSessionsLibrary'
+import FeatureFlag from '@/components/shared/FeatureFlag'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import LoadingSpinner from '@/components/common/LoadingSpinner'
@@ -403,7 +404,9 @@ function TeacherDashboardContent() {
             </Card>
             
             {/* 공유 세션 라이브러리 */}
-            <SharedSessionsLibrary />
+            <FeatureFlag feature="sharing">
+              <SharedSessionsLibrary />
+            </FeatureFlag>
           </TabsContent>
           
           <TabsContent value="shared-topics" className="mt-6 space-y-6">
@@ -457,7 +460,9 @@ function TeacherDashboardContent() {
             </Card>
             
             {/* 토론 주제 라이브러리 */}
-            <SharedTopicsLibrary />
+            <FeatureFlag feature="topics">
+              <SharedTopicsLibrary />
+            </FeatureFlag>
           </TabsContent>
         </Tabs>
         
