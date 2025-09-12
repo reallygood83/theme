@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SharedTopic, PaginationParams, PaginatedResult } from '@/lib/shared-db'
+import { useAuth } from '@/contexts/AuthContext'
 import { BookOpen, Clock, Users, Star, Eye, Search, Filter } from 'lucide-react'
 
 interface SharedTopicsLibraryProps {
@@ -260,6 +261,7 @@ function TopicDetailModal({ topic, isOpen, onClose, onImportSuccess }: TopicDeta
 }
 
 function ImportTopicDialog({ topic, isOpen, onClose, onImportSuccess }: ImportTopicDialogProps) {
+  const { user } = useAuth();
   const [customTitle, setCustomTitle] = useState('');
   const [customDescription, setCustomDescription] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -282,7 +284,10 @@ function ImportTopicDialog({ topic, isOpen, onClose, onImportSuccess }: ImportTo
         body: JSON.stringify({
           topicId: topic.id,
           customTitle,
-          customDescription
+          customDescription,
+          teacherId: user?.uid,
+          teacherName: user?.displayName || user?.email?.split('@')[0] || '익명 교사',
+          teacherEmail: user?.email
         })
       });
 
