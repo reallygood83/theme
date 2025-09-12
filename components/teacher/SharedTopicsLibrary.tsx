@@ -353,49 +353,7 @@ function ImportTopicDialog({ topic, isOpen, onClose, onImportSuccess }: ImportTo
 }
 
 export default function SharedTopicsLibrary({ onTopicSelect }: SharedTopicsLibraryProps) {
-  // 환경변수 체크 - SharedSessionsLibrary와 동일한 패턴
-  const checkEnvVariables = () => {
-    const sharing = process.env.NEXT_PUBLIC_ENABLE_SHARING
-    const community = process.env.NEXT_PUBLIC_ENABLE_COMMUNITY
-    const debug = process.env.NEXT_PUBLIC_SHARING_DEBUG === 'true'
-    
-    if (debug) {
-      console.log('🚩 SharedTopicsLibrary 환경변수 체크:')
-      console.log(`  - NEXT_PUBLIC_ENABLE_SHARING: ${sharing}`)
-      console.log(`  - NEXT_PUBLIC_ENABLE_COMMUNITY: ${community}`)
-      console.log(`  - NEXT_PUBLIC_SHARING_DEBUG: ${process.env.NEXT_PUBLIC_SHARING_DEBUG}`)
-      console.log('  - Topics sharing enabled:', sharing === 'true')
-    }
-    
-    return sharing === 'true'
-  }
-  
-  const isEnabled = checkEnvVariables()
-  
-  // 기능이 비활성화된 경우
-  if (!isEnabled) {
-    if (process.env.NODE_ENV === 'development') {
-      return (
-        <Card className="border-2 border-orange-200 shadow-lg">
-          <CardContent className="p-8 text-center">
-            <div className="mx-auto mb-4 p-4 bg-orange-100 rounded-full w-16 h-16 flex items-center justify-center">
-              <BookOpen className="w-8 h-8 text-orange-600" />
-            </div>
-            <h3 className="text-xl font-bold text-orange-900 mb-2">🚧 토론 주제 공유 기능 비활성화</h3>
-            <p className="text-orange-700 mb-4">
-              현재 토론 주제 공유 기능이 비활성화되어 있습니다.
-            </p>
-            <p className="text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
-              개발 모드: NEXT_PUBLIC_ENABLE_SHARING=true로 설정하여 활성화할 수 있습니다.
-            </p>
-          </CardContent>
-        </Card>
-      )
-    }
-    
-    // 프로덕션에서는 아무것도 렌더링하지 않음
-    return null
-  }
+  console.log('✅ SharedTopicsLibrary 컴포넌트가 FeatureFlag를 통과하여 렌더링됨');
 
   const [topics, setTopics] = useState<SharedTopic[]>([])
   const [loading, setLoading] = useState(true)

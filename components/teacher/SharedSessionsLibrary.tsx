@@ -450,25 +450,7 @@ export default function SharedSessionsLibrary() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [importingSession, setImportingSession] = useState<SharedSession | null>(null);
 
-  // Feature Flag 체크 + 상세 디버깅
-  const envValue = process.env.NEXT_PUBLIC_ENABLE_SHARING;
-  const sharingEnabled = envValue?.trim() === 'true';
-  
-  // 🔍 실시간 환경변수 디버깅 로그
-  console.group('🔍 SharedSessionsLibrary - 환경변수 디버깅');
-  console.log('⚙️ NEXT_PUBLIC_ENABLE_SHARING 원시값:', envValue);
-  console.log('📊 typeof envValue:', typeof envValue);
-  console.log('🔍 envValue 길이:', envValue?.length);
-  console.log('🔍 envValue 바이트:', JSON.stringify(envValue));
-  console.log('🧽 envValue.trim():', envValue?.trim());
-  console.log('✅ sharingEnabled 결과:', sharingEnabled);
-  console.log('🌐 현재 환경:', process.env.NODE_ENV);
-  console.log('📍 현재 도메인:', window.location.hostname);
-  console.log('🔧 전체 NEXT_PUBLIC 환경변수들:');
-  Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')).forEach(key => {
-    console.log(`  - ${key}: ${process.env[key]}`);
-  });
-  console.groupEnd();
+  console.log('✅ SharedSessionsLibrary 컴포넌트가 FeatureFlag를 통과하여 렌더링됨');
 
   const categories = [
     { value: 'all', label: '전체 카테고리', icon: '🔍' },
@@ -487,18 +469,9 @@ export default function SharedSessionsLibrary() {
 
   const fetchSharedSessions = async () => {
     console.group('🚀 fetchSharedSessions 실행');
-    console.log('🔍 sharingEnabled 상태:', sharingEnabled);
-    
-    if (!sharingEnabled) {
-      console.warn('❌ 공유 기능이 비활성화되어 있어서 API 호출을 건너뜁니다');
-      console.log('🔧 환경변수 다시 확인:', process.env.NEXT_PUBLIC_ENABLE_SHARING);
-      setLoading(false);
-      console.groupEnd();
-      return;
-    }
+    console.log('🔍 FeatureFlag에 의해 컴포넌트가 렌더링되었으므로 API 호출을 시작합니다...');
 
     try {
-      console.log('✅ 공유 기능이 활성화되어 있습니다. API 호출을 시작합니다...');
       setLoading(true);
       
       console.log('📡 API 호출: /api/shared/sessions/list');
@@ -606,37 +579,7 @@ export default function SharedSessionsLibrary() {
     }
   };
 
-  // Feature Flag가 비활성화된 경우
-  console.log('🎯 렌더링 시점 - sharingEnabled 상태:', sharingEnabled);
-  console.log('🎯 렌더링 시점 - 환경변수 원시값:', process.env.NEXT_PUBLIC_ENABLE_SHARING);
-  
-  if (!sharingEnabled) {
-    console.warn('🚧 "교육자료실 준비 중" 메시지를 표시합니다 - sharingEnabled가 false임');
-    return (
-      <Card className="border-2 border-yellow-100 shadow-lg">
-        <CardContent className="p-8 text-center">
-          <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-8 rounded-xl border-2 border-yellow-200">
-            <div className="mx-auto mb-6 p-4 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full w-20 h-20 flex items-center justify-center shadow-lg">
-              <AlertTriangle className="h-10 w-10 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold text-yellow-800 mb-4">
-              🚧 교육자료실 준비 중
-            </h3>
-            <p className="text-yellow-700 text-lg mb-6">
-              교사간 세션 공유 기능이 현재 개발 중입니다. 곧 멋진 기능으로 찾아뵙겠습니다!
-            </p>
-            <div className="bg-white/60 backdrop-blur p-4 rounded-lg">
-              <p className="text-sm text-yellow-600">
-                📅 예상 출시일: 곧 공개 예정 | 🔔 알림을 받고 싶으시면 문의해 주세요
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  console.log('✅ SharedSessionsLibrary 정상 렌더링 진입 - sharingEnabled: true');
+  console.log('✅ SharedSessionsLibrary 정상 렌더링 - FeatureFlag를 통과함');
   
   return (
     <div className="space-y-6">
