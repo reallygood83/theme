@@ -13,9 +13,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSharedSession, incrementImportCount } from '@/lib/shared-db';
 import admin from 'firebase-admin';
 
-// Feature Flag 확인
+// Feature Flag 확인 - FeatureFlag.tsx와 동일한 패턴
 function checkSharingEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_ENABLE_SHARING === 'true';
+  // 개발 환경에서는 모든 기능 활성화
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 개발 환경 - 토론 세션 가져오기 기능 강제 활성화');
+    return true;
+  }
+  
+  // 기본값 true, 명시적으로 false일 때만 비활성화
+  return process.env.NEXT_PUBLIC_ENABLE_SHARING !== 'false';
 }
 
 // Firebase Admin SDK 초기화 (shared-db와 동일한 패턴)

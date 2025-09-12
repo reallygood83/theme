@@ -489,11 +489,11 @@ export default function SharedSessionsLibrary() {
       
       const data = await response.json();
       console.log('✅ API 응답 데이터:', data);
-      console.log('📊 세션 개수:', data.data?.length || 0);
+      console.log('📊 세션 개수:', data.sessions?.length || 0);
       
-      if (data.data && Array.isArray(data.data)) {
-        setSessions(data.data);
-        console.log('✅ 세션 데이터 setState 완료:', data.data.length + '개');
+      if (data.sessions && Array.isArray(data.sessions)) {
+        setSessions(data.sessions);
+        console.log('✅ 세션 데이터 setState 완료:', data.sessions.length + '개');
       } else {
         console.warn('⚠️ 데이터 형식이 예상과 다릅니다:', data);
         setSessions([]);
