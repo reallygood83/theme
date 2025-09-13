@@ -85,5 +85,8 @@ export const getAdminAuth = () => {
   return adminAuth;
 };
 
+// 초기화 실행
+initializeFirebaseAdmin();
+
 export { adminDB, adminAuth };
 export default adminApp;

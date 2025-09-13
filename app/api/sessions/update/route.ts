@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
-import { database, getFirebaseDatabase } from '@/lib/firebase'
-import { ref, update } from 'firebase/database'
+import { getAdminDatabase } from '@/lib/firebase-admin'
 
 export async function PUT(request: Request) {
   try {
@@ -57,26 +56,25 @@ export async function PUT(request: Request) {
       keywordsCount: sessionUpdateData.keywords?.length || 0
     })
     
-    // Firebase Database 인스턴스 확인
-    const db = getFirebaseDatabase()
+    // Firebase Admin Database 인스턴스 확인
+    const adminDB = getAdminDatabase()
     
-    if (!db) {
-      console.log('오류: Firebase Database 초기화 실패')
+    if (!adminDB) {
+      console.log('오류: Firebase Admin Database 초기화 실패')
       return NextResponse.json(
-        { error: 'Firebase Database 연결에 실패했습니다.' }, 
+        { error: 'Firebase Admin Database 연결에 실패했습니다.' }, 
         { status: 500 }
       )
     }
-    
-    // 세션 업데이트
-    const sessionRef = ref(db, `sessions/${sessionId}`)
     
     console.log('세션 수정 시도:', {
       sessionId,
       updateData: sessionUpdateData
     })
     
-    await update(sessionRef, sessionUpdateData)
+    // Admin SDK를 사용하여 세션 업데이트
+    const sessionRef = adminDB.ref(`sessions/${sessionId}`)
+    await sessionRef.update(sessionUpdateData)
     
     console.log('세션 수정 완료:', sessionId)
     
