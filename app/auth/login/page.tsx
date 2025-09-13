@@ -63,6 +63,21 @@ function LoginForm() {
     }
   }
 
+  // 심사 로그인 함수
+  const handleJudgeLogin = () => {
+    setEmail('judge@questiontalk.demo')
+    setPassword('20251234')
+    setError(null)
+    
+    // 잠시 후 자동 로그인 시도
+    setTimeout(() => {
+      const form = document.querySelector('form') as HTMLFormElement
+      if (form) {
+        form.requestSubmit()
+      }
+    }, 100)
+  }
+
   return (
     <div className="max-w-md mx-auto">
       <div className="bg-white shadow-md rounded-lg p-6 md:p-8">
@@ -144,6 +159,17 @@ function LoginForm() {
                 <span>구글로 로그인</span>
               </>
             )}
+          </button>
+        </div>
+        
+        {/* 심사 로그인 버튼 */}
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={handleJudgeLogin}
+            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-4 rounded-md transition-colors"
+          >
+            🎯 심사 로그인 (judge@questiontalk.demo)
           </button>
         </div>
         
