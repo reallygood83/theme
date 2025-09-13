@@ -1,21 +1,34 @@
 import { NextResponse } from 'next/server'
-import { database } from '@/lib/firebase'
-import { ref, update, getDatabase, Database } from 'firebase/database'
-import { initializeApp } from 'firebase/app'
+import { database, getFirebaseDatabase } from '@/lib/firebase'
+import { ref, update } from 'firebase/database'
 
 export async function PUT(request: Request) {
   try {
+    console.log('PUT /api/sessions/update 요청 시작')
+    
     const data = await request.json()
+    console.log('요청 데이터:', JSON.stringify(data, null, 2))
+    
     const { sessionId, ...updateData } = data
     
     // 필수 필드 검증
     if (!sessionId) {
+      console.log('오류: 세션 ID 누락')
       return NextResponse.json(
         { error: '세션 ID는 필수입니다.' }, 
         { status: 400 }
       )
     }
     
+    // 요청 데이터 검증
+    if (!updateData.title && !updateData.materials && !updateData.materialText) {
+      console.log('오류: 업데이트할 데이터가 없음')
+      return NextResponse.json(
+        { error: '업데이트할 데이터가 없습니다.' }, 
+        { status: 400 }
+      )
+    }
+
     // 업데이트할 데이터 준비
     const sessionUpdateData: any = {
       title: updateData.title || '제목 없음',
@@ -35,33 +48,24 @@ export async function PUT(request: Request) {
       sessionUpdateData.materialUrl = updateData.materialUrl || ''
     }
     
-    // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-    let db: Database | null = database;
+    console.log('업데이트 데이터 준비 완료:', {
+      sessionId,
+      hasTitle: !!sessionUpdateData.title,
+      hasMaterials: !!sessionUpdateData.materials,
+      materialsCount: sessionUpdateData.materials?.length || 0,
+      hasKeywords: !!sessionUpdateData.keywords,
+      keywordsCount: sessionUpdateData.keywords?.length || 0
+    })
     
-    // Firebase 환경 변수 확인 및 필요시 재초기화
+    // Firebase Database 인스턴스 확인
+    const db = getFirebaseDatabase()
+    
     if (!db) {
-      const firebaseConfig = {
-        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-        databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
-          (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-            ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
-            : undefined)
-      };
-      
-      if (!firebaseConfig.databaseURL) {
-        return NextResponse.json(
-          { error: 'Firebase 설정이 완료되지 않았습니다.' }, 
-          { status: 500 }
-        );
-      }
-      
-      const app = initializeApp(firebaseConfig);
-      db = getDatabase(app);
+      console.log('오류: Firebase Database 초기화 실패')
+      return NextResponse.json(
+        { error: 'Firebase Database 연결에 실패했습니다.' }, 
+        { status: 500 }
+      )
     }
     
     // 세션 업데이트
@@ -81,9 +85,29 @@ export async function PUT(request: Request) {
       message: '세션이 성공적으로 수정되었습니다.'
     })
   } catch (error) {
-    console.error('세션 수정 오류:', error)
+    console.error('세션 수정 오류 상세:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
+    
+    // Firebase 특정 에러 처리
+    let errorMessage = '세션 수정에 실패했습니다.'
+    if (error instanceof Error) {
+      if (error.message.includes('permission')) {
+        errorMessage = 'Firebase 권한이 없습니다.'
+      } else if (error.message.includes('network')) {
+        errorMessage = '네트워크 연결에 문제가 있습니다.'
+      } else if (error.message.includes('auth')) {
+        errorMessage = 'Firebase 인증에 실패했습니다.'
+      }
+    }
+    
     return NextResponse.json(
-      { error: '세션 수정에 실패했습니다.' }, 
+      { 
+        error: errorMessage,
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }, 
       { status: 500 }
     )
   }
