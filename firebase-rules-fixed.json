@@ -1,0 +1,123 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "teachers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid"
+      }
+    },
+    
+    "sessions": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "createdAt", "accessCode"],
+      "$sessionId": {
+        ".read": true,
+        ".write": "auth != null",
+        "questions": {
+          ".read": true,
+          ".write": true,
+          "$questionId": {
+            ".read": true,
+            ".write": true,
+            ".validate": "newData.hasChildren(['text', 'studentName', 'groupName', 'timestamp']) && newData.child('text').val().length >= 1 && newData.child('text').val().length <= 1000 && newData.child('studentName').val().length >= 1 && newData.child('studentName').val().length <= 50 && newData.child('groupName').val().length >= 1 && newData.child('groupName').val().length <= 50"
+          }
+        },
+        "studentAgendas": {
+          ".read": true,
+          ".write": true
+        },
+        "agendas": {
+          ".read": true,
+          ".write": "auth != null",
+          "$agendaId": {
+            ".read": true,
+            ".write": "auth != null",
+            ".validate": "newData.hasChildren(['title', 'description']) && newData.child('title').val().length >= 1 && newData.child('title').val().length <= 300"
+          }
+        },
+        "materials": {
+          ".read": true,
+          ".write": "auth != null",
+          "$materialId": {
+            ".read": true,
+            ".write": "auth != null"
+          }
+        },
+        "evidenceResults": {
+          ".read": true,
+          ".write": true,
+          "$resultId": {
+            ".read": true,
+            ".write": true,
+            ".validate": "newData.hasChildren(['timestamp']) && newData.child('results').isString()"
+          }
+        },
+        "sessionConfig": {
+          ".read": true,
+          ".write": "auth != null"
+        }
+      }
+    },
+    
+    "classes": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "teacherUid", "sessionCode"],
+      "$classId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (data.child('teacherId').val() === auth.uid || !data.exists())",
+        ".validate": "newData.hasChildren(['className', 'teacherId']) && newData.child('className').val().length >= 1 && newData.child('className').val().length <= 100"
+      }
+    },
+    
+    "students": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["classId", "sessionCode"],
+      "$studentId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['studentName', 'classId']) && newData.child('studentName').val().length >= 1 && newData.child('studentName').val().length <= 50"
+      }
+    },
+    
+    "opinions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "classId", "sessionCode", "studentId"],
+      "$opinionId": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['content', 'studentId', 'timestamp']) && newData.child('content').val().length >= 1 && newData.child('content').val().length <= 2000"
+      }
+    },
+    
+    "notifications": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId"],
+      "$notificationId": {
+        ".read": "auth != null && data.child('teacherId').val() === auth.uid",
+        ".write": "auth != null && (newData.child('teacherId').val() === auth.uid || !data.exists())",
+        ".validate": "newData.hasChildren(['title', 'message', 'teacherId', 'timestamp']) && newData.child('title').val().length >= 1 && newData.child('title').val().length <= 100 && newData.child('message').val().length >= 1 && newData.child('message').val().length <= 500"
+      }
+    },
+    
+    "feedbackTemplates": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId"],
+      "$templateId": {
+        ".read": "auth != null && data.child('teacherId').val() === auth.uid",
+        ".write": "auth != null && (newData.child('teacherId').val() === auth.uid || !data.exists())",
+        ".validate": "newData.hasChildren(['templateName', 'content', 'teacherId']) && newData.child('templateName').val().length >= 1 && newData.child('templateName').val().length <= 100 && newData.child('content').val().length >= 1 && newData.child('content').val().length <= 1000"
+      }
+    }
+  }
+}

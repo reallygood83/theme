@@ -683,20 +683,27 @@ export function processEvidenceResults(
           }
         }
         
-        // 뉴스 URL 특별 처리
+        // 뉴스 URL 안전 필터링 (교육적 콘텐츠 보호)
         if (evidence.type === '뉴스 기사') {
-          // 네이버 뉴스 URL 정리
-          if (cleanUrl.includes('n.news.naver.com') && !cleanUrl.includes('/article/')) {
+          // 명확한 메인 페이지만 차단 (기사 페이지는 허용)
+          if (cleanUrl.match(/\.(com|co\.kr|net|org)\/?$/) || 
+              cleanUrl.includes('/index.') || 
+              cleanUrl.endsWith('/main') ||
+              cleanUrl.endsWith('/home')) {
             cleanUrl = ''
           }
-          // 다음 뉴스 URL 정리
-          else if (cleanUrl.includes('v.daum.net/v/') && cleanUrl.length < 50) {
+          // 유해/성인 콘텐츠 명시적 차단
+          else if (cleanUrl.includes('adult') || 
+                   cleanUrl.includes('19금') || 
+                   cleanUrl.includes('성인') ||
+                   cleanUrl.match(/\b(sex|porn|adult)\b/i)) {
             cleanUrl = ''
           }
-          // 기타 메인 페이지 URL 필터링
-          else if (cleanUrl.match(/\.(com|co\.kr|net)\/?(index\.html?)?$/)) {
+          // 너무 짧은 URL (의미없는 단축 URL) 차단
+          else if (cleanUrl.length < 20 && !cleanUrl.includes('naver.com') && !cleanUrl.includes('daum.net')) {
             cleanUrl = ''
           }
+          // 교육적 뉴스 사이트는 허용 (기존보다 완화)
         }
         
       }

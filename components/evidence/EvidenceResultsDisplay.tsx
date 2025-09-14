@@ -328,12 +328,12 @@ export default function EvidenceResultsDisplay({
                     </a>
                   )}
                   {(!result.url || result.url.trim() === '') && result.type === '뉴스 기사' && (
-                    <span className="inline-flex items-center px-3 py-1 bg-gray-50 text-gray-500 text-sm font-medium rounded-md">
+                    <div className="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-600 text-sm font-medium rounded-md" title="제목과 신문사 이름으로 직접 검색해보세요!">
                       <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      원문 링크 없음
-                    </span>
+                      🔍 직접 검색해보세요
+                    </div>
                   )}
                 </div>
               </div>
@@ -360,6 +360,21 @@ export default function EvidenceResultsDisplay({
                 {getTypeBadge(type)}: {count}개
               </span>
             ))}
+          </div>
+        </div>
+        
+        {/* 친근한 사용 안내 */}
+        <div className="mt-4 p-3 bg-blue-50 rounded-md border-l-4 border-blue-400">
+          <div className="flex items-start">
+            <div className="text-blue-400 mr-2">💡</div>
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">📰 뉴스 기사 이용 안내</p>
+              <ul className="text-xs text-blue-700 space-y-1">
+                <li>• 일부 기사는 저작권 보호로 원문 링크가 제공되지 않을 수 있어요</li>
+                <li>• 제목과 신문사 이름으로 네이버나 구글에서 직접 검색해보세요!</li>
+                <li>• 모든 자료는 교육용으로 선별된 신뢰할 수 있는 출처입니다</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
