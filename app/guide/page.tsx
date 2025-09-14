@@ -763,6 +763,69 @@ export default function GuidePage() {
             </p>
           </div>
 
+          {/* YouTube 가이드 영상 */}
+          <Card className="max-w-5xl mx-auto border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50">
+            <CardHeader className="text-center pb-4">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <PlayCircle className="w-6 h-6 text-blue-600" />
+                <CardTitle className="text-2xl text-blue-800">📹 완벽 가이드 영상</CardTitle>
+              </div>
+              <CardDescription className="text-lg text-blue-700">
+                질문톡톡! 논제샘솟! 사용법을 17분만에 완벽하게 마스터하세요
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pb-6">
+              <div className="relative w-full" style={{ paddingBottom: '56.25%' /* 16:9 aspect ratio */ }}>
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full rounded-lg shadow-lg"
+                  src="https://www.youtube.com/embed/HwRvVL0gSA8?si=APfxzMitJM6jHlRG"
+                  title="질문톡톡! 논제샘솟! 가이드 영상"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
+              </div>
+              <div className="mt-4 text-center">
+                <div className="inline-flex items-center gap-4 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full border border-blue-200">
+                  <div className="flex items-center gap-2 text-sm text-blue-700">
+                    <Clock className="w-4 h-4" />
+                    <span className="font-medium">영상 길이: 17분 41초</span>
+                  </div>
+                  <div className="w-px h-4 bg-blue-300"></div>
+                  <div className="flex items-center gap-2 text-sm text-green-700">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span className="font-medium">교사/학생 기능 완전 가이드</span>
+                  </div>
+                  <div className="w-px h-4 bg-blue-300"></div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                    asChild
+                  >
+                    <a 
+                      href="https://youtu.be/HwRvVL0gSA8?si=APfxzMitJM6jHlRG" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1"
+                    >
+                      <Video className="w-4 h-4" />
+                      YouTube에서 보기
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Alert className="max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-emerald-50 border-green-200">
+            <PlayCircle className="h-4 w-4 text-green-600" />
+            <AlertDescription className="text-green-800">
+              <strong>🎯 추천 시청 방법:</strong> 영상을 먼저 보고 아래 단계별 가이드를 참고하면 더욱 효과적으로 학습할 수 있습니다.
+              영상에는 실제 화면 조작과 함께 모든 기능이 자세히 설명되어 있어요!
+            </AlertDescription>
+          </Alert>
+
           {/* 사용자 여정 플로우차트 */}
           <Card className="p-8 border-2 border-blue-100 bg-gradient-to-br from-blue-50 to-indigo-50 mb-8">
             <div className="text-center mb-8">
