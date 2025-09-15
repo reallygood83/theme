@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 
 export default function Home() {
   const [sessionCode, setSessionCode] = useState('')
@@ -165,10 +166,10 @@ export default function Home() {
             <CardContent className="relative z-10">
               <div className="space-y-4">
                 <div className="relative">
-                  <input
+                  <Input
                     type="text"
                     placeholder="세션 코드 입력 (예: ABC123)"
-                    className="w-full px-6 py-4 text-center uppercase tracking-widest rounded-2xl border-2 border-blue-200/50 bg-white/70 backdrop-blur-xl focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-200/50 transition-all font-bold text-xl placeholder-gray-400"
+                    className="text-center uppercase tracking-widest border-blue-200/50 bg-white/70 backdrop-blur-xl focus:border-blue-400 focus:ring-blue-200/50 font-bold text-xl placeholder-gray-400 px-6 py-4 rounded-2xl"
                     value={sessionCode}
                     onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
                     maxLength={6}

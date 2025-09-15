@@ -5,6 +5,7 @@ import { ref, push, set, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
 import { Button } from '../common/Button'
+import { Textarea } from '../ui/textarea'
 
 interface QuestionInputProps {
   sessionId: string
@@ -99,9 +100,8 @@ export default function QuestionInput({
         <label htmlFor="questionText" className="block text-sm font-medium text-gray-700 mb-1">
           질문 작성
         </label>
-        <textarea
+        <Textarea
           id="questionText"
-          className="textarea-field"
           placeholder="학습 자료에 대한 질문을 작성해주세요..."
           value={questionText}
           onChange={(e) => setQuestionText(e.target.value)}

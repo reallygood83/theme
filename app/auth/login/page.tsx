@@ -7,6 +7,7 @@ import Link from 'next/link'
 import Header from '@/components/common/Header'
 import { Button } from '@/components/common/Button'
 import { loginUser, loginWithGoogle } from '@/lib/auth'
+import { Input } from '@/components/ui/input'
 
 function LoginForm() {
   const router = useRouter()
@@ -95,13 +96,12 @@ function LoginForm() {
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
               이메일
             </label>
-            <input
+            <Input
               id="email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="이메일을 입력하세요"
             />
           </div>
@@ -110,13 +110,12 @@ function LoginForm() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               비밀번호
             </label>
-            <input
+            <Input
               id="password"
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               placeholder="비밀번호를 입력하세요"
             />
           </div>

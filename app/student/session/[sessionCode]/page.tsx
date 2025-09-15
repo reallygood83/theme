@@ -518,10 +518,10 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   <label htmlFor="studentName" className="block text-sm font-bold text-blue-800 mb-2 flex items-center">
                     👤 이름
                   </label>
-                  <input
+                  <Input
                     id="studentName"
                     type="text"
-                    className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-gradient-to-r from-blue-50 to-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-gray-800 placeholder-gray-500"
+                    className="bg-gradient-to-r from-blue-50 to-white border-blue-200 focus:border-blue-400 focus:ring-blue-200 text-gray-800 placeholder-gray-500"
                     placeholder="이름을 입력하세요"
                     value={studentName}
                     onChange={(e) => setStudentName(e.target.value)}
@@ -535,10 +535,10 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
                   <label htmlFor="studentGroup" className="block text-sm font-bold text-blue-800 mb-2 flex items-center">
                     👥 모둠명
                   </label>
-                  <input
+                  <Input
                     id="studentGroup"
                     type="text"
-                    className="w-full px-4 py-3 border-2 border-blue-200 rounded-xl bg-gradient-to-r from-blue-50 to-white focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-gray-800 placeholder-gray-500"
+                    className="bg-gradient-to-r from-blue-50 to-white border-blue-200 focus:border-blue-400 focus:ring-blue-200 text-gray-800 placeholder-gray-500"
                     placeholder="모둠명을 입력하세요"
                     value={studentGroup}
                     onChange={(e) => setStudentGroup(e.target.value)}

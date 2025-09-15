@@ -6,6 +6,8 @@ import { Button } from '../common/Button'
 import { generateSessionCode } from '@/lib/utils'
 import { ref as storageRef, uploadBytes, getDownloadURL, getStorage } from 'firebase/storage'
 import { useAuth } from '@/contexts/AuthContext'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
 
 interface Material {
   id: string
@@ -326,11 +328,10 @@ export default function CreateSessionForm() {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           세션 제목 <span className="text-red-500">*</span>
         </label>
-        <input
+        <Input
           type="text"
           value={sessionTitle}
           onChange={(e) => setSessionTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="예: 환경보호와 경제발전의 균형"
           required
           maxLength={100}
@@ -363,20 +364,19 @@ export default function CreateSessionForm() {
               </div>
               
               {material.type === 'text' && (
-                <textarea
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                <Textarea
                   placeholder="학생들이 질문을 생성할 텍스트 자료를 입력하세요..."
                   value={material.content || ''}
                   onChange={(e) => updateMaterial(material.id, { content: e.target.value })}
                   rows={6}
                   required
+                  className="resize-none"
                 />
               )}
               
               {material.type === 'youtube' && (
-                <input
+                <Input
                   type="url"
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                   placeholder="https://www.youtube.com/watch?v=..."
                   value={material.url || ''}
                   onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
@@ -390,9 +390,8 @@ export default function CreateSessionForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       링크 제목
                     </label>
-                    <input
+                    <Input
                       type="text"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="예: '환경보호와 경제발전' 관련 기사"
                       value={material.linkTitle || ''}
                       onChange={(e) => updateMaterial(material.id, { linkTitle: e.target.value })}
@@ -403,9 +402,8 @@ export default function CreateSessionForm() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       URL
                     </label>
-                    <input
+                    <Input
                       type="url"
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
                       placeholder="https://example.com/article"
                       value={material.url || ''}
                       onChange={(e) => updateMaterial(material.id, { url: e.target.value })}
@@ -543,9 +541,9 @@ export default function CreateSessionForm() {
           핵심 키워드 (선택, 최대 3개)
         </label>
         <div className="flex gap-2">
-          <input
+          <Input
             type="text"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1"
             placeholder="키워드 입력..."
             value={keywordInput}
             onChange={(e) => setKeywordInput(e.target.value)}

@@ -6,6 +6,8 @@ import { database } from '@/lib/firebase'
 import { initializeApp } from 'firebase/app'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
 
 interface DebateOpinionInputProps {
   sessionId: string
@@ -173,10 +175,10 @@ export default function DebateOpinionInput({
             <label htmlFor="selectedAgenda" className="block text-sm font-bold text-emerald-800 mb-2 flex items-center">
               🎯 토론 논제 입력
             </label>
-            <input
+            <Input
               type="text"
               id="selectedAgenda"
-              className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl bg-gradient-to-r from-emerald-50 to-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-gray-800 placeholder-gray-500"
+              className="bg-gradient-to-r from-emerald-50 to-white border-emerald-200 focus:border-emerald-400 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
               placeholder="토론할 논제를 직접 입력하세요 (예: 환경보호를 위해 일회용품 사용을 전면 금지해야 한다)"
               value={selectedAgenda}
               onChange={(e) => setSelectedAgenda(e.target.value)}
@@ -238,9 +240,9 @@ export default function DebateOpinionInput({
             <label htmlFor="opinionText" className="block text-sm font-bold text-emerald-800 mb-2 flex items-center">
               ✍️ 나의 의견과 근거
             </label>
-            <textarea
+            <Textarea
               id="opinionText"
-              className="w-full px-4 py-3 border-2 border-emerald-200 rounded-xl bg-gradient-to-r from-emerald-50 to-white focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 transition-all text-gray-800 placeholder-gray-500"
+              className="bg-gradient-to-r from-emerald-50 to-white border-emerald-200 focus:border-emerald-400 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
               placeholder="나의 입장과 그 이유를 자세히 설명해주세요. 구체적인 예시나 근거를 포함하면 더 좋아요!"
               value={opinionText}
               onChange={(e) => setOpinionText(e.target.value)}
