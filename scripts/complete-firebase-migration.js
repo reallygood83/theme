@@ -10,17 +10,7 @@ const { getDatabase } = require('firebase-admin/database');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/test';
 
-// Firebase 설정 (제공된 정보 기반)
-const firebaseConfig = {
-  apiKey: "AIzaSyD1fJ4q5X68uh9vDksN3gVhMD4B2-lY8SQ",
-  authDomain: "question-talk-ebd38.firebaseapp.com",
-  databaseURL: "https://question-talk-ebd38-default-rtdb.firebaseio.com",
-  projectId: "question-talk-ebd38",
-  storageBucket: "question-talk-ebd38.firebasestorage.app",
-  messagingSenderId: "1056303611894",
-  appId: "1:1056303611894:web:437eabc93b8960bac2d1d7",
-  measurementId: "G-PS7RZ3XJBC"
-};
+
 
 async function completeFirebaseMigration() {
   const mongoClient = new MongoClient(MONGODB_URI);
