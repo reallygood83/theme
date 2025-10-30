@@ -1,0 +1,67 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    
+    "teachers": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$userId": {
+        ".write": "$userId === auth.uid"
+      }
+    },
+    
+    "sessions": {
+      ".read": true,
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "createdAt", "accessCode"],
+      "$sessionId": {
+        ".read": true,
+        ".write": "auth != null",
+        "questions": {
+          ".read": true,
+          ".write": true
+        },
+        "studentAgendas": {
+          ".read": true,
+          ".write": true,
+          ".validate": "newData.hasChildren(['title', 'description']) && newData.child('title').val().length <= 300 && newData.child('description').val().length <= 1000"
+        },
+        "agendas": {
+          ".read": true,
+          ".write": "auth != null"
+        }
+      }
+    },
+    
+    "classes": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "teacherUid", "sessionCode"]
+    },
+    
+    "students": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["classId", "sessionCode"]
+    },
+    
+    "opinions": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId", "classId", "sessionCode", "studentId"]
+    },
+    
+    "notifications": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId"]
+    },
+    
+    "feedbackTemplates": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["teacherId"]
+    }
+  }
+}

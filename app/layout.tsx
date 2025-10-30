@@ -1,0 +1,44 @@
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
+import { AuthProvider } from '@/contexts/AuthContext'
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+export const metadata: Metadata = {
+  title: '질문톡톡! 논제샘솟!',
+  description: '학생들이 질문을 생성하고, AI가 토론 논제를 추천하는 교육용 웹 서비스',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: '질문톡톡! 논제샘솟!',
+  },
+}
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#4F46E5',
+}
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="ko" className={`${inter.variable} h-full`}>
+      <body className="h-full w-full m-0 p-0 overflow-x-hidden overflow-y-auto">
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
+  )
+}

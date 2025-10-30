@@ -1,0 +1,53 @@
+{
+  "name": "question-talk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "학생들이 질문을 생성하고, AI(Gemini 2.0 Flash)가 토론 논제를 추천하는 교육용 웹 서비스",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.2.0",
+    "@heroicons/react": "^2.2.0",
+    "@radix-ui/react-accordion": "^1.2.12",
+    "@radix-ui/react-avatar": "^1.1.10",
+    "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-progress": "^1.1.7",
+    "@radix-ui/react-select": "^2.2.6",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@radix-ui/react-tooltip": "^1.2.8",
+    "autoprefixer": "^10.4.16",
+    "dotenv": "^17.2.2",
+    "firebase": "^10.6.0",
+    "firebase-admin": "^13.5.0",
+    "lucide-react": "^0.543.0",
+    "mermaid": "^11.11.0",
+    "mongodb": "^6.19.0",
+    "mongoose": "^8.18.1",
+    "next": "^14.0.0",
+    "node-fetch": "^3.3.2",
+    "postcss": "^8.4.31",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-youtube": "^10.1.0",
+    "tailwindcss": "^3.3.0"
+  },
+  "devDependencies": {
+    "@radix-ui/react-slot": "^1.2.3",
+    "@types/node": "^20.8.10",
+    "@types/react": "^18.2.33",
+    "@types/react-dom": "^18.2.14",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "eslint": "^8.52.0",
+    "eslint-config-next": "^14.0.0",
+    "shadcn": "^3.2.1",
+    "tailwind-merge": "^3.3.1",
+    "typescript": "^5.2.2"
+  },
+  "packageManager": "pnpm@10.14.0+sha512.ad27a79641b49c3e481a16a805baa71817a04bbe06a38d17e60e2eaee83f6a146c6a688125f5792e48dd5ba30e7da52a5cda4c3992b9ccf333f9ce223af84748"
+}

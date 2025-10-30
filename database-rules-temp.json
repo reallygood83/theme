@@ -1,0 +1,27 @@
+{
+  "rules": {
+    ".read": true,
+    ".write": true,
+    "sessions": {
+      ".indexOn": ["teacherId", "createdAt", "accessCode"]
+    },
+    "questions": {
+      ".indexOn": ["sessionId", "createdAt"]
+    },
+    "session_participants": {
+      ".indexOn": ["sessionId"]
+    },
+    "session_opinions": {
+      ".indexOn": ["sessionId", "studentId"]
+    },
+    "debate_opinions": {
+      ".indexOn": ["sessionId", "teacherId"]
+    },
+    "shared-sessions": {
+      ".indexOn": ["teacherId", "createdAt", "shareType", "category", "targetGrade"]
+    },
+    "shared-scenarios": {
+      ".indexOn": ["teacherId", "createdAt"]
+    }
+  }
+}
