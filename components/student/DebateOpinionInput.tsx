@@ -170,15 +170,39 @@ export default function DebateOpinionInput({
       
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* 안내 메시지 - 모든 필드 필수 입력 */}
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded-r-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-blue-800">
+                  📝 토론 의견 제출 방법
+                </h3>
+                <div className="mt-2 text-sm text-blue-700">
+                  <p>토론 의견을 제출하려면 <strong>3가지를 모두</strong> 입력해야 합니다:</p>
+                  <ul className="list-disc list-inside mt-1 space-y-1">
+                    <li><strong>토론 논제</strong> - 토론할 주제를 입력하세요</li>
+                    <li><strong>나의 입장</strong> - 찬성 또는 반대를 선택하세요</li>
+                    <li><strong>나의 의견과 근거</strong> - 입장에 대한 이유를 설명하세요</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* 논제 직접 입력 */}
           <div>
             <label htmlFor="selectedAgenda" className="block text-sm font-bold text-emerald-800 mb-2 flex items-center">
-              🎯 토론 논제 입력
+              🎯 토론 논제 입력 <span className="text-red-500 ml-1">*</span>
             </label>
             <Input
               type="text"
               id="selectedAgenda"
-              className="bg-gradient-to-r from-emerald-50 to-white border-emerald-200 focus:border-emerald-400 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
+              className="bg-white border-2 border-emerald-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
               placeholder="토론할 논제를 직접 입력하세요 (예: 환경보호를 위해 일회용품 사용을 전면 금지해야 한다)"
               value={selectedAgenda}
               onChange={(e) => setSelectedAgenda(e.target.value)}
@@ -192,7 +216,7 @@ export default function DebateOpinionInput({
           {/* 찬성/반대 입장 선택 */}
           <div>
             <label className="block text-sm font-bold text-emerald-800 mb-3">
-              👍👎 나의 입장
+              👍👎 나의 입장 <span className="text-red-500 ml-1">*</span>
             </label>
             <div className="grid grid-cols-2 gap-4">
               <label className={`flex items-center justify-center p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -238,11 +262,11 @@ export default function DebateOpinionInput({
           {/* 의견 작성 */}
           <div>
             <label htmlFor="opinionText" className="block text-sm font-bold text-emerald-800 mb-2 flex items-center">
-              ✍️ 나의 의견과 근거
+              ✍️ 나의 의견과 근거 <span className="text-red-500 ml-1">*</span>
             </label>
             <Textarea
               id="opinionText"
-              className="bg-gradient-to-r from-emerald-50 to-white border-emerald-200 focus:border-emerald-400 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
+              className="bg-white border-2 border-emerald-300 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 text-gray-800 placeholder-gray-500"
               placeholder="나의 입장과 그 이유를 자세히 설명해주세요. 구체적인 예시나 근거를 포함하면 더 좋아요!"
               value={opinionText}
               onChange={(e) => setOpinionText(e.target.value)}
