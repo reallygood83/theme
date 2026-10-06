@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { ref, onValue, getDatabase, Database } from 'firebase/database'
 import { database } from '@/lib/firebase'
+import { parseJsonResponse } from '@/lib/api-response'
 import { initializeApp } from 'firebase/app'
 import { Button } from '../common/Button'
 import { Card } from '../common/Card'
@@ -180,7 +181,11 @@ export default function SessionManager({
         }),
       })
       
-      const result = await response.json()
+      const result = await parseJsonResponse<{
+        error?: string
+        success?: boolean
+        result?: { recommendedAgendas?: unknown[] }
+      }>(response)
       console.log('📊 AI 분석 결과:', result)
       
       if (!response.ok) {
