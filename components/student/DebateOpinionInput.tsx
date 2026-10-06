@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, FormEvent } from 'react'
-import { ref, push, set, get, getDatabase, Database } from 'firebase/database'
-import { database } from '@/lib/firebase'
-import { initializeApp } from 'firebase/app'
+import { parseJsonResponse } from '@/lib/api-response'
 import { Button } from '../ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Input } from '../ui/input'
@@ -33,18 +31,6 @@ export default function DebateOpinionInput({
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     
-    console.log('🚀 DebateOpinionInput 제출 시작:', {
-      sessionId: sessionId,
-      sessionCode: sessionCode,
-      studentName: studentName,
-      studentGroup: studentGroup,
-      selectedAgenda: selectedAgenda,
-      position: position,
-      opinionText길이: opinionText.trim().length,
-      sessionId타입: typeof sessionId,
-      sessionId길이: sessionId ? sessionId.length : 'null'
-    });
-    
     if (!opinionText.trim() || !selectedAgenda || !position) {
       alert('모든 항목을 입력해주세요.')
       return
@@ -53,82 +39,22 @@ export default function DebateOpinionInput({
     setIsSubmitting(true)
     
     try {
-      // Firebase 라이브러리가 정상적으로 초기화되었는지 확인
-      let db: Database | null = database;
-      
-      if (!db) {
-        const firebaseConfig = {
-          apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-          authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-          projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-          storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-          messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-          appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-          databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL || 
-            (process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID 
-              ? `https://${process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID}-default-rtdb.firebaseio.com` 
-              : undefined)
-        };
-        
-        if (!firebaseConfig.databaseURL) {
-          throw new Error('Firebase 설정이 완료되지 않았습니다. 환경 변수를 확인하세요.');
-        }
-        
-        const app = initializeApp(firebaseConfig);
-        db = getDatabase(app);
-      }
-      
-      // 토론 의견 데이터 구조
-      const opinionData = {
-        sessionId,
-        sessionCode, // 자동으로 전달받은 세션 코드
-        studentName,
-        studentGroup,
-        selectedAgenda,
-        position,
-        opinionText: opinionText.trim(),
-        createdAt: Date.now(),
-        timestamp: new Date().toISOString()
-      };
-      
-      // Firebase에 토론 의견 저장
-      const opinionsRef = ref(db, `sessions/${sessionId}/debateOpinions`);
-      const newOpinionRef = push(opinionsRef);
-      
-      console.log('🔥 토론 의견 저장 시도:', {
-        path: `sessions/${sessionId}/debateOpinions`,
-        sessionId,
-        sessionCode,
-        studentName,
-        studentGroup,
-        selectedAgenda,
-        position,
-        opinionData
-      });
-      
-      await set(newOpinionRef, opinionData);
-      
-      console.log('✅ 토론 의견 제출 성공! Firebase에 저장됨:', {
-        newOpinionKey: newOpinionRef.key,
-        sessionCode,
-        studentName,
-        studentGroup,
-        agenda: selectedAgenda,
-        position,
-        전체데이터: opinionData
-      });
-      
-      // 즉시 검증: 저장된 데이터가 실제로 Firebase에 있는지 확인
-      console.log('🔍 저장 검증 시작 - Firebase에서 다시 조회...');
-      const verifyRef = ref(db, `sessions/${sessionId}/debateOpinions/${newOpinionRef.key}`);
-      const verifySnapshot = await get(verifyRef);
-      
-      if (verifySnapshot.exists()) {
-        const savedData = verifySnapshot.val();
-        console.log('✅ 검증 완료 - 데이터가 Firebase에 정상 저장됨:', savedData);
-      } else {
-        console.log('❌ 검증 실패 - 저장된 데이터를 Firebase에서 찾을 수 없음!');
-        throw new Error('데이터 저장 검증 실패');
+      const response = await fetch('/api/debate-opinions/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          sessionCode,
+          studentName,
+          studentGroup,
+          selectedAgenda,
+          position,
+          opinionText: opinionText.trim(),
+        }),
+      })
+      const result = await parseJsonResponse<{ success: boolean; error?: string }>(response)
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '토론 의견 제출에 실패했습니다.')
       }
       
       // 입력 필드 초기화
@@ -143,8 +69,8 @@ export default function DebateOpinionInput({
       onOpinionSubmit()
       
     } catch (error) {
-      console.error('토론 의견 제출 오류:', error)
-      alert('토론 의견 제출에 실패했습니다. 다시 시도해주세요.')
+      console.error('토론 의견 제출 오류:', error instanceof Error ? error.message : 'Unknown error')
+      alert(error instanceof Error ? error.message : '토론 의견 제출에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
     }
