@@ -146,3 +146,73 @@ test('validates structured AI results before returning them to routes', async (t
   content = JSON.stringify({ terms: [{ term: 1, description: false }] })
   await assert.rejects(extractKeyTerms('학교 급식'), /핵심 용어 응답/)
 })
+
+test('requests strict JSON schemas for every structured Solar task', async (t) => {
+  const originalKey = process.env.UPSTAGE_API_KEY
+  const originalModel = process.env.UPSTAGE_MODEL
+  const originalFetch = globalThis.fetch
+  t.after(() => {
+    if (originalKey === undefined) delete process.env.UPSTAGE_API_KEY
+    else process.env.UPSTAGE_API_KEY = originalKey
+    if (originalModel === undefined) delete process.env.UPSTAGE_MODEL
+    else process.env.UPSTAGE_MODEL = originalModel
+    globalThis.fetch = originalFetch
+  })
+
+  process.env.UPSTAGE_API_KEY = 'test-placeholder-key'
+  const cases = [
+    {
+      name: 'question_clusters',
+      rootField: 'clusters',
+      fields: ['clusterId', 'clusterTitle', 'clusterSummary', 'questions', 'combinationGuide'],
+      run: () => clusterQuestions(['급식 메뉴는 어떻게 정할까?']),
+      output: { clusters: [{
+        clusterId: '1',
+        clusterTitle: '급식 선택',
+        clusterSummary: '급식 메뉴 결정에 관한 질문',
+        questions: ['급식 메뉴는 어떻게 정할까?'],
+        combinationGuide: '함께 논의할 수 있습니다.',
+      }] },
+    },
+    {
+      name: 'debate_agendas',
+      rootField: 'agendas',
+      fields: ['agendaId', 'agendaTitle', 'reason', 'type'],
+      run: () => recommendAgendas([], []),
+      output: { agendas: [{ agendaId: '1', agendaTitle: '논제', reason: '이유', type: '찬반형' }] },
+    },
+    {
+      name: 'key_terms',
+      rootField: 'terms',
+      fields: ['term', 'description'],
+      run: () => extractKeyTerms('학교 급식'),
+      output: { terms: [{ term: '영양', description: '설명' }] },
+    },
+  ]
+
+  for (const model of ['solar-pro4', 'solar-mini4']) {
+    process.env.UPSTAGE_MODEL = model
+    for (const task of cases) {
+      let capturedRequest
+      globalThis.fetch = async (_url, init) => {
+        capturedRequest = JSON.parse(init.body)
+        return new Response(JSON.stringify({
+          choices: [{ message: { content: JSON.stringify(task.output) } }],
+        }), { status: 200 })
+      }
+
+      await task.run()
+      assert.equal(capturedRequest.model, model)
+      assert.equal(capturedRequest.response_format.type, 'json_schema')
+
+      const { name, strict, schema } = capturedRequest.response_format.json_schema
+      assert.equal(name, task.name)
+      assert.equal(strict, true)
+      assert.equal(schema.type, 'object')
+      assert.equal(schema.additionalProperties, false)
+      assert.deepEqual(schema.required, [task.rootField])
+      assert.equal(schema.properties[task.rootField].items.additionalProperties, false)
+      assert.deepEqual(schema.properties[task.rootField].items.required, task.fields)
+    }
+  }
+})

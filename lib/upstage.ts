@@ -2,6 +2,15 @@ const UPSTAGE_CHAT_COMPLETIONS_URL = 'https://api.upstage.ai/v1/chat/completions
 
 export type UpstageModel = 'solar-pro4' | 'solar-mini4'
 
+type UpstageResponseFormat = {
+  type: 'json_schema'
+  json_schema: {
+    name: string
+    strict: true
+    schema: Record<string, unknown>
+  }
+}
+
 export class UpstageError extends Error {
   public readonly statusCode: number
 
@@ -20,7 +29,11 @@ export function getUpstageModel(): UpstageModel {
   return model
 }
 
-export async function generateUpstageContent(prompt: string, maxTokens?: number): Promise<string> {
+export async function generateUpstageContent(
+  prompt: string,
+  maxTokens?: number,
+  responseFormat?: UpstageResponseFormat
+): Promise<string> {
   const apiKey = process.env.UPSTAGE_API_KEY?.trim()
   if (!apiKey) {
     throw new UpstageError('Upstage API 키가 설정되지 않았습니다. Vercel의 UPSTAGE_API_KEY를 확인해주세요.', 503)
@@ -39,6 +52,7 @@ export async function generateUpstageContent(prompt: string, maxTokens?: number)
         model,
         messages: [{ role: 'user', content: prompt }],
         ...(maxTokens === undefined ? {} : { max_tokens: maxTokens }),
+        ...(responseFormat === undefined ? {} : { response_format: responseFormat }),
       }),
     })
   } catch {
@@ -67,6 +81,78 @@ export async function generateUpstageContent(prompt: string, maxTokens?: number)
     throw new UpstageError('Upstage API 응답에 생성된 내용이 없습니다.', 502)
   }
   return content
+}
+
+const questionClustersSchema: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    clusters: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          clusterId: { type: 'string' },
+          clusterTitle: { type: 'string' },
+          clusterSummary: { type: 'string' },
+          questions: { type: 'array', items: { type: 'string' } },
+          combinationGuide: { type: 'string' },
+        },
+        required: ['clusterId', 'clusterTitle', 'clusterSummary', 'questions', 'combinationGuide'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['clusters'],
+  additionalProperties: false,
+}
+
+const debateAgendasSchema: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    agendas: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          agendaId: { type: 'string' },
+          agendaTitle: { type: 'string' },
+          reason: { type: 'string' },
+          type: { type: 'string', enum: ['찬반형', '원인탐구형', '문제해결형', '가치판단형'] },
+        },
+        required: ['agendaId', 'agendaTitle', 'reason', 'type'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['agendas'],
+  additionalProperties: false,
+}
+
+const keyTermsSchema: Record<string, unknown> = {
+  type: 'object',
+  properties: {
+    terms: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          term: { type: 'string' },
+          description: { type: 'string' },
+        },
+        required: ['term', 'description'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['terms'],
+  additionalProperties: false,
+}
+
+function generateStructuredUpstageContent(prompt: string, name: string, schema: Record<string, unknown>) {
+  return generateUpstageContent(prompt, undefined, {
+    type: 'json_schema',
+    json_schema: { name, strict: true, schema },
+  })
 }
 
 function parseStructuredResponse<T extends object>(response: string): T {
@@ -147,17 +233,18 @@ export async function clusterQuestions(questions: string[]) {
       "clusterId": "1",
       "clusterTitle": "그룹 요약 제목",
       "clusterSummary": "그룹에 포함된 질문들의 공통 주제 요약",
-      "questions": ["질문1", "질문2", ...],
+      "questions": ["질문1", "질문2"],
       "combinationGuide": "이 그룹의 질문들은 내용이 유사하여 함께 논의하거나 하나의 질문으로 합쳐볼 수 있습니다."
     },
-    ... 더 많은 클러스터
   ]
 }
 
 질문 목록:
 ${questions.map((question, index) => `${index + 1}. ${question}`).join('\n')}
 `
-  const result = parseStructuredResponse<{ clusters: QuestionCluster[] }>(await generateUpstageContent(prompt))
+  const result = parseStructuredResponse<{ clusters: QuestionCluster[] }>(
+    await generateStructuredUpstageContent(prompt, 'question_clusters', questionClustersSchema)
+  )
   if (!Array.isArray(result.clusters) || result.clusters.length === 0 || !result.clusters.every(isQuestionCluster)) {
     throw new UpstageError('Upstage API의 질문 분류 응답이 올바르지 않습니다.', 502)
   }
@@ -189,17 +276,20 @@ export async function recommendAgendas(clusters: QuestionCluster[], keywords: st
       "agendaId": "1",
       "agendaTitle": "토론 논제 문장",
       "reason": "이 논제를 추천하는 이유와 어떤 질문 그룹에서 도출되었는지 (1-2문장)",
-      "type": "찬반형" (또는 "원인탐구형", "문제해결형", "가치판단형" 중 하나)
+      "type": "찬반형"
     },
-    ... 더 많은 논제
   ]
 }
+
+논제 유형은 찬반형, 원인탐구형, 문제해결형, 가치판단형 중 하나로 작성해주세요.
 
 학생 질문 유형 분석 결과:
 ${clusterSummaries}
 ${keywordsText}
 `
-  const result = parseStructuredResponse<{ agendas: Agenda[] }>(await generateUpstageContent(prompt))
+  const result = parseStructuredResponse<{ agendas: Agenda[] }>(
+    await generateStructuredUpstageContent(prompt, 'debate_agendas', debateAgendasSchema)
+  )
   if (!Array.isArray(result.agendas) || result.agendas.length === 0 || !result.agendas.every(isAgenda)) {
     throw new UpstageError('Upstage API의 논제 추천 응답이 올바르지 않습니다.', 502)
   }
@@ -218,13 +308,14 @@ export async function extractKeyTerms(agenda: string) {
       "term": "용어1",
       "description": "이 용어가 논제에서 중요한 이유에 대한 짧은 설명"
     },
-    ... 더 많은 용어
   ]
 }
 
 논제: "${agenda}"
 `
-  const result = parseStructuredResponse<{ terms: KeyTerm[] }>(await generateUpstageContent(prompt))
+  const result = parseStructuredResponse<{ terms: KeyTerm[] }>(
+    await generateStructuredUpstageContent(prompt, 'key_terms', keyTermsSchema)
+  )
   if (!Array.isArray(result.terms) || result.terms.length === 0 || !result.terms.every(isKeyTerm)) {
     throw new UpstageError('Upstage API의 핵심 용어 응답이 올바르지 않습니다.', 502)
   }
