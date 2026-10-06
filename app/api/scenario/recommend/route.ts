@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateUpstageContent } from '@/lib/upstage'
 
 const OPENAI_CONFIG = {
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,77 +8,34 @@ const OPENAI_CONFIG = {
   maxTokens: 2500
 }
 
-// Gemini API 설정 (백업용)
-const GEMINI_CONFIG = {
-  apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY,
-  model: 'gemini-pro',
-  temperature: 0.7
-}
-
-// AI API 호출 함수 (OpenAI 우선, Gemini 백업)
 async function callAI(prompt: string) {
   console.log('🚀 AI 주제 추천 호출 시작...')
   
   // OpenAI API 시도
-  if (OPENAI_CONFIG.apiKey) {
+  if (OPENAI_CONFIG.apiKey && !process.env.UPSTAGE_API_KEY?.trim()) {
     try {
       return await callOpenAI(prompt)
     } catch (error) {
-      console.log('OpenAI 실패, Gemini로 전환:', error)
+      console.log('OpenAI fallback 실패:', error)
     }
   }
   
-  // Gemini API 시도
-  if (GEMINI_CONFIG.apiKey) {
+  if (process.env.UPSTAGE_API_KEY?.trim()) {
     try {
-      return await callGemini(prompt)
+      return await generateUpstageContent(prompt, OPENAI_CONFIG.maxTokens)
     } catch (error) {
-      console.log('Gemini도 실패:', error)
+      console.log('Upstage도 실패:', error)
+      if (OPENAI_CONFIG.apiKey) {
+        try {
+          return await callOpenAI(prompt)
+        } catch (fallbackError) {
+          console.log('OpenAI fallback도 실패:', fallbackError)
+        }
+      }
     }
   }
   
   throw new Error('사용 가능한 AI API가 없습니다')
-}
-
-// Gemini API 호출 함수
-async function callGemini(prompt: string) {
-  console.log('🚀 Gemini API 호출...')
-  
-  if (!GEMINI_CONFIG.apiKey) {
-    throw new Error('Gemini API 키가 설정되지 않았습니다')
-  }
-
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_CONFIG.model}:generateContent?key=${GEMINI_CONFIG.apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `당신은 초등학교 토론 교육 전문가입니다. 초등토론교육모형의 철학과 4단계 과정을 완벽히 이해하고 있으며, 학생들의 비판적 사고력과 의사소통 능력을 향상시키는 토론 시나리오를 만들어냅니다.\n\n${prompt}`
-          }]
-        }],
-        generationConfig: {
-          temperature: GEMINI_CONFIG.temperature,
-          maxOutputTokens: 2500
-        }
-      })
-    })
-
-    if (!response.ok) {
-      throw new Error(`Gemini API 오류: ${response.status}`)
-    }
-
-    const data = await response.json()
-    console.log('✅ Gemini 주제 추천 응답 성공')
-    return data.candidates[0].content.parts[0].text
-    
-  } catch (error) {
-    console.error('❌ Gemini API 호출 실패:', error)
-    throw error
-  }
 }
 
 // OpenAI API 호출 함수

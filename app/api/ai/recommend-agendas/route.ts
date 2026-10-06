@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { database } from '@/lib/firebase'
 import { ref, push, set, get } from 'firebase/database'
-import { generateContent } from '@/lib/gemini'
+import { generateContent, UpstageError } from '@/lib/upstage'
 
 // 학생용 AI 논제 추천 API
 export async function POST(request: NextRequest) {
@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Gemini 모델을 사용하여 토론 논제 생성
     let prompt = '';
     
     if (useQuestions && studentQuestions.length > 0) {
@@ -264,8 +263,8 @@ JSON 형식만 반환하세요. 추가 설명이나 다른 텍스트는 포함�
   } catch (error) {
     console.error('AI 논제 추천 API 오류:', error)
     return NextResponse.json(
-      { error: '논제 추천 처리 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { error: error instanceof UpstageError ? error.message : '논제 추천 처리 중 오류가 발생했습니다.' },
+      { status: error instanceof UpstageError ? error.statusCode : 500 }
     )
   }
 }

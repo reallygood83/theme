@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { generateUpstageContent } from '@/lib/upstage'
 
 interface ScenarioRequest {
   topic: string
@@ -57,7 +58,6 @@ interface ScenarioResponse {
   fallbackReason?: string
 }
 
-// GPT-4o API 호출 함수 (참고 구현체 기반 고품질 버전)
 async function callOpenAI(prompt: string) {
   if (!process.env.OPENAI_API_KEY) {
     throw new Error('OpenAI API key not configured')
@@ -110,6 +110,19 @@ async function callOpenAI(prompt: string) {
 
   const data = await response.json()
   return data.choices[0].message.content
+}
+
+async function callScenarioAI(prompt: string) {
+  if (process.env.UPSTAGE_API_KEY?.trim()) {
+    try {
+      const upstagePrompt = `초등학교 토론 교육 전문가로서 아래 요청에 맞는 완성도 높은 시나리오를 작성하고, 반드시 완전한 JSON만 반환해주세요.\n\n${prompt}`
+      return await generateUpstageContent(upstagePrompt, 4000)
+    } catch (error) {
+      console.error('Upstage API 호출 실패:', error)
+    }
+  }
+  if (process.env.OPENAI_API_KEY) return callOpenAI(prompt)
+  throw new Error('사용 가능한 AI API가 없습니다')
 }
 
 // 교육 목적별 가이드라인 생성
@@ -425,9 +438,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // OpenAI API 사용 가능 여부 확인
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('⚠️ OpenAI API 키가 설정되지 않았습니다. 오프라인 모드로 동작합니다.')
+    if (!process.env.UPSTAGE_API_KEY?.trim() && !process.env.OPENAI_API_KEY) {
+      console.warn('⚠️ AI API 키가 설정되지 않았습니다. 오프라인 모드로 동작합니다.')
       const offlineScenario = getOfflineScenarioTemplate(topic, purpose, grade, timeLimit)
       
       return NextResponse.json({
@@ -442,9 +454,9 @@ export async function POST(request: NextRequest) {
       const prompt = generateScenarioPrompt(topic, purpose, grade, timeLimit, additionalInfo)
       console.log('📝 생성된 프롬프트 (요약):', prompt.substring(0, 200) + '...')
       
-      console.log('🤖 OpenAI API 호출 시작...')
-      const response = await callOpenAI(prompt)
-      console.log('✅ OpenAI API 응답 받음')
+      console.log('🤖 AI 시나리오 생성 API 호출 시작...')
+      const response = await callScenarioAI(prompt)
+      console.log('✅ AI 시나리오 생성 API 응답 받음')
       
       const scenario = parseScenarioResponse(response, topic, purpose, grade, timeLimit)
       
@@ -457,7 +469,7 @@ export async function POST(request: NextRequest) {
       })
       
     } catch (apiError) {
-      console.error('❌ OpenAI API 호출 실패:', apiError)
+      console.error('❌ AI 시나리오 생성 API 호출 실패:', apiError)
       console.log('🔄 오프라인 모드로 전환...')
       
       const offlineScenario = getOfflineScenarioTemplate(topic, purpose, grade, timeLimit)
@@ -486,12 +498,12 @@ export async function POST(request: NextRequest) {
 
 // GET 요청으로 API 상태 확인
 export async function GET() {
-  const hasOpenAIKey = !!process.env.OPENAI_API_KEY
+  const hasAIProvider = Boolean(process.env.UPSTAGE_API_KEY?.trim() || process.env.OPENAI_API_KEY)
   
   return NextResponse.json({
     status: 'active',
     features: {
-      ai_generation: hasOpenAIKey ? 'available' : 'offline_only',
+      ai_generation: hasAIProvider ? 'available' : 'offline_only',
       offline_templates: 'available'
     },
     purposes: ['비판적 사고력', '의사소통 능력', '다양한 관점 이해', '민주적 의사결정', '창의적 문제해결'],

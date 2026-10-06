@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAdminDatabase } from '@/lib/firebase-admin'
-import { clusterQuestions, recommendAgendas, extractKeyTerms } from '@/lib/gemini'
+import { clusterQuestions, recommendAgendas, extractKeyTerms, UpstageError } from '@/lib/upstage'
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     const agendasResult = await recommendAgendas(clusteringResult.clusters, data.keywords || [])
     
     // 3. 주요 용어 추출 (첫 번째 논제 기준)
-    let termsResult = { terms: [] }
+    let termsResult: { terms: Array<{ term: string; description: string }> } = { terms: [] }
     if (agendasResult.agendas && agendasResult.agendas.length > 0) {
       termsResult = await extractKeyTerms(agendasResult.agendas[0].agendaTitle)
     }
@@ -54,8 +54,8 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('AI 분석 오류:', error)
     return NextResponse.json(
-      { error: '질문 분석에 실패했습니다.' }, 
-      { status: 500 }
+      { error: error instanceof UpstageError ? error.message : '질문 분석에 실패했습니다.' },
+      { status: error instanceof UpstageError ? error.statusCode : 500 }
     )
   }
 }

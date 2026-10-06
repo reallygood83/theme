@@ -7,6 +7,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getUpstageModel } from '@/lib/upstage';
 import { createSharedTopic } from '@/lib/shared-db';
 
 /**
@@ -148,7 +149,7 @@ export async function POST(request: NextRequest) {
       // AI 관련 정보
       aiGenerated: data.aiGenerated || false,
       originalPrompt: data.originalPrompt,
-      aiModel: data.aiModel || 'gemini-1.5',
+      aiModel: data.aiModel || getUpstageModel(),
       generatedAt: data.aiGenerated ? Date.now() : undefined,
       
       // 토론 정보

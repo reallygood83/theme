@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { getUpstageModel } from '@/lib/upstage';
 import { createSharedTopic, SharedTopic } from '@/lib/shared-db';
 
 interface CreateTopicRequest {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
       // AI 관련 정보
       aiGenerated: body.aiGenerated || true, // AI 시나리오 생성기에서 오는 경우 기본값
       originalPrompt: body.originalPrompt || undefined,
-      aiModel: 'gemini-pro',
+      aiModel: getUpstageModel(),
       generatedAt: Date.now(),
       
       // 토론 정보

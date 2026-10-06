@@ -2,7 +2,7 @@
   "name": "question-talk",
   "version": "0.1.0",
   "private": true,
-  "description": "학생들이 질문을 생성하고, AI(Gemini 2.0 Flash)가 토론 논제를 추천하는 교육용 웹 서비스",
+  "description": "학생들이 질문을 생성하고, Upstage Solar AI가 토론 논제를 추천하는 교육용 웹 서비스",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -10,7 +10,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.2.0",
     "@heroicons/react": "^2.2.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-avatar": "^1.1.10",

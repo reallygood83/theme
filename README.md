@@ -6,16 +6,16 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue)](https://www.typescriptlang.org/)
 [![Firebase](https://img.shields.io/badge/Firebase-orange)](https://firebase.google.com/)
-[![Gemini AI](https://img.shields.io/badge/Gemini-AI-purple)](https://ai.google.dev/)
+[![Upstage Solar](https://img.shields.io/badge/Upstage-Solar-purple)](https://console.upstage.ai/docs)
 
 ## 🚀 프로젝트 개요
 
-**질문톡톡! 논제샘솟!**은 초등•중등 교육을 위한 차세대 AI 기반 토론 교육 플랫폼입니다. 학생들이 다양한 학습 자료를 보고 자발적으로 생성한 질문을 Google Gemini AI가 분석하여, 교육 목표에 맞는 창의적이고 의미 있는 토론 논제를 실시간으로 생성합니다.
+**질문톡톡! 논제샘솟!**은 초등•중등 교육을 위한 차세대 AI 기반 토론 교육 플랫폼입니다. 학생들이 다양한 학습 자료를 보고 자발적으로 생성한 질문을 Upstage Solar AI가 분석하여, 교육 목표에 맞는 창의적이고 의미 있는 토론 논제를 실시간으로 생성합니다.
 
 ### ✨ 핵심 가치
 - 🎯 **학생 중심**: 학생들의 자발적 질문이 토론 주제의 출발점
 - ⚡ **실시간 협업**: Firebase 기반 즉시 데이터 동기화
-- 🤖 **AI 지원**: Gemini AI의 교육적 분석과 맞춤형 추천
+- 🤖 **AI 지원**: Upstage Solar AI의 교육적 분석과 맞춤형 추천
 - 📱 **접근성**: 별도 앱 설치 없이 웹브라우저에서 바로 이용
 - 👥 **협력 학습**: 실시간 질문 공유와 집단 지성 활용
 
@@ -37,7 +37,7 @@
 - **🤖 AI 지원 도구**: 논제 추천, 용어 정의, 논제 검증 기능
 - **❓ 질문 도우미**: 4가지 관점(시간/공간/사회/윤리)으로 사고 확장
 
-### 🧠 AI 핵심 기능 (Google Gemini)
+### 🧠 AI 핵심 기능 (Upstage Solar)
 - **📊 질문 분석**: 학생 질문의 의미와 맥락 분석
 - **🔗 질문 유목화**: 제출된 질문들을 주제별로 자동 그룹화
 - **🎯 맞춤형 논제 생성**: 질문 패턴 기반 토론 주제 추천
@@ -62,7 +62,7 @@
 - **🌐 API Routes**: Next.js Server-side API
 
 ### AI & External Services  
-- **🧠 AI Model**: Google Gemini API
+- **🧠 AI Model**: Upstage Solar Chat Completions API
 - **📺 Video**: YouTube Data API v3
 - **🔍 Search**: Web Scraping for link previews
 
@@ -77,7 +77,7 @@
 ### 📋 필수 조건
 - **Node.js**: 18.x 이상 권장
 - **Firebase 프로젝트**: Realtime Database, Auth, Storage 설정
-- **Google Gemini API 키**: AI 기능 사용
+- **Upstage API 키**: 질문 분석, 논제 추천, AI 피드백 기능 사용
 - **YouTube Data API 키**: 영상 자료 지원 (선택)
 - **Git**: 소스코드 관리
 
@@ -107,9 +107,12 @@ cp .env.local.example .env.local
 필수 환경 변수:
 
 ```
-# AI API 설정 (둘 중 하나 이상 필요)
+# Upstage Solar API (필수, 서버 전용)
+UPSTAGE_API_KEY=your_upstage_api_key_here
+UPSTAGE_MODEL=solar-pro4
+
+# OpenAI는 Upstage 장애 시 사용할 선택적 fallback
 OPENAI_API_KEY=your_openai_api_key_here
-GEMINI_API_KEY=your_gemini_api_key_here
 
 # Firebase 설정 (필수)
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
@@ -122,7 +125,8 @@ NEXT_PUBLIC_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 ```
 
 **🚨 환경 설정 주의사항**:
-- **Gemini API**: 기본 AI 서비스 (필수)
+- **Upstage Solar API**: 기본 AI 서비스 (필수). `UPSTAGE_MODEL`은 `solar-pro4`(기본값) 또는 `solar-mini4`로 설정
+- **OpenAI API**: Upstage 호출 실패 시 시나리오 기능의 선택적 fallback
 - **YouTube API**: 영상 자료 지원용 (선택적)
 - **Firebase 설정**: [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트 생성 후 설정값 복사
 - **보안 규칙**: Realtime Database에 교사별 데이터 격리 규칙 적용
@@ -182,7 +186,8 @@ npm run dev
 
 3. **환경 변수 설정** (Vercel 대시보드에서)
    ```env
-   GEMINI_API_KEY=your_gemini_api_key
+   UPSTAGE_API_KEY=your_upstage_api_key
+   UPSTAGE_MODEL=solar-pro4
    YOUTUBE_API_KEY=your_youtube_api_key  # 선택적
    NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_config
    # ... 기타 Firebase 설정값

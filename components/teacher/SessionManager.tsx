@@ -215,7 +215,7 @@ export default function SessionManager({
       // 구체적인 오류 메시지 표시
       if (error instanceof Error) {
         if (error.message.includes('API 키')) {
-          alert('⚠️ AI 분석을 위한 Gemini API 키가 설정되지 않았습니다.\n\n관리자에게 문의하여 API 키를 설정해주세요.')
+          alert('⚠️ AI 분석을 위한 Upstage API 키가 설정되지 않았습니다.\n\n관리자에게 문의하여 API 키를 설정해주세요.')
         } else {
           alert(`분석 중 오류가 발생했습니다:\n${error.message}\n\n다시 시도해주세요.`)
         }

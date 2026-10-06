@@ -192,7 +192,7 @@ export default function GuidePage() {
                 <div className="space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
-                    Google Gemini AI 활용
+                    Upstage Solar AI 활용
                   </div>
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-green-500" />
@@ -583,7 +583,7 @@ export default function GuidePage() {
                           <Brain className="w-8 h-8 text-purple-600" />
                         </div>
                         <h4 className="font-bold text-gray-800 mb-1">AI 분석</h4>
-                        <p className="text-xs text-gray-600">Gemini AI를 통한 패턴 분석</p>
+                        <p className="text-xs text-gray-600">Upstage Solar AI를 통한 패턴 분석</p>
                       </div>
                       <ArrowRight className="w-6 h-6 text-purple-400 mx-auto mt-4 hidden md:block transform rotate-90 md:rotate-0" />
                     </div>
@@ -668,7 +668,7 @@ export default function GuidePage() {
                   <CardContent>
                     <div className="space-y-4">
                       <div className="bg-blue-50 p-3 rounded-lg">
-                        <p className="font-medium text-blue-800">Google Gemini AI 활용</p>
+                        <p className="font-medium text-blue-800">Upstage Solar AI 활용</p>
                         <p className="text-sm text-blue-600 mt-1">최신 언어모델 기반 정교한 분석</p>
                       </div>
                       <div className="space-y-2 text-sm text-gray-600">

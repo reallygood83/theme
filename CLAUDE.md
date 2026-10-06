@@ -19,7 +19,8 @@
 - **호스팅**: Firebase Hosting
 
 ### 2.3 AI 기능
-- **AI 모델**: Google Gemini API
+- **AI 모델**: Upstage Solar Chat Completions (`solar-pro4` 기본값, `solar-mini4` 선택 가능)
+- **API 키**: `UPSTAGE_API_KEY` 서버 전용 환경 변수
 - **기능**: 질문 분석, 논제 추천, 용어 정의, 논제 검증
 
 ## 3. 구현된 주요 기능
@@ -45,7 +46,7 @@
 - **학습 자료 열람**: 토글 UI로 필요시에만 자료 확인
 
 ### 3.4 AI 지원 기능
-- **질문 분석**: Gemini API를 통한 질문 내용 분석
+- **질문 분석**: Upstage Solar API를 통한 질문 내용 분석
 - **논제 추천**: 질문을 기반으로 한 토론 주제 제안
 - **용어 정의**: 복잡한 개념에 대한 쉬운 설명 제공
 - **논제 검증**: 토론하기 적합한 주제인지 평가
@@ -122,7 +123,7 @@ question-talk/
 ├── lib/                          # 유틸리티 및 설정
 │   ├── auth.ts
 │   ├── firebase.ts
-│   ├── gemini.ts
+│   ├── upstage.ts
 │   └── utils.ts
 └── public/                       # 정적 파일
     └── icons/
@@ -142,7 +143,7 @@ question-talk/
 - 질문 제출 시 실시간 업데이트
 - 교사별 데이터 필터링 구현
 
-### 5.3 AI 통합 (Gemini API)
+### 5.3 AI 통합 (Upstage Solar API)
 - 질문 분석 및 논제 추천 기능
 - 용어 정의 및 논제 검증
 - 안전한 API 키 관리 (서버사이드)
@@ -240,7 +241,7 @@ question-talk/
 
 ### 10.1 혁신적 요소
 - **실시간 협업**: Firebase를 통한 즉시 데이터 동기화
-- **AI 통합**: Gemini API를 활용한 교육 지원
+- **AI 통합**: Upstage Solar API를 활용한 교육 지원
 - **사용자 중심 설계**: 교사와 학생 모두를 고려한 UX
 - **다중 자료 지원**: 다양한 형태의 학습 자료 활용
 

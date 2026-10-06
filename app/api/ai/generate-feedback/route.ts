@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY!)
+import { generateUpstageContent, UpstageError } from '@/lib/upstage'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +11,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const prompt = `
 다음은 학생이 제출한 토론 의견과 교사의 피드백입니다.
@@ -39,8 +35,7 @@ ${teacherFeedback || '(교사 피드백 없음)'}
 한국어로 답변해주세요.
 `
 
-    const result = await model.generateContent(prompt)
-    const feedback = result.response.text().trim()
+    const feedback = (await generateUpstageContent(prompt)).trim()
 
     return NextResponse.json({
       success: true,
@@ -49,8 +44,8 @@ ${teacherFeedback || '(교사 피드백 없음)'}
   } catch (error) {
     console.error('Error generating AI feedback:', error)
     return NextResponse.json(
-      { success: false, error: 'AI 피드백 생성 중 오류가 발생했습니다.' },
-      { status: 500 }
+      { success: false, error: error instanceof UpstageError ? error.message : 'AI 피드백 생성 중 오류가 발생했습니다.' },
+      { status: error instanceof UpstageError ? error.statusCode : 500 }
     )
   }
 }
