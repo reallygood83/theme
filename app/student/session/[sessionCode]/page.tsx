@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react';
 import { useRouter } from 'next/navigation'
 import Header from '@/components/common/Header'
 import Breadcrumb from '@/components/common/Breadcrumb'
@@ -25,15 +25,16 @@ import { Session, extractYoutubeVideoId } from '@/lib/utils'
 import type { EvidenceResult } from '@/lib/types/evidence'
 
 interface StudentSessionPageProps {
-  params: {
+  params: Promise<{
     sessionCode: string
-  }
+  }>
 }
 
-export default function StudentSessionPage({ params }: StudentSessionPageProps) {
+export default function StudentSessionPage(props: StudentSessionPageProps) {
+  const params = use(props.params);
   const { sessionCode } = params
   const router = useRouter()
-  
+
   const [studentName, setStudentName] = useState('')
   const [studentGroup, setStudentGroup] = useState('')
   const [hasJoined, setHasJoined] = useState(false)
@@ -43,22 +44,22 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
   const [error, setError] = useState<string | null>(null)
   const [showAnalysisResult, setShowAnalysisResult] = useState(false)
   const [isMaterialsExpanded, setIsMaterialsExpanded] = useState(false) // 기본적으로 접힌 상태
-  
+
   // AI 논제 추천 관련 상태
   const [showAgendaRecommender, setShowAgendaRecommender] = useState(false)
   const [isGeneratingAgendas, setIsGeneratingAgendas] = useState(false)
   const [studentAgendas, setStudentAgendas] = useState<any[]>([])
   const [debugInfo, setDebugInfo] = useState<string[]>([])
-  
+
   // 근거자료 검색 상태 (공통 컴포넌트 사용)
   const [isEvidenceSearchModalOpen, setIsEvidenceSearchModalOpen] = useState(false)
-  
+
   // 디버깅 정보 추가 함수
   const addDebugInfo = (message: string) => {
     console.log(message);
     setDebugInfo(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   }
-  
+
   // 세션 코드로 세션 정보 조회
   useEffect(() => {
     addDebugInfo('=== 세션 조회 시작 ===');
@@ -291,7 +292,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       clearTimeout(timeoutId);
     };
   }, [sessionCode, studentName, studentGroup])
-  
+
   const handleJoinSession = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -314,7 +315,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
     
     console.log('세션 참여 정보:', { 이름: trimmedName, 모둠: trimmedGroup });
   }
-  
+
   // 세션 스토리지에서 참여 정보 복원
   useEffect(() => {
     const savedName = sessionStorage.getItem(`session_${sessionCode}_name`) || '';
@@ -329,7 +330,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       console.log('저장된 세션 정보 없음');
     }
   }, [sessionCode])
-  
+
   // AI 논제 추천 요청 처리
   const handleRequestAgendas = async (topic: string, description: string, useQuestions: boolean = false) => {
     if (!sessionId || (!topic && !useQuestions)) return
@@ -391,14 +392,14 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       setIsGeneratingAgendas(false)
     }
   }
-  
+
   // 근거자료 검색 요청 처리
   // 근거자료 검색 모달 열기 (공통 컴포넌트 사용)
   const handleOpenEvidenceSearch = () => {
     setIsEvidenceSearchModalOpen(true)
   }
-  
-  
+
+
   if (loading) {
     return (
       <>
@@ -440,7 +441,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       </>
     )
   }
-  
+
   if (error || !session) {
     return (
       <>
@@ -495,7 +496,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       </>
     )
   }
-  
+
   if (!hasJoined) {
     return (
       <>
@@ -561,7 +562,7 @@ export default function StudentSessionPage({ params }: StudentSessionPageProps) 
       </>
     )
   }
-  
+
   return (
     <>
       <Header />

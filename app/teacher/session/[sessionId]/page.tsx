@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, use } from 'react';
 import { useSearchParams } from 'next/navigation'
 import DebateHeader from '@/components/debate/DebateHeader'
 import RequireAuth from '@/components/auth/RequireAuth'
@@ -11,20 +11,21 @@ import { initializeApp } from 'firebase/app'
 import { Session } from '@/lib/utils'
 
 interface SessionPageProps {
-  params: {
+  params: Promise<{
     sessionId: string
-  }
+  }>
 }
 
-export default function SessionPage({ params }: SessionPageProps) {
+export default function SessionPage(props: SessionPageProps) {
+  const params = use(props.params);
   const { sessionId } = params
   const searchParams = useSearchParams()
   const sessionCode = searchParams.get('code') || ''
-  
+
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   useEffect(() => {
     const fetchSession = async () => {
       try {
@@ -85,7 +86,7 @@ export default function SessionPage({ params }: SessionPageProps) {
     
     fetchSession()
   }, [sessionId])
-  
+
   return (
     <RequireAuth>
       <DebateHeader 
