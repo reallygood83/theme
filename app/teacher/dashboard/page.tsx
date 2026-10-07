@@ -43,18 +43,18 @@ function TeacherDashboardContent() {
       
       // 현재 사용자의 ID 가져오기
       const currentUserId = getCurrentUserId()
-      if (!currentUserId) {
-        console.log('사용자 ID가 없어서 세션 조회 중단')
+      if (!currentUserId || !user) {
         setSessions([])
         setLoading(false)
         return
       }
-      
-      console.log('API로 전송할 teacherId:', currentUserId)
+
+      const idToken = await user.getIdToken()
       
       const response = await fetch(`/api/sessions/list?teacherId=${encodeURIComponent(currentUserId)}`, {
         cache: 'no-store',
         headers: {
+          Authorization: `Bearer ${idToken}`,
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache',
           'Expires': '0'
@@ -64,19 +64,11 @@ function TeacherDashboardContent() {
       
       if (!response.ok) {
         const errorData = await response.json()
-        console.error('세션 목록 조회 오류:', errorData)
+        console.error('세션 목록 조회 오류:', response.status, errorData.error)
         throw new Error('세션 목록을 불러오는데 실패했습니다.')
       }
       
       const data = await response.json()
-      console.log('받아온 세션 데이터:', data)
-      console.log('세션 개수:', data.sessions?.length || 0)
-      
-      // 각 세션의 ID 목록 출력 (디버깅용)
-      if (data.sessions && data.sessions.length > 0) {
-        const sessionIds = data.sessions.map((s: Session) => s.sessionId)
-        console.log('조회된 세션 ID 목록:', sessionIds)
-      }
       
       // Ensure sessions is always an array
       setSessions(Array.isArray(data.sessions) ? data.sessions : [])
@@ -108,7 +100,7 @@ function TeacherDashboardContent() {
     }
     
     // 보안을 위해 API 호출로만 세션 데이터 가져오기
-    console.log('보안 강화된 API 호출로 세션 목록 조회 중... 교사 ID:', getCurrentUserId())
+    console.log('보안 세션 목록 API 호출 중...')
     fetchSessions()
     
     // 실시간 업데이트를 위한 주기적 갱신 (선택사항)
