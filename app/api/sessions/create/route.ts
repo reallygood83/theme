@@ -1,19 +1,5 @@
 import { NextResponse } from 'next/server'
-import admin from 'firebase-admin'
-
-// Firebase Admin SDK 초기화
-if (!admin.apps.length) {
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-  
-  admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: privateKey,
-    }),
-    databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-  })
-}
+import { getAdminDatabase } from '@/lib/firebase-admin'
 
 export async function POST(request: Request) {
   try {
@@ -52,7 +38,8 @@ export async function POST(request: Request) {
     
     // Firebase Admin SDK로 데이터베이스 접근
     console.log('Firebase Admin SDK로 연결 중...')
-    const db = admin.database()
+    const db = getAdminDatabase()
+    if (!db) throw new Error('Firebase Admin Database is unavailable')
     console.log('✅ Firebase Admin SDK 연결 완료')
     
     // 세션 생성

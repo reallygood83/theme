@@ -11,7 +11,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSharedSession, incrementImportCount } from '@/lib/shared-db';
-import admin from 'firebase-admin';
+import { getAdminDatabase } from '@/lib/firebase-admin';
 
 // Feature Flag 확인 - FeatureFlag.tsx와 동일한 패턴
 function checkSharingEnabled(): boolean {
@@ -23,25 +23,6 @@ function checkSharingEnabled(): boolean {
   
   // 기본값 true, 명시적으로 false일 때만 비활성화
   return process.env.NEXT_PUBLIC_ENABLE_SHARING !== 'false';
-}
-
-// Firebase Admin SDK 초기화 (shared-db와 동일한 패턴)
-function initializeAdminSDK() {
-  if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-    });
-    
-    console.log('✅ Firebase Admin SDK 초기화 완료 (import-route)');
-  }
-  return admin.database();
 }
 
 // 교사 인증 확인 (Request Body에서 실제 사용자 정보 사용)
@@ -191,7 +172,8 @@ export async function POST(request: NextRequest) {
     console.log('💾 새 세션 생성 시작...');
 
     // Always Works™ 검증: Admin SDK로 권한 문제 해결하여 개인 세션 컬렉션에 저장
-    const database = initializeAdminSDK();
+    const database = getAdminDatabase();
+    if (!database) throw new Error('Firebase Admin Database is unavailable');
     const sessionsRef = database.ref('sessions');
     const newSessionRef = sessionsRef.push();
     await newSessionRef.set(newSessionData);

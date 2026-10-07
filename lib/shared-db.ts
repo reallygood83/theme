@@ -5,7 +5,7 @@
  * ✅ Admin SDK 사용으로 보안 규칙 우회 및 서버사이드 권한 보장
  */
 
-import admin from 'firebase-admin';
+import { getAdminDatabase } from '@/lib/firebase-admin';
 
 /**
  * 공유 세션 데이터 구조
@@ -138,21 +138,9 @@ export interface PaginatedResult<T> {
  * Firebase Admin SDK 초기화
  */
 function initializeAdminSDK() {
-  if (!admin.apps.length) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-    
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-      databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
-    });
-    
-    console.log('✅ Firebase Admin SDK 초기화 완료 (shared-db)');
-  }
-  return admin.database();
+  const database = getAdminDatabase();
+  if (!database) throw new Error('Firebase Admin Database is unavailable');
+  return database;
 }
 
 /**
