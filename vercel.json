@@ -4,6 +4,9 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "functions": {
+    "app/api/ai/analyze-questions/route.ts": {
+      "maxDuration": 120
+    },
     "app/api/**/*.ts": {
       "maxDuration": 30
     }
