@@ -101,6 +101,16 @@ test('rejects upstream errors and responses without generated text', async (t) =
   globalThis.fetch = async () => new Response('provider error', { status: 503 })
   await assert.rejects(generateUpstageContent('prompt'), /503/)
 
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    choices: [{ finish_reason: 'length', message: { content: '{"clusters":' } }],
+  }), { status: 200 })
+  await assert.rejects(generateUpstageContent('prompt'), /길이 제한으로 잘려/)
+
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    choices: [{ finish_reason: 'stop', message: { content: [{ type: 'text', text: '배열 본문' }] } }],
+  }), { status: 200 })
+  assert.equal(await generateUpstageContent('prompt'), '배열 본문')
+
   globalThis.fetch = async () => new Response(JSON.stringify({ choices: [{ message: {} }] }), { status: 200 })
   await assert.rejects(generateUpstageContent('prompt'), /생성된 내용/)
 
