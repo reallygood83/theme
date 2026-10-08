@@ -69,18 +69,25 @@ export async function generateUpstageContent(
     throw new UpstageError(`Upstage API 요청에 실패했습니다 (HTTP ${response.status}).`, 502)
   }
 
-  let result: { choices?: Array<{ message?: { content?: unknown } }> } | null
+  let result: { choices?: Array<{ finish_reason?: string | null; message?: { content?: unknown } }> } | null
   try {
     result = await response.json()
   } catch {
     throw new UpstageError('Upstage API가 올바르지 않은 응답을 반환했습니다.', 502)
   }
 
-  const content = result?.choices?.[0]?.message?.content
-  if (typeof content !== 'string' || !content.trim()) {
+  const choice = result?.choices?.[0]
+  if (choice?.finish_reason === 'length') {
+    throw new UpstageError('Upstage 응답이 길이 제한으로 잘려 분석을 완료하지 못했습니다. 다시 시도해주세요.', 502)
+  }
+  const content = choice?.message?.content
+  const text = typeof content === 'string' ? content : Array.isArray(content)
+    ? content.map((part) => typeof part === 'string' ? part : typeof part?.text === 'string' ? part.text : '').join('')
+    : ''
+  if (!text.trim()) {
     throw new UpstageError('Upstage API 응답에 생성된 내용이 없습니다.', 502)
   }
-  return content
+  return text
 }
 
 const questionClustersSchema: Record<string, unknown> = {
