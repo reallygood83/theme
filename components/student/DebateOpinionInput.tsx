@@ -26,13 +26,24 @@ export default function DebateOpinionInput({
   const [selectedAgenda, setSelectedAgenda] = useState('')
   const [position, setPosition] = useState<'agree' | 'disagree' | ''>('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   // 논제는 이제 사용자가 직접 입력하므로 불러올 필요 없음
   
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setSubmitError('')
     
+    if (!sessionId) {
+      const message = '세션 정보를 아직 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 제출해주세요.'
+      setSubmitError(message)
+      alert(message)
+      return
+    }
+
     if (!opinionText.trim() || !selectedAgenda || !position) {
-      alert('모든 항목을 입력해주세요.')
+      const message = '토론 논제, 찬성/반대 입장, 의견을 모두 입력해주세요.'
+      setSubmitError(message)
+      alert(message)
       return
     }
     
@@ -69,8 +80,10 @@ export default function DebateOpinionInput({
       onOpinionSubmit()
       
     } catch (error) {
-      console.error('토론 의견 제출 오류:', error instanceof Error ? error.message : 'Unknown error')
-      alert(error instanceof Error ? error.message : '토론 의견 제출에 실패했습니다. 다시 시도해주세요.')
+      const message = error instanceof Error ? error.message : '토론 의견 제출에 실패했습니다. 다시 시도해주세요.'
+      console.error('토론 의견 제출 오류:', message)
+      setSubmitError(message)
+      alert(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -204,6 +217,12 @@ export default function DebateOpinionInput({
             </div>
           </div>
           
+          {submitError && (
+            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {submitError}
+            </div>
+          )}
+
           {/* 제출 버튼 */}
           <div className="bg-gradient-to-r from-emerald-100 to-teal-100 p-4 rounded-xl border border-emerald-200">
             <div className="flex items-center justify-between">

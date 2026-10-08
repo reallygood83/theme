@@ -33,12 +33,14 @@ export default function DebateOpinionList({
 }: DebateOpinionListProps) {
   const [opinions, setOpinions] = useState<DebateOpinion[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [filter, setFilter] = useState<'all' | 'my-group' | 'my-opinions'>('all')
 
   useEffect(() => {
     const db = getFirebaseDatabase()
     if (!db) {
       console.error('Firebase 데이터베이스 연결 실패')
+      setLoadError('토론 의견 목록을 불러올 수 없습니다. 페이지를 새로고침해주세요.')
       setLoading(false)
       return
     }
@@ -59,9 +61,11 @@ export default function DebateOpinionList({
       } else {
         setOpinions([])
       }
+      setLoadError('')
       setLoading(false)
     }, (error) => {
-      console.error('토론 의견 조회 오류:', error)
+      console.error('토론 의견 조회 오류:', error instanceof Error ? error.message : 'Unknown error')
+      setLoadError('제출된 의견을 불러오지 못했습니다. 저장은 되었을 수 있으니 잠시 후 새로고침해주세요.')
       setLoading(false)
     })
 
@@ -183,6 +187,11 @@ export default function DebateOpinionList({
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {loadError && (
+            <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {loadError}
+            </div>
+          )}
           {filteredOpinions.length === 0 ? (
             <div className="text-center py-8">
               <div className="text-6xl mb-4">💭</div>

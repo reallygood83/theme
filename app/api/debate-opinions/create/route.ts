@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getAdminDatabase } from '@/lib/firebase-admin'
+import { get, push, ref, set } from 'firebase/database'
+import { getFirebaseDatabase } from '@/lib/firebase'
 import {
-  sessionMatchesCode,
+  storeDebateOpinion,
   validateDebateOpinionSubmission,
 } from '@/lib/debate-opinion-submission'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
   try {
@@ -25,36 +28,37 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data } = validation
-    const database = getAdminDatabase()
+    const database = getFirebaseDatabase()
     if (!database) {
       return NextResponse.json(
-        { success: false, error: '의견 저장 서비스를 사용할 수 없습니다.' },
+        { success: false, error: '의견 저장 서비스를 사용할 수 없습니다. 페이지를 새로고침한 뒤 다시 시도해주세요.' },
         { status: 503 }
       )
     }
 
-    const sessionSnapshot = await database.ref(`sessions/${data.sessionId}`).once('value')
-    if (!sessionMatchesCode(sessionSnapshot.val(), data.sessionCode)) {
+    const result = await storeDebateOpinion({
+      readSession: async (sessionId) => {
+        const snapshot = await get(ref(database, `sessions/${sessionId}`))
+        return snapshot.val()
+      },
+      writeOpinion: async (sessionId, opinion) => {
+        const opinionRef = push(ref(database, `sessions/${sessionId}/debateOpinions`))
+        await set(opinionRef, opinion)
+        return opinionRef.key ?? ''
+      },
+    }, validation.data)
+
+    if (!result.ok) {
       return NextResponse.json(
-        { success: false, error: '세션 코드가 올바르지 않습니다.' },
-        { status: 404 }
+        { success: false, error: result.error },
+        { status: result.status }
       )
     }
-
-    const opinionData = {
-      ...data,
-      createdAt: Date.now(),
-      timestamp: new Date().toISOString(),
-    }
-
-    const newOpinionRef = database.ref(`sessions/${data.sessionId}/debateOpinions`).push()
-    await newOpinionRef.set(opinionData)
 
     return NextResponse.json({
       success: true,
       message: '토론 의견이 성공적으로 제출되었습니다.',
-      opinionId: newOpinionRef.key,
+      opinionId: result.opinionId,
     })
   } catch (error) {
     console.error('토론 의견 제출 API 오류:', error instanceof Error ? error.message : 'Unknown error')

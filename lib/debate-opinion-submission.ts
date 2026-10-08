@@ -57,3 +57,63 @@ export function sessionMatchesCode(session: unknown, sessionCode: string): boole
   return isRecord(session)
     && (session.sessionCode === sessionCode || session.accessCode === sessionCode)
 }
+
+export interface OpinionWriter {
+  readSession(sessionId: string): Promise<unknown>
+  writeOpinion(sessionId: string, opinion: DebateOpinionRecord): Promise<string>
+}
+
+export interface DebateOpinionRecord extends DebateOpinionSubmission {
+  createdAt: number
+  timestamp: string
+}
+
+export type OpinionStoreResult =
+  | { ok: true; opinionId: string }
+  | { ok: false; status: number; error: string }
+
+export async function storeDebateOpinion(
+  writer: OpinionWriter,
+  submission: DebateOpinionSubmission,
+  now = Date.now()
+): Promise<OpinionStoreResult> {
+  let session: unknown
+  try {
+    session = await writer.readSession(submission.sessionId)
+  } catch (error) {
+    return databaseFailure(error)
+  }
+
+  if (!sessionMatchesCode(session, submission.sessionCode)) {
+    return { ok: false, status: 404, error: '세션 코드가 올바르지 않습니다.' }
+  }
+
+  const opinion: DebateOpinionRecord = {
+    ...submission,
+    createdAt: now,
+    timestamp: new Date(now).toISOString(),
+  }
+
+  try {
+    const opinionId = await writer.writeOpinion(submission.sessionId, opinion)
+    if (!opinionId) {
+      return { ok: false, status: 500, error: '토론 의견 저장에 실패했습니다. 잠시 후 다시 시도해주세요.' }
+    }
+    return { ok: true, opinionId }
+  } catch (error) {
+    return databaseFailure(error)
+  }
+}
+
+function databaseFailure(error: unknown): OpinionStoreResult {
+  const code = error && typeof error === 'object' && 'code' in error ? String(error.code) : ''
+  const message = error instanceof Error ? error.message : ''
+  if (code.includes('PERMISSION_DENIED') || message.includes('PERMISSION_DENIED') || message.includes('permission_denied')) {
+    return {
+      ok: false,
+      status: 403,
+      error: '토론 의견을 저장할 권한이 없습니다. 세션 코드가 맞는지 확인하고, 계속되면 선생님께 알려주세요.',
+    }
+  }
+  return { ok: false, status: 500, error: '토론 의견 저장에 실패했습니다. 잠시 후 다시 시도해주세요.' }
+}

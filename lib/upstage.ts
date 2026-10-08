@@ -60,27 +60,68 @@ export async function generateUpstageContent(
   }
 
   if (!response.ok) {
+    const detail = await readUpstageErrorDetail(response)
+    const suffix = detail ? ` ${detail}` : ''
     if (response.status === 401 || response.status === 403) {
-      throw new UpstageError('Upstage 인증에 실패했습니다. Vercel의 UPSTAGE_API_KEY를 확인해주세요.', 503)
+      throw new UpstageError(`Upstage 인증에 실패했습니다. Vercel의 UPSTAGE_API_KEY를 확인해주세요.${suffix}`, 503)
     }
     if (response.status === 429 || response.status >= 500) {
-      throw new UpstageError(`Upstage API를 일시적으로 사용할 수 없습니다 (HTTP ${response.status}).`, 503)
+      throw new UpstageError(`Upstage API를 일시적으로 사용할 수 없습니다 (HTTP ${response.status}).${suffix}`, 503)
     }
-    throw new UpstageError(`Upstage API 요청에 실패했습니다 (HTTP ${response.status}).`, 502)
+    throw new UpstageError(`Upstage API 요청에 실패했습니다 (HTTP ${response.status}).${suffix}`, 502)
   }
 
-  let result: { choices?: Array<{ message?: { content?: unknown } }> } | null
+  let result: {
+    choices?: Array<{
+      finish_reason?: string | null
+      message?: { content?: unknown }
+    }>
+  } | null
   try {
     result = await response.json()
   } catch {
     throw new UpstageError('Upstage API가 올바르지 않은 응답을 반환했습니다.', 502)
   }
 
-  const content = result?.choices?.[0]?.message?.content
-  if (typeof content !== 'string' || !content.trim()) {
+  const choice = result?.choices?.[0]
+  const content = readMessageContent(choice?.message?.content).trim()
+  // Official chat completions: finish_reason "length" means the JSON/text was cut off.
+  if (choice?.finish_reason === 'length') {
+    throw new UpstageError('Upstage 응답이 길이 제한으로 잘려 분석을 완료하지 못했습니다. 다시 시도해주세요.', 502)
+  }
+  if (!content) {
     throw new UpstageError('Upstage API 응답에 생성된 내용이 없습니다.', 502)
   }
   return content
+}
+
+async function readUpstageErrorDetail(response: Response): Promise<string> {
+  try {
+    const body: unknown = await response.json()
+    if (!body || typeof body !== 'object') return ''
+    const error = (body as { error?: unknown }).error
+    const message = typeof error === 'string'
+      ? error
+      : error && typeof error === 'object' && typeof (error as { message?: unknown }).message === 'string'
+        ? (error as { message: string }).message
+        : ''
+    const trimmed = message.trim()
+    return trimmed ? trimmed.slice(0, 300) : ''
+  } catch {
+    return ''
+  }
+}
+
+function readMessageContent(content: unknown): string {
+  if (typeof content === 'string') return content
+  if (!Array.isArray(content)) return ''
+  return content.map((part) => {
+    if (typeof part === 'string') return part
+    if (part && typeof part === 'object' && typeof (part as { text?: unknown }).text === 'string') {
+      return (part as { text: string }).text
+    }
+    return ''
+  }).join('')
 }
 
 const questionClustersSchema: Record<string, unknown> = {
